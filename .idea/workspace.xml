@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feature:init project" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feature:rust入门安装文档spec">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/develop/version/v.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/research/project/rust_web.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -16,21 +25,21 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "RainyJiang22"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;RainyJiang22&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/RainyJiang22/FlashIM_by_ai.git",
-    "accountId": "195b4269-e103-49ba-b399-0b17d651a5b8"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/RainyJiang22/FlashIM_by_ai.git&quot;,
+    &quot;accountId&quot;: &quot;195b4269-e103-49ba-b399-0b17d651a5b8&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 7
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
   <component name="ProjectId" id="3ETUsOJeT4ak3mUGC8ApXCZwtCs" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -42,6 +51,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "SHELLCHECK.PATH": "/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck",
     "cf.first.check.clang-format": "false",
@@ -77,11 +87,20 @@
       <option name="project" value="LOCAL" />
       <updated>1780279391615</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="feature:rust入门安装文档spec">
+      <option name="closed" value="true" />
+      <created>1780283791556</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1780283791556</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feature:init project" />
-    <option name="LAST_COMMIT_MESSAGE" value="feature:init project" />
+    <MESSAGE value="feature:rust入门安装文档spec" />
+    <option name="LAST_COMMIT_MESSAGE" value="feature:rust入门安装文档spec" />
   </component>
 </project>

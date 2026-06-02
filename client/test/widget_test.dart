@@ -17,6 +17,7 @@ void main() {
 
     expect(find.text('flash_im playground'), findsOneWidget);
     expect(find.text('conversation'), findsOneWidget);
+    expect(find.text('心跳通信'), findsOneWidget);
     expect(find.text('烟花秀'), findsOneWidget);
   });
 }

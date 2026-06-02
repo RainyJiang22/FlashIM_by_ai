@@ -1,11 +1,22 @@
-use axum::{Json, Router, http::header, response::IntoResponse, routing::get};
+use axum::{
+    Json, Router,
+    extract::ws::{Message, WebSocket, WebSocketUpgrade},
+    http::header,
+    response::IntoResponse,
+    routing::get,
+};
+use futures_util::StreamExt;
 use local_ip_address::local_ip;
 use serde::Serialize;
-use std::net::SocketAddr;
+use std::{
+    net::SocketAddr,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 use tokio::net::TcpListener;
 
 const HOST: &str = "0.0.0.0";
 const PORT: u16 = 9600;
+static NEXT_CONNECTION_ID: AtomicUsize = AtomicUsize::new(1);
 
 #[derive(Serialize)]
 struct VersionResponse {
@@ -25,7 +36,8 @@ struct ConversationResponse {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/v", get(version))
-        .route("/conversation", get(conversations));
+        .route("/conversation", get(conversations))
+        .route("/ws", get(websocket_handler));
     let addr: SocketAddr = format!("{HOST}:{PORT}").parse()?;
     let listener = TcpListener::bind(addr).await?;
 
@@ -145,6 +157,44 @@ async fn conversations() -> impl IntoResponse {
             time: "15:30",
         },
     ]))
+}
+
+async fn websocket_handler(websocket: WebSocketUpgrade) -> impl IntoResponse {
+    let connection_id = NEXT_CONNECTION_ID.fetch_add(1, Ordering::Relaxed);
+
+    websocket.on_upgrade(move |socket| handle_websocket(socket, connection_id))
+}
+
+async fn handle_websocket(mut socket: WebSocket, connection_id: usize) {
+    println!("ws connected: connection_id={connection_id}");
+
+    if let Err(error) = socket
+        .send(Message::Text("welcome to flash_im websocket".into()))
+        .await
+    {
+        println!("ws send failed on connect: connection_id={connection_id}, error={error}");
+        return;
+    }
+
+    while let Some(result) = socket.next().await {
+        match result {
+            Ok(Message::Text(text)) => {
+                let reply = format!("echo: {text}");
+                if let Err(error) = socket.send(Message::Text(reply.into())).await {
+                    println!("ws send failed: connection_id={connection_id}, error={error}");
+                    break;
+                }
+            }
+            Ok(Message::Close(_)) => break,
+            Ok(_) => {}
+            Err(error) => {
+                println!("ws receive failed: connection_id={connection_id}, error={error}");
+                break;
+            }
+        }
+    }
+
+    println!("ws disconnected: connection_id={connection_id}");
 }
 
 fn utf8_json<T>(json: Json<T>) -> impl IntoResponse

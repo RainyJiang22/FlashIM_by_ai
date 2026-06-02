@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'demos/conversation/presentation/conversation_playground_page.dart';
+import 'demos/heartbeat/presentation/heartbeat_playground_page.dart';
 import 'demos/fireworks/fireworks_show_page.dart';
 
 class PlaygroundHomePage extends StatelessWidget {
@@ -20,7 +21,7 @@ class PlaygroundHomePage extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +41,7 @@ class PlaygroundHomePage extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 28),
                 _PlaygroundEntryCard(
                   title: 'conversation',
                   description: '一个可配置 IP 的 Dio 网络请求单元，用来拉取会话列表。',
@@ -52,6 +53,22 @@ class PlaygroundHomePage extends StatelessWidget {
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const ConversationPlaygroundPage(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 18),
+                _PlaygroundEntryCard(
+                  title: '心跳通信',
+                  description: '一个最小 WebSocket 测试台，用来验证连接状态、欢迎消息、心跳和 echo 返回。',
+                  icon: Icons.monitor_heart_outlined,
+                  buttonLabel: '打开心跳通信',
+                  buttonColor: const Color(0xFF93C5FD),
+                  buttonForegroundColor: const Color(0xFF0B1A33),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const HeartbeatPlaygroundPage(),
                       ),
                     );
                   },

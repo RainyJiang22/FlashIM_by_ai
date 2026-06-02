@@ -250,7 +250,7 @@ rustup self uninstall
 
 ## 8. 到什么程度算安装完成
 
-满足下面 3 条，就可以认为 Rust 环境已经准备好了：
+满足下面 3 条，就可以认为 Rust 环境已经准备好了:
 
 1. `bash scripts/setup/install-rust-macos.sh` 能正常完成
 2. `bash scripts/setup/verify-rust-macos.sh` 能正常完成

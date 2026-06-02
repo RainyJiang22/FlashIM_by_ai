@@ -5,7 +5,6 @@ import '../../../../core/network/dio_factory.dart';
 import '../data/conversation_api.dart';
 import '../data/conversation_repository.dart';
 import '../domain/conversation_entity.dart';
-import 'widgets/conversation_bottom_navigation_bar.dart';
 import 'widgets/conversation_list_tile.dart';
 
 class ConversationPlaygroundPage extends StatefulWidget {
@@ -61,6 +60,7 @@ class _ConversationPlaygroundPageState
             surfaceTintColor: Colors.white,
             centerTitle: true,
             elevation: 0,
+            iconTheme: const IconThemeData(color: Color(0xFF111111)),
             title: Text(
               '微信(${conversations.length})',
               style: const TextStyle(

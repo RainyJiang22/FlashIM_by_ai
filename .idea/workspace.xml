@@ -4,8 +4,29 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(client): 创建client客户端项目">
-      <change beforePath="$PROJECT_DIR$/client/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/main.dart" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(client): add fireworks show app shell and home flow">
+      <change afterPath="$PROJECT_DIR$/client/lib/core/config/playground_api_config.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/core/network/dio_factory.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/data/conversation_api.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/data/conversation_repository.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/data/models/conversation_dto.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/domain/conversation_entity.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/presentation/conversation_playground_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/presentation/widgets/conversation_bottom_navigation_bar.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/presentation/widgets/conversation_list_tile.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/playground_home_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/test/playground/conversation/data/conversation_api_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/test/playground/conversation/data/conversation_repository_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/test/playground/conversation/fixtures/conversation_list_fixture.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/data/playground/conversation/list.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/develop/report/conversation-playground-0to1-report.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/fireworks/fireworks_show_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/fireworks/fireworks_show_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/fireworks/widgets/fireworks_show_scene.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/fireworks/widgets/fireworks_show_scene.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/home_page.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/test/widget_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/widget_test.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -39,24 +60,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "SHELLCHECK.PATH": "/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im",
-    "show.migrate.to.gradle.popup": "false"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im&quot;,
+    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
-}]]></component>
+}</component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="" />
@@ -113,8 +134,27 @@
       <option name="project" value="LOCAL" />
       <updated>1780309527841</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="feat(client): client 烟花秀">
+      <option name="closed" value="true" />
+      <created>1780311609744</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1780311609744</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feature:init project" />
@@ -122,6 +162,7 @@
     <MESSAGE value="feat(server): add initial axum version endpoint" />
     <MESSAGE value="feat(server): add mock conversation endpoint" />
     <MESSAGE value="feat(client): 创建client客户端项目" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(client): 创建client客户端项目" />
+    <MESSAGE value="feat(client): client 烟花秀" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(client): client 烟花秀" />
   </component>
 </project>

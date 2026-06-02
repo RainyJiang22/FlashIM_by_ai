@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../features/home/home_page.dart';
+import '../playground/playground_home_page.dart';
 
 class FlashImApp extends StatelessWidget {
   const FlashImApp({super.key});
@@ -18,7 +18,7 @@ class FlashImApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFF090B16),
       ),
-      home: const HomePage(),
+      home: const PlaygroundHomePage(),
     );
   }
 }

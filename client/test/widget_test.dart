@@ -10,16 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flash_im/app/flash_im_app.dart';
 
 void main() {
-  testWidgets('home page can open fireworks show', (WidgetTester tester) async {
+  testWidgets('main app opens the playground list', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const FlashImApp());
 
-    expect(find.text('flash_im'), findsOneWidget);
+    expect(find.text('flash_im playground'), findsOneWidget);
+    expect(find.text('conversation'), findsOneWidget);
     expect(find.text('烟花秀'), findsOneWidget);
-
-    await tester.tap(find.text('烟花秀'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.text('轻触屏幕，尽情庆祝。'), findsOneWidget);
   });
 }

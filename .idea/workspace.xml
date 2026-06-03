@@ -4,30 +4,11 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(client): add fireworks show app shell and home flow">
-      <change afterPath="$PROJECT_DIR$/client/lib/core/config/playground_api_config.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/core/network/dio_factory.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/data/conversation_api.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/data/conversation_repository.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/data/models/conversation_dto.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/domain/conversation_entity.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/presentation/conversation_playground_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/presentation/widgets/conversation_bottom_navigation_bar.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/conversation/presentation/widgets/conversation_list_tile.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/playground_home_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/test/playground/conversation/data/conversation_api_test.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/test/playground/conversation/data/conversation_repository_test.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/test/playground/conversation/fixtures/conversation_list_fixture.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/data/playground/conversation/list.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/develop/report/conversation-playground-0to1-report.md" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(playground): build conversation list flow from API to chat-style view">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/fireworks/fireworks_show_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/fireworks/fireworks_show_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/fireworks/widgets/fireworks_show_scene.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/fireworks/widgets/fireworks_show_scene.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/home/home_page.dart" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/widget_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/widget_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,10 +55,16 @@
     &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/research/project&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/research/project" />
+    </key>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="" />
@@ -142,7 +129,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780311609744</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="feat(playground): build conversation list flow from API to chat-style view">
+      <option name="closed" value="true" />
+      <created>1780370315751</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1780370315751</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -163,6 +158,7 @@
     <MESSAGE value="feat(server): add mock conversation endpoint" />
     <MESSAGE value="feat(client): 创建client客户端项目" />
     <MESSAGE value="feat(client): client 烟花秀" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(client): client 烟花秀" />
+    <MESSAGE value="feat(playground): build conversation list flow from API to chat-style view" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(playground): build conversation list flow from API to chat-style view" />
   </component>
 </project>

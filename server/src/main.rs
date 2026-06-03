@@ -1,22 +1,53 @@
 use axum::{
     Json, Router,
-    extract::ws::{Message, WebSocket, WebSocketUpgrade},
-    http::header,
+    extract::{
+        State,
+        ws::{Message, WebSocket, WebSocketUpgrade},
+    },
+    http::{HeaderMap, StatusCode, header},
     response::IntoResponse,
-    routing::get,
+    routing::{get, post},
 };
 use futures_util::StreamExt;
+use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use local_ip_address::local_ip;
-use serde::Serialize;
+use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashMap,
     net::SocketAddr,
-    sync::atomic::{AtomicUsize, Ordering},
+    sync::{
+        Arc,
+        atomic::{AtomicU64, AtomicUsize, Ordering},
+    },
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, sync::RwLock};
 
 const HOST: &str = "0.0.0.0";
 const PORT: u16 = 9600;
+const JWT_TTL: Duration = Duration::from_secs(24 * 60 * 60);
+
 static NEXT_CONNECTION_ID: AtomicUsize = AtomicUsize::new(1);
+
+type SharedState = Arc<AppState>;
+
+#[derive(Clone)]
+struct AppState {
+    sms_codes: Arc<RwLock<HashMap<String, String>>>,
+    users_by_id: Arc<RwLock<HashMap<u64, UserRecord>>>,
+    user_ids_by_phone: Arc<RwLock<HashMap<String, u64>>>,
+    next_user_id: Arc<AtomicU64>,
+    jwt_secret: Arc<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct UserRecord {
+    user_id: u64,
+    nickname: String,
+    avatar: String,
+    phone: String,
+}
 
 #[derive(Serialize)]
 struct VersionResponse {
@@ -32,12 +63,64 @@ struct ConversationResponse {
     time: &'static str,
 }
 
+#[derive(Deserialize)]
+struct SmsRequest {
+    phone: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SmsResponse {
+    phone: String,
+    code: String,
+}
+
+#[derive(Deserialize)]
+struct LoginRequest {
+    phone: String,
+    code: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct LoginResponse {
+    token: String,
+    user_id: u64,
+}
+
+#[derive(Serialize, Deserialize)]
+struct ProfileResponse {
+    user_id: u64,
+    nickname: String,
+    avatar: String,
+    phone: String,
+}
+
+#[derive(Serialize)]
+struct ErrorResponse {
+    message: &'static str,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct AuthClaims {
+    user_id: u64,
+    exp: usize,
+}
+
+impl AppState {
+    fn new(jwt_secret: impl Into<String>) -> Self {
+        Self {
+            sms_codes: Arc::new(RwLock::new(HashMap::new())),
+            users_by_id: Arc::new(RwLock::new(HashMap::new())),
+            user_ids_by_phone: Arc::new(RwLock::new(HashMap::new())),
+            next_user_id: Arc::new(AtomicU64::new(1)),
+            jwt_secret: Arc::new(jwt_secret.into()),
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let app = Router::new()
-        .route("/v", get(version))
-        .route("/conversation", get(conversations))
-        .route("/ws", get(websocket_handler));
+    let state = Arc::new(AppState::new("flash-im-playground-secret"));
+    let app = app(state);
     let addr: SocketAddr = format!("{HOST}:{PORT}").parse()?;
     let listener = TcpListener::bind(addr).await?;
 
@@ -45,6 +128,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     axum::serve(listener, app).await?;
     Ok(())
+}
+
+fn app(state: SharedState) -> Router {
+    Router::new()
+        .route("/v", get(version))
+        .route("/conversation", get(conversations))
+        .route("/ws", get(websocket_handler))
+        .route("/auth/sms", post(send_sms_code))
+        .route("/auth/login", post(login))
+        .route("/user/profile", get(user_profile))
+        .with_state(state)
 }
 
 async fn version() -> impl IntoResponse {
@@ -159,6 +253,82 @@ async fn conversations() -> impl IntoResponse {
     ]))
 }
 
+async fn send_sms_code(
+    State(state): State<SharedState>,
+    Json(request): Json<SmsRequest>,
+) -> impl IntoResponse {
+    let phone = request.phone.trim().to_string();
+    if phone.is_empty() {
+        return json_error(StatusCode::BAD_REQUEST, "phone is required");
+    }
+
+    let code = random_sms_code();
+    state
+        .sms_codes
+        .write()
+        .await
+        .insert(phone.clone(), code.clone());
+
+    utf8_json(Json(SmsResponse { phone, code })).into_response()
+}
+
+async fn login(
+    State(state): State<SharedState>,
+    Json(request): Json<LoginRequest>,
+) -> impl IntoResponse {
+    let phone = request.phone.trim().to_string();
+    let code = request.code.trim().to_string();
+
+    if phone.is_empty() || code.is_empty() {
+        return json_error(StatusCode::BAD_REQUEST, "phone and code are required");
+    }
+
+    let stored_code = state.sms_codes.read().await.get(&phone).cloned();
+    if stored_code.as_deref() != Some(code.as_str()) {
+        return json_error(StatusCode::UNAUTHORIZED, "invalid or expired code");
+    }
+
+    state.sms_codes.write().await.remove(&phone);
+
+    let user = find_or_create_user(state.as_ref(), &phone).await;
+    match sign_token(state.as_ref(), user.user_id) {
+        Ok(token) => utf8_json(Json(LoginResponse {
+            token,
+            user_id: user.user_id,
+        }))
+        .into_response(),
+        Err(error) => {
+            println!("jwt sign failed: user_id={}, error={error}", user.user_id);
+            json_error(StatusCode::INTERNAL_SERVER_ERROR, "failed to sign token")
+        }
+    }
+}
+
+async fn user_profile(State(state): State<SharedState>, headers: HeaderMap) -> impl IntoResponse {
+    let token = match extract_token(&headers) {
+        Some(token) => token,
+        None => return json_error(StatusCode::UNAUTHORIZED, "missing token"),
+    };
+
+    let claims = match decode_token(state.as_ref(), token) {
+        Ok(claims) => claims,
+        Err(_) => return json_error(StatusCode::UNAUTHORIZED, "invalid token"),
+    };
+
+    let user = match state.users_by_id.read().await.get(&claims.user_id).cloned() {
+        Some(user) => user,
+        None => return json_error(StatusCode::UNAUTHORIZED, "invalid token"),
+    };
+
+    utf8_json(Json(ProfileResponse {
+        user_id: user.user_id,
+        nickname: user.nickname,
+        avatar: user.avatar,
+        phone: user.phone,
+    }))
+    .into_response()
+}
+
 async fn websocket_handler(websocket: WebSocketUpgrade) -> impl IntoResponse {
     let connection_id = NEXT_CONNECTION_ID.fetch_add(1, Ordering::Relaxed);
 
@@ -207,6 +377,93 @@ where
     )
 }
 
+fn json_error(status: StatusCode, message: &'static str) -> axum::response::Response {
+    (status, utf8_json(Json(ErrorResponse { message }))).into_response()
+}
+
+fn random_sms_code() -> String {
+    let mut rng = rand::rng();
+    format!("{:06}", rng.random_range(0..1_000_000))
+}
+
+fn random_avatar_url() -> String {
+    let mut rng = rand::rng();
+    let seed = rng.random::<u64>();
+    format!("https://picsum.photos/seed/{seed}/120/120")
+}
+
+async fn find_or_create_user(state: &AppState, phone: &str) -> UserRecord {
+    {
+        let existing_user_id = state.user_ids_by_phone.read().await.get(phone).copied();
+        if let Some(user_id) = existing_user_id
+            && let Some(user) = state.users_by_id.read().await.get(&user_id).cloned()
+        {
+            return user;
+        }
+    }
+
+    let mut user_ids_by_phone = state.user_ids_by_phone.write().await;
+    if let Some(user_id) = user_ids_by_phone.get(phone).copied()
+        && let Some(user) = state.users_by_id.read().await.get(&user_id).cloned()
+    {
+        return user;
+    }
+
+    let user_id = state.next_user_id.fetch_add(1, Ordering::Relaxed);
+    let user = UserRecord {
+        user_id,
+        nickname: phone.to_string(),
+        avatar: random_avatar_url(),
+        phone: phone.to_string(),
+    };
+
+    user_ids_by_phone.insert(phone.to_string(), user_id);
+    state
+        .users_by_id
+        .write()
+        .await
+        .insert(user_id, user.clone());
+
+    user
+}
+
+fn sign_token(state: &AppState, user_id: u64) -> Result<String, jsonwebtoken::errors::Error> {
+    let claims = AuthClaims {
+        user_id,
+        exp: (unix_timestamp() + JWT_TTL.as_secs()) as usize,
+    };
+
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(state.jwt_secret.as_bytes()),
+    )
+}
+
+fn decode_token(state: &AppState, token: &str) -> Result<AuthClaims, jsonwebtoken::errors::Error> {
+    decode::<AuthClaims>(
+        token,
+        &DecodingKey::from_secret(state.jwt_secret.as_bytes()),
+        &Validation::default(),
+    )
+    .map(|data| data.claims)
+}
+
+fn unix_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+fn extract_token(headers: &HeaderMap) -> Option<&str> {
+    headers
+        .get(header::AUTHORIZATION)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.strip_prefix("Bearer ").or(Some(value)))
+        .or_else(|| headers.get("token").and_then(|value| value.to_str().ok()))
+}
+
 fn print_access_urls(port: u16) {
     println!("server started");
     println!("local:   http://127.0.0.1:{port}/v");
@@ -214,5 +471,101 @@ fn print_access_urls(port: u16) {
     match local_ip() {
         Ok(ip) => println!("network: http://{ip}:{port}/v"),
         Err(error) => println!("network: unable to detect local ip: {error}"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::{
+        body::{Body, to_bytes},
+        http::{Request, StatusCode},
+    };
+    use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn auth_flow_returns_profile_for_valid_token() {
+        let state = Arc::new(AppState::new("test-secret"));
+        let app = app(state);
+
+        let sms_request = Request::builder()
+            .method("POST")
+            .uri("/auth/sms")
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"phone":"13800138000"}"#))
+            .unwrap();
+        let sms_response = app.clone().oneshot(sms_request).await.unwrap();
+        assert_eq!(sms_response.status(), StatusCode::OK);
+
+        let sms_body = to_bytes(sms_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let sms: SmsResponse = serde_json::from_slice(&sms_body).unwrap();
+        assert_eq!(sms.phone, "13800138000");
+        assert_eq!(sms.code.len(), 6);
+
+        let login_request = Request::builder()
+            .method("POST")
+            .uri("/auth/login")
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "phone": sms.phone,
+                    "code": sms.code,
+                })
+                .to_string(),
+            ))
+            .unwrap();
+        let login_response = app.clone().oneshot(login_request).await.unwrap();
+        assert_eq!(login_response.status(), StatusCode::OK);
+
+        let login_body = to_bytes(login_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let login: LoginResponse = serde_json::from_slice(&login_body).unwrap();
+        assert!(!login.token.is_empty());
+        assert_eq!(login.user_id, 1);
+
+        let profile_request = Request::builder()
+            .method("GET")
+            .uri("/user/profile")
+            .header(header::AUTHORIZATION, format!("Bearer {}", login.token))
+            .body(Body::empty())
+            .unwrap();
+        let profile_response = app.oneshot(profile_request).await.unwrap();
+        assert_eq!(profile_response.status(), StatusCode::OK);
+
+        let profile_body = to_bytes(profile_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let profile: ProfileResponse = serde_json::from_slice(&profile_body).unwrap();
+        assert_eq!(profile.user_id, 1);
+        assert_eq!(profile.nickname, "13800138000");
+        assert_eq!(profile.phone, "13800138000");
+        assert!(profile.avatar.starts_with("https://picsum.photos/seed/"));
+        assert!(profile.avatar.ends_with("/120/120"));
+    }
+
+    #[tokio::test]
+    async fn missing_or_invalid_token_returns_401() {
+        let state = Arc::new(AppState::new("test-secret"));
+        let app = app(state);
+
+        let missing_token_request = Request::builder()
+            .method("GET")
+            .uri("/user/profile")
+            .body(Body::empty())
+            .unwrap();
+        let missing_token_response = app.clone().oneshot(missing_token_request).await.unwrap();
+        assert_eq!(missing_token_response.status(), StatusCode::UNAUTHORIZED);
+
+        let invalid_token_request = Request::builder()
+            .method("GET")
+            .uri("/user/profile")
+            .header(header::AUTHORIZATION, "Bearer invalid-token")
+            .body(Body::empty())
+            .unwrap();
+        let invalid_token_response = app.oneshot(invalid_token_request).await.unwrap();
+        assert_eq!(invalid_token_response.status(), StatusCode::UNAUTHORIZED);
     }
 }

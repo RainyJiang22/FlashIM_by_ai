@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'demos/auth/presentation/auth_playground_page.dart';
 import 'demos/conversation/presentation/conversation_playground_page.dart';
 import 'demos/heartbeat/presentation/heartbeat_playground_page.dart';
 import 'demos/fireworks/fireworks_show_page.dart';
@@ -69,6 +70,22 @@ class PlaygroundHomePage extends StatelessWidget {
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const HeartbeatPlaygroundPage(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 18),
+                _PlaygroundEntryCard(
+                  title: '用户认证',
+                  description: '手机号 + 验证码登录演示，包含验证码冷却、Token 持久化、自动鉴权和退出登录。',
+                  icon: Icons.verified_user_outlined,
+                  buttonLabel: '打开用户认证',
+                  buttonColor: const Color(0xFFB7F171),
+                  buttonForegroundColor: const Color(0xFF122106),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const AuthPlaygroundPage(),
                       ),
                     );
                   },

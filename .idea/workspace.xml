@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(playground): build conversation list flow from API to chat-style view">
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(login):添加后端模拟认证接口以及相关文档">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_profile_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_profile_page.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,7 +136,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780370315751</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="feat(login):添加后端模拟认证接口以及相关文档">
+      <option name="closed" value="true" />
+      <created>1780494670013</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1780494670013</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -159,6 +166,7 @@
     <MESSAGE value="feat(client): 创建client客户端项目" />
     <MESSAGE value="feat(client): client 烟花秀" />
     <MESSAGE value="feat(playground): build conversation list flow from API to chat-style view" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(playground): build conversation list flow from API to chat-style view" />
+    <MESSAGE value="feat(login):添加后端模拟认证接口以及相关文档" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(login):添加后端模拟认证接口以及相关文档" />
   </component>
 </project>

@@ -32,9 +32,17 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
   bool _isBootstrapping = true;
   bool _isSendingCode = false;
   bool _isSubmitting = false;
+  bool _agreedToTerms = true;
   int _secondsUntilResend = 0;
   String? _inlineError;
   SmsCodeInfo? _latestSmsCode;
+
+  bool get _canLogin {
+    return !_isSubmitting &&
+        _agreedToTerms &&
+        _phoneController.text.trim().isNotEmpty &&
+        _codeController.text.trim().isNotEmpty;
+  }
 
   @override
   void initState() {
@@ -49,14 +57,20 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
         );
     _phoneController = TextEditingController(text: '13800138000');
     _codeController = TextEditingController();
+    _phoneController.addListener(_handleInputChanged);
+    _codeController.addListener(_handleInputChanged);
     unawaited(_bootstrap());
   }
 
   @override
   void dispose() {
     _countdownTimer?.cancel();
-    _phoneController.dispose();
-    _codeController.dispose();
+    _phoneController
+      ..removeListener(_handleInputChanged)
+      ..dispose();
+    _codeController
+      ..removeListener(_handleInputChanged)
+      ..dispose();
     super.dispose();
   }
 
@@ -76,13 +90,27 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
     });
   }
 
+  void _handleInputChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
+
   Future<void> _login() async {
     final phone = _phoneController.text.trim();
     final code = _codeController.text.trim();
 
     if (phone.isEmpty || code.isEmpty) {
       setState(() {
-        _inlineError = '请输入手机号和验证码。';
+        _inlineError = '请输入手机号和验证码';
+      });
+      return;
+    }
+
+    if (!_agreedToTerms) {
+      setState(() {
+        _inlineError = '请先勾选协议';
       });
       return;
     }
@@ -126,7 +154,7 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
       setState(() {
-        _inlineError = '请先输入手机号。';
+        _inlineError = '请先输入手机号';
       });
       return;
     }
@@ -142,6 +170,11 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
         return;
       }
 
+      _codeController.text = info.code;
+      _codeController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: info.code.length,
+      );
       setState(() {
         _latestSmsCode = info;
       });
@@ -193,504 +226,329 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
       if (payload is Map && payload['message'] is String) {
         return payload['message'] as String;
       }
-      return error.message ?? '请求失败，请稍后重试。';
+      return error.message ?? '请求失败，请稍后重试';
     }
     return error.toString();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      body: Stack(
-        children: [
-          const _AuthNebulaBackground(),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 28,
-                ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: _isBootstrapping
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF6B8FF8)),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 560),
-                  child: _isBootstrapping
-                      ? const _AuthLoadingView()
-                      : _AuthLoginPanel(
-                          phoneController: _phoneController,
-                          codeController: _codeController,
-                          isSendingCode: _isSendingCode,
-                          isSubmitting: _isSubmitting,
-                          secondsUntilResend: _secondsUntilResend,
-                          latestSmsCode: _latestSmsCode,
-                          inlineError: _inlineError,
-                          onSendCode: _sendCode,
-                          onLogin: _login,
-                          theme: theme,
-                        ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AuthLoginPanel extends StatelessWidget {
-  const _AuthLoginPanel({
-    required this.phoneController,
-    required this.codeController,
-    required this.isSendingCode,
-    required this.isSubmitting,
-    required this.secondsUntilResend,
-    required this.latestSmsCode,
-    required this.inlineError,
-    required this.onSendCode,
-    required this.onLogin,
-    required this.theme,
-  });
-
-  final TextEditingController phoneController;
-  final TextEditingController codeController;
-  final bool isSendingCode;
-  final bool isSubmitting;
-  final int secondsUntilResend;
-  final SmsCodeInfo? latestSmsCode;
-  final String? inlineError;
-  final VoidCallback onSendCode;
-  final VoidCallback onLogin;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    final canSendCode = !isSendingCode && secondsUntilResend == 0;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(36),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xCC121A29), Color(0xE6120F1B), Color(0xF0131625)],
-        ),
-        border: Border.all(color: const Color(0xFF31405B)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x66000000),
-            blurRadius: 38,
-            offset: Offset(0, 18),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: const [
-                _AuthLabelChip(label: 'playground'),
-                _AuthLabelChip(label: '用户认证'),
-                _AuthLabelChip(label: '验证码登录'),
-              ],
-            ),
-            const SizedBox(height: 22),
-            Text(
-              '把登录链路先做对，再谈 IM 的下一步。',
-              style: theme.textTheme.displaySmall?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                height: 1.1,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              '这个模块用于演示手机号 + 验证码登录、Token 持久化、自动鉴权和退出登录。界面保持克制，但不走廉价拼装风。',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: const Color(0xFFADB7CC),
-                height: 1.55,
-              ),
-            ),
-            const SizedBox(height: 28),
-            _AuthFieldShell(
-              child: TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-                decoration: const InputDecoration(
-                  labelText: '手机号',
-                  hintText: '请输入手机号',
-                  prefixIcon: Icon(Icons.phone_iphone_rounded),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _AuthFieldShell(
-                    child: TextField(
-                      controller: codeController,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
-                      decoration: const InputDecoration(
-                        labelText: '验证码',
-                        hintText: '请输入 6 位验证码',
-                        prefixIcon: Icon(Icons.shield_moon_outlined),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 150,
-                  child: FilledButton(
-                    onPressed: canSendCode ? onSendCode : null,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(62),
-                      backgroundColor: const Color(0xFFE7F0FF),
-                      foregroundColor: const Color(0xFF0E1C35),
-                      disabledBackgroundColor: const Color(0xFF36445D),
-                      disabledForegroundColor: const Color(0xFF9EABC0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      textStyle: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    child: isSendingCode
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            secondsUntilResend > 0
-                                ? '${secondsUntilResend}s 后重发'
-                                : '发送验证码',
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: IconButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            size: 28,
+                            color: Color(0xFF4A4A4A),
                           ),
+                        ),
+                      ),
+                      const SizedBox(height: 130),
+                      const Center(
+                        child: Text(
+                          'FLASH IM',
+                          style: TextStyle(
+                            color: Color(0xFF17171F),
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Center(
+                        child: Text(
+                          '即 时 通 信 练 习 场',
+                          style: TextStyle(
+                            color: Color(0xFF8A8A95),
+                            fontSize: 12,
+                            letterSpacing: 3.2,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 58),
+                      _AuthUnderlineField(
+                        leading: const Text(
+                          '+86',
+                          style: TextStyle(
+                            color: Color(0xFF17171F),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          style: const TextStyle(
+                            color: Color(0xFF17171F),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: const InputDecoration(
+                            hintText: '请输入手机号',
+                            border: InputBorder.none,
+                            isDense: true,
+                            hintStyle: TextStyle(
+                              color: Color(0xFFB1B2BA),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _AuthUnderlineField(
+                        leading: const Text(
+                          '验证码',
+                          style: TextStyle(
+                            color: Color(0xFF17171F),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _codeController,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(
+                            color: Color(0xFF17171F),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: '请输入 6 位验证码',
+                            border: InputBorder.none,
+                            isDense: true,
+                            hintStyle: const TextStyle(
+                              color: Color(0xFFB1B2BA),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w400,
+                            ),
+                            suffixIconConstraints: const BoxConstraints(
+                              minWidth: 56,
+                              minHeight: 24,
+                            ),
+                            suffixIcon: _AuthCountdownAction(
+                              isSendingCode: _isSendingCode,
+                              secondsUntilResend: _secondsUntilResend,
+                              onTap: _sendCode,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Transform.translate(
+                            offset: const Offset(-10, -8),
+                            child: Checkbox(
+                              value: _agreedToTerms,
+                              side: const BorderSide(color: Color(0xFFD6D8DE)),
+                              activeColor: const Color(0xFF6B8FF8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _agreedToTerms = value ?? false;
+                                });
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: RichText(
+                              text: const TextSpan(
+                                style: TextStyle(
+                                  color: Color(0xFF8F9097),
+                                  fontSize: 12,
+                                  height: 1.5,
+                                ),
+                                children: [
+                                  TextSpan(text: '登录即代表您同意 '),
+                                  TextSpan(
+                                    text: '《用户协议》',
+                                    style: TextStyle(
+                                      color: Color(0xFF6B8FF8),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  TextSpan(text: ' 和 '),
+                                  TextSpan(
+                                    text: '《隐私政策》',
+                                    style: TextStyle(
+                                      color: Color(0xFF6B8FF8),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  TextSpan(text: '，未注册绑定的手机号验证成功后将自动注册'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_latestSmsCode != null) const SizedBox(height: 10),
+                      if (_latestSmsCode != null)
+                        Text(
+                          'playground 验证码：${_latestSmsCode!.code}',
+                          style: const TextStyle(
+                            color: Color(0xFF9FA1AB),
+                            fontSize: 11,
+                          ),
+                        ),
+                      if (_inlineError != null) const SizedBox(height: 10),
+                      if (_inlineError != null)
+                        Text(
+                          _inlineError!,
+                          style: const TextStyle(
+                            color: Color(0xFFE25B5B),
+                            fontSize: 11,
+                          ),
+                        ),
+                      const SizedBox(height: 26),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: _canLogin ? _login : null,
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(52),
+                            side: BorderSide(
+                              color: _canLogin
+                                  ? const Color(0xFFD2D4DA)
+                                  : const Color(0xFFE9E9EE),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            foregroundColor: const Color(0xFF6B6E76),
+                            disabledForegroundColor: const Color(0xFFC5C7CD),
+                            backgroundColor: Colors.white,
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          child: _isSubmitting
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 5,
+                                    color: Color(0xFF6B8FF8),
+                                  ),
+                                )
+                              : const Text('登录'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (latestSmsCode != null)
-              _AuthCodePreviewCard(
-                code: latestSmsCode!.code,
-                phone: latestSmsCode!.phone,
               ),
-            if (latestSmsCode != null) const SizedBox(height: 14),
-            if (inlineError != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Text(
-                  inlineError!,
-                  style: const TextStyle(
-                    color: Color(0xFFFFB4B4),
-                    fontSize: 13,
-                    height: 1.45,
-                  ),
-                ),
-              ),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: isSubmitting ? null : onLogin,
-                icon: isSubmitting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.arrow_outward_rounded),
-                label: Text(isSubmitting ? '登录中...' : '进入个人信息页'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(64),
-                  backgroundColor: const Color(0xFF6EF7C8),
-                  foregroundColor: const Color(0xFF052116),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  textStyle: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            const _AuthFootnote(),
-          ],
-        ),
       ),
     );
   }
 }
 
-class _AuthLoadingView extends StatelessWidget {
-  const _AuthLoadingView();
+class _AuthUnderlineField extends StatelessWidget {
+  const _AuthUnderlineField({required this.leading, required this.child});
 
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xD5121723),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0xFF2C3951)),
-      ),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: Color(0xFF6EF7C8)),
-            SizedBox(height: 18),
-            Text(
-              '正在恢复登录状态...',
-              style: TextStyle(color: Colors.white70, fontSize: 15),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthFootnote extends StatelessWidget {
-  const _AuthFootnote();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Wrap(
-      spacing: 12,
-      runSpacing: 10,
-      children: [
-        _AuthMiniNote(icon: Icons.timer_outlined, label: '验证码 60 秒冷却'),
-        _AuthMiniNote(icon: Icons.lock_outline_rounded, label: '登录成功自动持久化 Token'),
-        _AuthMiniNote(icon: Icons.badge_outlined, label: '资料页自动携带鉴权头'),
-      ],
-    );
-  }
-}
-
-class _AuthMiniNote extends StatelessWidget {
-  const _AuthMiniNote({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFF171F30),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFF2E3B56)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: const Color(0xFF8FE8CB), size: 16),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(color: Color(0xFFBDC6D8), fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthCodePreviewCard extends StatelessWidget {
-  const _AuthCodePreviewCard({required this.code, required this.phone});
-
-  final String code;
-  final String phone;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0x1213F0B9),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF295042)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.mark_email_read_outlined,
-              color: Color(0xFF8FF0CC),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'playground 验证码',
-                    style: TextStyle(
-                      color: Color(0xFFB9C4D7),
-                      fontSize: 12,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    code,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              phone,
-              style: const TextStyle(color: Color(0xFF90A0B8), fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthFieldShell extends StatelessWidget {
-  const _AuthFieldShell({required this.child});
-
+  final Widget leading;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFF131A28),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF2D3952)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            inputDecorationTheme: const InputDecorationTheme(
-              labelStyle: TextStyle(color: Color(0xFF94A2B8)),
-              hintStyle: TextStyle(color: Color(0xFF4F5D77)),
-              prefixIconColor: Color(0xFF7F90A9),
-            ),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthLabelChip extends StatelessWidget {
-  const _AuthLabelChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFF171D2C),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFF2E3B56)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFFCAD3E5),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AuthNebulaBackground extends StatelessWidget {
-  const _AuthNebulaBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF060913), Color(0xFF09101B), Color(0xFF121420)],
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFE9E9EE), width: 1.5),
         ),
       ),
-      child: Stack(
-        children: const [
-          Positioned(
-            top: -100,
-            left: -40,
-            child: _GlowOrb(
-              size: 280,
-              color: Color(0x33A9FFF1),
-            ),
-          ),
-          Positioned(
-            top: 120,
-            right: -60,
-            child: _GlowOrb(
-              size: 240,
-              color: Color(0x2FFF9C6B),
-            ),
-          ),
-          Positioned(
-            bottom: -80,
-            left: 40,
-            child: _GlowOrb(
-              size: 260,
-              color: Color(0x1F7D8CFF),
-            ),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(width: 84, child: leading),
+            Container(width: 1.5, height: 24, color: const Color(0xFFD5E1FF)),
+            const SizedBox(width: 14),
+            Expanded(child: child),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({required this.size, required this.color});
+class _AuthCountdownAction extends StatelessWidget {
+  const _AuthCountdownAction({
+    required this.isSendingCode,
+    required this.secondsUntilResend,
+    required this.onTap,
+  });
 
-  final double size;
-  final Color color;
+  final bool isSendingCode;
+  final int secondsUntilResend;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: color, blurRadius: size * 0.4)],
+    if (isSendingCode) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 6),
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF6B8FF8),
+          ),
+        ),
+      );
+    }
+
+    if (secondsUntilResend > 0) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Text(
+          '${secondsUntilResend}s',
+          style: const TextStyle(
+            color: Color(0xFFB6B8BF),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        minimumSize: Size.zero,
+        padding: EdgeInsets.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: const Text(
+        '发送',
+        style: TextStyle(
+          color: Color(0xFF6B8FF8),
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

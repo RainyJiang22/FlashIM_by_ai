@@ -26,6 +26,16 @@ class _AuthProfilePageState extends State<AuthProfilePage> {
     _profileFuture = _loadProfileViewData();
   }
 
+  Future<_AuthProfileViewData> _loadProfileViewData() async {
+    final token = await _repository.readToken();
+    if (token == null || token.isEmpty) {
+      throw const AuthMissingTokenException();
+    }
+
+    final profile = await _repository.fetchProfile();
+    return _AuthProfileViewData(profile: profile, token: token);
+  }
+
   Future<void> _logout() async {
     await _repository.logout();
     if (!mounted) {
@@ -45,16 +55,6 @@ class _AuthProfilePageState extends State<AuthProfilePage> {
       _profileFuture = future;
     });
     await future;
-  }
-
-  Future<_AuthProfileViewData> _loadProfileViewData() async {
-    final token = await _repository.readToken();
-    if (token == null || token.isEmpty) {
-      throw const AuthMissingTokenException();
-    }
-
-    final profile = await _repository.fetchProfile();
-    return _AuthProfileViewData(profile: profile, token: token);
   }
 
   Future<void> _returnToLoginWithLogout() async {
@@ -98,205 +98,105 @@ class _AuthProfilePageState extends State<AuthProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF08111A), Color(0xFF111827), Color(0xFF08131F)],
+      backgroundColor: const Color(0xFFFBF7FB),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFCDBBFF),
+        surfaceTintColor: const Color(0xFFCDBBFF),
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        toolbarHeight: 76,
+        titleSpacing: 18,
+        title: const Text(
+          '个人信息',
+          style: TextStyle(
+            color: Color(0xFF17171F),
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
           ),
         ),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight - 40),
-                  child: FutureBuilder<_AuthProfileViewData>(
-                    future: _profileFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF6EF7C8),
-                          ),
-                        );
-                      }
+      ),
+      body: FutureBuilder<_AuthProfileViewData>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF8D6CF6)),
+            );
+          }
 
-                      if (snapshot.hasError) {
-                        final error = snapshot.error!;
-                        return _AuthProfileErrorView(
-                          message: _readErrorMessage(error),
-                          actionLabel: _shouldForceLogout(error)
-                              ? '返回登录页'
-                              : '重试',
-                          onPressed: _shouldForceLogout(error)
-                              ? _returnToLoginWithLogout
-                              : _reload,
-                        );
-                      }
+          if (snapshot.hasError) {
+            final error = snapshot.error!;
+            return _AuthProfileErrorView(
+              message: _readErrorMessage(error),
+              actionLabel: _shouldForceLogout(error) ? '返回登录页' : '重试',
+              onPressed: _shouldForceLogout(error)
+                  ? _returnToLoginWithLogout
+                  : _reload,
+            );
+          }
 
-                      final viewData = snapshot.requireData;
-                      final profile = viewData.profile;
-                      return Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 620),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(36),
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xE1162032),
-                                  Color(0xF0101726),
-                                  Color(0xE3151520),
-                                ],
-                              ),
-                              border: Border.all(color: const Color(0xFF30415D)),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x52000000),
-                                  blurRadius: 42,
-                                  offset: Offset(0, 18),
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(28),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 72,
-                                        height: 72,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: const Color(0xFF7FF0D0),
-                                            width: 2,
-                                          ),
-                                          image: DecorationImage(
-                                            image: NetworkImage(profile.avatarUrl),
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 18),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              profile.nickname,
-                                              style: theme
-                                                  .textTheme
-                                                  .headlineMedium
-                                                  ?.copyWith(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.w800,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            const _ProfileTag(
-                                              label: '资料来自 /user/profile',
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 28),
-                                  _ProfileInfoRow(
-                                    label: '用户 ID',
-                                    value: profile.userId.toString(),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _ProfileInfoRow(
-                                    label: '手机号',
-                                    value: profile.phone,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _ProfileInfoRow(
-                                    label: '头像 URL',
-                                    value: profile.avatarUrl,
-                                    selectable: true,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  _ProfileInfoRow(
-                                    label: 'JWT Token',
-                                    value: viewData.token,
-                                    selectable: true,
-                                    monospace: true,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  const _ProfileInfoRow(
-                                    label: '登录状态',
-                                    value: 'Token 已保存，后续请求自动携带 Authorization',
-                                  ),
-                                  const SizedBox(height: 24),
-                                  LayoutBuilder(
-                                    builder: (context, actionConstraints) {
-                                      final useColumn =
-                                          actionConstraints.maxWidth < 420;
-                                      if (useColumn) {
-                                        return Column(
-                                          children: [
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: _RefreshButton(
-                                                onPressed: _reload,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: _LogoutButton(
-                                                onPressed: _logout,
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      }
-
-                                      return Row(
-                                        children: [
-                                          Expanded(
-                                            child: _RefreshButton(
-                                              onPressed: _reload,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: _LogoutButton(
-                                              onPressed: _logout,
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+          final viewData = snapshot.requireData;
+          final profile = viewData.profile;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 24, 22, 32),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  radius: 44,
+                  backgroundColor: const Color(0xFFE8DDFF),
+                  backgroundImage: NetworkImage(profile.avatarUrl),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  profile.phone,
+                  style: const TextStyle(
+                    color: Color(0xFF17171F),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+                const SizedBox(height: 6),
+                Text(
+                  'ID: ${profile.userId}',
+                  style: const TextStyle(
+                    color: Color(0xFFB2AEB9),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                _ProfileSummaryCard(profile: profile),
+                const SizedBox(height: 18),
+                _TokenCard(token: viewData.token),
+                const SizedBox(height: 26),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _logout,
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(54),
+                      side: const BorderSide(
+                        color: Color(0xFFE35D5D),
+                        width: 1.4,
+                      ),
+                      foregroundColor: const Color(0xFFE35D5D),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    child: const Text('退出登录'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -307,6 +207,145 @@ class _AuthProfileViewData {
 
   final AuthProfile profile;
   final String token;
+}
+
+class _ProfileSummaryCard extends StatelessWidget {
+  const _ProfileSummaryCard({required this.profile});
+
+  final AuthProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _ProfileSummaryRow(
+            icon: Icons.phone_in_talk_rounded,
+            label: '手机号',
+            value: profile.phone,
+          ),
+          const Divider(height: 1, indent: 68, endIndent: 18),
+          _ProfileSummaryRow(
+            icon: Icons.person_rounded,
+            label: '昵称',
+            value: profile.nickname,
+          ),
+          const Divider(height: 1, indent: 68, endIndent: 18),
+          _ProfileSummaryRow(
+            icon: Icons.badge_rounded,
+            label: '用户 ID',
+            value: profile.userId.toString(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileSummaryRow extends StatelessWidget {
+  const _ProfileSummaryRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Icon(icon, color: const Color(0xFF7354D5), size: 26),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Color(0xFF9D9AA7),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Color(0xFF2C2934),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TokenCard extends StatelessWidget {
+  const _TokenCard({required this.token});
+
+  final String token;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F4F4),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'JWT Token',
+              style: TextStyle(
+                color: Color(0xFF6E6B76),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SelectableText(
+              token,
+              style: const TextStyle(
+                color: Color(0xFF66636E),
+                fontSize: 12,
+                height: 1.55,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _AuthProfileErrorView extends StatelessWidget {
@@ -323,13 +362,19 @@ class _AuthProfileErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xD1121926),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFF33435E)),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -338,15 +383,15 @@ class _AuthProfileErrorView extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.error_outline_rounded,
-                  color: Color(0xFFFFC1AE),
-                  size: 34,
+                  color: Color(0xFFE35D5D),
+                  size: 36,
                 ),
                 const SizedBox(height: 14),
                 const Text(
                   '个人信息加载失败',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
+                    color: Color(0xFF2B2833),
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -355,155 +400,22 @@ class _AuthProfileErrorView extends StatelessWidget {
                   message,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: Color(0xFFB5C0D3),
-                    fontSize: 14,
+                    color: Color(0xFF86838C),
+                    fontSize: 15,
                     height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 20),
                 FilledButton(
                   onPressed: onPressed,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF8D6CF6),
+                    foregroundColor: Colors.white,
+                  ),
                   child: Text(actionLabel),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileInfoRow extends StatelessWidget {
-  const _ProfileInfoRow({
-    required this.label,
-    required this.value,
-    this.selectable = false,
-    this.monospace = false,
-  });
-
-  final String label;
-  final String value;
-  final bool selectable;
-  final bool monospace;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFF131B2A),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF2E3E59)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 92,
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Color(0xFF8FA0B8),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: selectable
-                  ? SelectableText(
-                      value,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        height: 1.45,
-                        fontFamily: monospace ? 'monospace' : null,
-                      ),
-                    )
-                  : Text(
-                      value,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        height: 1.45,
-                        fontFamily: monospace ? 'monospace' : null,
-                      ),
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RefreshButton extends StatelessWidget {
-  const _RefreshButton({required this.onPressed});
-
-  final Future<void> Function() onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: const Icon(Icons.refresh_rounded),
-      label: const Text('刷新资料'),
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(56),
-        foregroundColor: Colors.white,
-        side: const BorderSide(color: Color(0xFF435271)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-    );
-  }
-}
-
-class _LogoutButton extends StatelessWidget {
-  const _LogoutButton({required this.onPressed});
-
-  final Future<void> Function() onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton.icon(
-      onPressed: onPressed,
-      icon: const Icon(Icons.logout_rounded),
-      label: const Text('退出登录'),
-      style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(56),
-        backgroundColor: const Color(0xFFFFD4C8),
-        foregroundColor: const Color(0xFF32120B),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        textStyle: const TextStyle(fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-}
-
-class _ProfileTag extends StatelessWidget {
-  const _ProfileTag({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0x1429F0B5),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFF2B5747)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF93EFD2),
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),

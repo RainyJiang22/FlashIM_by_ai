@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'demos/auth/presentation/auth_playground_page.dart';
 import 'demos/conversation/presentation/conversation_playground_page.dart';
 import 'demos/heartbeat/presentation/heartbeat_playground_page.dart';
+import 'demos/im_playground/presentation/im_playground_page.dart';
 import 'demos/fireworks/fireworks_show_page.dart';
 
 class PlaygroundHomePage extends StatelessWidget {
@@ -86,6 +87,22 @@ class PlaygroundHomePage extends StatelessWidget {
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const AuthPlaygroundPage(),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 18),
+                _PlaygroundEntryCard(
+                  title: 'IM 聊天室整合',
+                  description: '把 JWT 登录和聊天室 WebSocket 连接真正接起来，包含聊天室和我的双 Tab。',
+                  icon: Icons.forum_outlined,
+                  buttonLabel: '打开 IM 聊天室',
+                  buttonColor: const Color(0xFF88F09C),
+                  buttonForegroundColor: const Color(0xFF0E2B12),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ImPlaygroundPage(),
                       ),
                     );
                   },

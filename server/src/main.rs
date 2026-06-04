@@ -1,14 +1,14 @@
 use axum::{
     Json, Router,
     extract::{
-        State,
+        Query, State,
         ws::{Message, WebSocket, WebSocketUpgrade},
     },
     http::{HeaderMap, StatusCode, header},
     response::IntoResponse,
     routing::{get, post},
 };
-use futures_util::StreamExt;
+use futures_util::{SinkExt, StreamExt};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use local_ip_address::local_ip;
 use rand::Rng;
@@ -22,7 +22,10 @@ use std::{
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use tokio::{net::TcpListener, sync::RwLock};
+use tokio::{
+    net::TcpListener,
+    sync::{RwLock, mpsc},
+};
 
 const HOST: &str = "0.0.0.0";
 const PORT: u16 = 9600;
@@ -37,7 +40,9 @@ struct AppState {
     sms_codes: Arc<RwLock<HashMap<String, String>>>,
     users_by_id: Arc<RwLock<HashMap<u64, UserRecord>>>,
     user_ids_by_phone: Arc<RwLock<HashMap<String, u64>>>,
+    chat_connections: Arc<RwLock<HashMap<usize, ChatRoomConnection>>>,
     next_user_id: Arc<AtomicU64>,
+    next_chat_message_id: Arc<AtomicU64>,
     jwt_secret: Arc<String>,
 }
 
@@ -47,6 +52,11 @@ struct UserRecord {
     nickname: String,
     avatar: String,
     phone: String,
+}
+
+#[derive(Clone)]
+struct ChatRoomConnection {
+    sender: mpsc::UnboundedSender<String>,
 }
 
 #[derive(Serialize)]
@@ -105,13 +115,51 @@ struct AuthClaims {
     exp: usize,
 }
 
+#[derive(Deserialize)]
+struct ChatRoomWsQuery {
+    token: Option<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+enum ChatRoomClientEvent {
+    Ping,
+    Chat { text: String },
+}
+
+#[derive(Serialize, Clone)]
+#[serde(tag = "type", rename_all = "snake_case")]
+enum ChatRoomServerEvent {
+    AuthReady {
+        user_id: u64,
+        nickname: String,
+        avatar: String,
+    },
+    Chat {
+        message_id: u64,
+        user_id: u64,
+        nickname: String,
+        avatar: String,
+        text: String,
+        sent_at: u64,
+    },
+    Pong {
+        sent_at: u64,
+    },
+    Error {
+        message: String,
+    },
+}
+
 impl AppState {
     fn new(jwt_secret: impl Into<String>) -> Self {
         Self {
             sms_codes: Arc::new(RwLock::new(HashMap::new())),
             users_by_id: Arc::new(RwLock::new(HashMap::new())),
             user_ids_by_phone: Arc::new(RwLock::new(HashMap::new())),
+            chat_connections: Arc::new(RwLock::new(HashMap::new())),
             next_user_id: Arc::new(AtomicU64::new(1)),
+            next_chat_message_id: Arc::new(AtomicU64::new(1)),
             jwt_secret: Arc::new(jwt_secret.into()),
         }
     }
@@ -135,6 +183,7 @@ fn app(state: SharedState) -> Router {
         .route("/v", get(version))
         .route("/conversation", get(conversations))
         .route("/ws", get(websocket_handler))
+        .route("/chat_room/ws", get(chat_room_websocket_handler))
         .route("/auth/sms", post(send_sms_code))
         .route("/auth/login", post(login))
         .route("/user/profile", get(user_profile))
@@ -367,6 +416,174 @@ async fn handle_websocket(mut socket: WebSocket, connection_id: usize) {
     println!("ws disconnected: connection_id={connection_id}");
 }
 
+async fn chat_room_websocket_handler(
+    State(state): State<SharedState>,
+    Query(query): Query<ChatRoomWsQuery>,
+    websocket: WebSocketUpgrade,
+) -> impl IntoResponse {
+    let token = match query.token {
+        Some(token) if !token.trim().is_empty() => token,
+        _ => return json_error(StatusCode::UNAUTHORIZED, "missing token"),
+    };
+
+    let claims = match decode_token(state.as_ref(), &token) {
+        Ok(claims) => claims,
+        Err(_) => return json_error(StatusCode::UNAUTHORIZED, "invalid token"),
+    };
+
+    let user = match state.users_by_id.read().await.get(&claims.user_id).cloned() {
+        Some(user) => user,
+        None => return json_error(StatusCode::UNAUTHORIZED, "invalid token"),
+    };
+
+    let connection_id = NEXT_CONNECTION_ID.fetch_add(1, Ordering::Relaxed);
+    websocket.on_upgrade(move |socket| handle_chat_room_socket(socket, connection_id, state, user))
+}
+
+async fn handle_chat_room_socket(
+    socket: WebSocket,
+    connection_id: usize,
+    state: SharedState,
+    user: UserRecord,
+) {
+    println!(
+        "chat_room ws connected: connection_id={connection_id}, user_id={}",
+        user.user_id
+    );
+
+    let (mut ws_sender, mut ws_receiver) = socket.split();
+    let (outgoing_tx, mut outgoing_rx) = mpsc::unbounded_channel::<String>();
+
+    state.chat_connections.write().await.insert(
+        connection_id,
+        ChatRoomConnection {
+            sender: outgoing_tx.clone(),
+        },
+    );
+
+    let write_task = tokio::spawn(async move {
+        while let Some(payload) = outgoing_rx.recv().await {
+            if ws_sender.send(Message::Text(payload.into())).await.is_err() {
+                break;
+            }
+        }
+    });
+
+    send_to_connection(
+        &outgoing_tx,
+        ChatRoomServerEvent::AuthReady {
+            user_id: user.user_id,
+            nickname: user.nickname.clone(),
+            avatar: user.avatar.clone(),
+        },
+    );
+
+    while let Some(result) = ws_receiver.next().await {
+        match result {
+            Ok(Message::Text(text)) => match serde_json::from_str::<ChatRoomClientEvent>(&text) {
+                Ok(ChatRoomClientEvent::Ping) => {
+                    send_to_connection(
+                        &outgoing_tx,
+                        ChatRoomServerEvent::Pong {
+                            sent_at: unix_timestamp(),
+                        },
+                    );
+                }
+                Ok(ChatRoomClientEvent::Chat { text }) => {
+                    let content = text.trim().to_string();
+                    if content.is_empty() {
+                        send_to_connection(
+                            &outgoing_tx,
+                            ChatRoomServerEvent::Error {
+                                message: "chat message is empty".to_string(),
+                            },
+                        );
+                        continue;
+                    }
+
+                    broadcast_chat_room_message(state.as_ref(), &user, content).await;
+                }
+                Err(_) => {
+                    send_to_connection(
+                        &outgoing_tx,
+                        ChatRoomServerEvent::Error {
+                            message: "unsupported message payload".to_string(),
+                        },
+                    );
+                }
+            },
+            Ok(Message::Close(_)) => break,
+            Ok(_) => {}
+            Err(error) => {
+                println!(
+                    "chat_room ws receive failed: connection_id={connection_id}, user_id={}, error={error}",
+                    user.user_id
+                );
+                break;
+            }
+        }
+    }
+
+    state.chat_connections.write().await.remove(&connection_id);
+
+    write_task.abort();
+
+    println!(
+        "chat_room ws disconnected: connection_id={connection_id}, user_id={}",
+        user.user_id
+    );
+}
+
+async fn broadcast_chat_room_message(state: &AppState, user: &UserRecord, text: String) {
+    let message_id = state.next_chat_message_id.fetch_add(1, Ordering::Relaxed);
+    let payload = serialize_chat_room_event(ChatRoomServerEvent::Chat {
+        message_id,
+        user_id: user.user_id,
+        nickname: user.nickname.clone(),
+        avatar: user.avatar.clone(),
+        text,
+        sent_at: unix_timestamp(),
+    });
+
+    broadcast_chat_payload(state, payload, None).await;
+}
+
+async fn broadcast_chat_payload(state: &AppState, payload: String, exclude: Option<usize>) {
+    let connections: Vec<(usize, ChatRoomConnection)> = state
+        .chat_connections
+        .read()
+        .await
+        .iter()
+        .map(|(connection_id, connection)| (*connection_id, connection.clone()))
+        .collect();
+
+    let mut stale_connections = Vec::new();
+    for (connection_id, connection) in connections {
+        if exclude == Some(connection_id) {
+            continue;
+        }
+
+        if connection.sender.send(payload.clone()).is_err() {
+            stale_connections.push(connection_id);
+        }
+    }
+
+    if !stale_connections.is_empty() {
+        let mut guard = state.chat_connections.write().await;
+        for connection_id in stale_connections {
+            guard.remove(&connection_id);
+        }
+    }
+}
+
+fn send_to_connection(sender: &mpsc::UnboundedSender<String>, event: ChatRoomServerEvent) {
+    let _ = sender.send(serialize_chat_room_event(event));
+}
+
+fn serialize_chat_room_event(event: ChatRoomServerEvent) -> String {
+    serde_json::to_string(&event).expect("chat_room event should serialize")
+}
+
 fn utf8_json<T>(json: Json<T>) -> impl IntoResponse
 where
     Json<T>: IntoResponse,
@@ -481,6 +698,7 @@ mod tests {
         body::{Body, to_bytes},
         http::{Request, StatusCode},
     };
+    use tokio_tungstenite::{connect_async, tungstenite::Message as TungsteniteMessage};
     use tower::ServiceExt;
 
     #[tokio::test]
@@ -567,5 +785,84 @@ mod tests {
             .unwrap();
         let invalid_token_response = app.oneshot(invalid_token_request).await.unwrap();
         assert_eq!(invalid_token_response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn chat_room_websocket_requires_valid_token() {
+        let state = Arc::new(AppState::new("test-secret"));
+        let app = app(state);
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server_task = tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+
+        let url = format!("ws://{address}/chat_room/ws?token=invalid-token");
+        let error = connect_async(url).await.expect_err("handshake should fail");
+        assert!(error.to_string().contains("401"));
+
+        server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn chat_room_websocket_supports_auth_ping_and_chat() {
+        let state = Arc::new(AppState::new("test-secret"));
+        let user = find_or_create_user(state.as_ref(), "13800138000").await;
+        let token = sign_token(state.as_ref(), user.user_id).unwrap();
+        let app = app(state.clone());
+
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server_task = tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+
+        let url = format!("ws://{address}/chat_room/ws?token={token}");
+        let (mut stream, _) = connect_async(url).await.unwrap();
+
+        let auth_ready = next_text_message(&mut stream).await;
+        assert!(auth_ready.contains("\"type\":\"auth_ready\""));
+        assert!(auth_ready.contains("\"user_id\":1"));
+
+        stream
+            .send(TungsteniteMessage::Text(
+                serde_json::json!({ "type": "ping" }).to_string().into(),
+            ))
+            .await
+            .unwrap();
+        let pong_message = next_text_message(&mut stream).await;
+        assert!(pong_message.contains("\"type\":\"pong\""));
+
+        stream
+            .send(TungsteniteMessage::Text(
+                serde_json::json!({ "type": "chat", "text": "hello chat room" })
+                    .to_string()
+                    .into(),
+            ))
+            .await
+            .unwrap();
+        let user_chat = next_text_message(&mut stream).await;
+        assert!(user_chat.contains("\"type\":\"chat\""));
+        assert!(user_chat.contains("\"text\":\"hello chat room\""));
+        assert!(user_chat.contains("\"user_id\":1"));
+
+        server_task.abort();
+    }
+
+    async fn next_text_message(
+        stream: &mut tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
+    ) -> String {
+        let message = tokio::time::timeout(Duration::from_secs(3), stream.next())
+            .await
+            .expect("expected websocket message")
+            .expect("stream should stay open")
+            .expect("message should be ok");
+
+        match message {
+            TungsteniteMessage::Text(text) => text.to_string(),
+            other => panic!("expected text message, got {other:?}"),
+        }
     }
 }

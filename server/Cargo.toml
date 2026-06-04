@@ -14,4 +14,5 @@ serde_json = "1.0.145"
 tokio = { version = "1.52.3", features = ["full"] }
 
 [dev-dependencies]
+tokio-tungstenite = "0.29.0"
 tower = { version = "0.5.2", features = ["util"] }

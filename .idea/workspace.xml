@@ -4,10 +4,25 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(login):添加后端模拟认证接口以及相关文档">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_profile_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_profile_page.dart" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="refactor(login):调整前端模拟认证ui">
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/data/chat_room_api.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/data/chat_room_repository.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/data/models/chat_room_socket_frame.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/domain/chat_room_connection_status.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/domain/chat_room_event.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/domain/chat_room_message.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/presentation/im_playground_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/macos/Podfile.lock" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/test/playground/im_playground/data/chat_room_api_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/test/playground/im_playground/data/chat_room_repository_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/develop/report/im-playground-jwt-ws-integration-report.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/research/project/websocket_jwt_auth.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/playground_home_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/playground_home_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner.xcworkspace/contents.xcworkspacedata" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner.xcworkspace/contents.xcworkspacedata" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -144,7 +159,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780494670013</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="refactor(login):调整前端模拟认证ui">
+      <option name="closed" value="true" />
+      <created>1780540068281</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1780540068281</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -167,6 +190,7 @@
     <MESSAGE value="feat(client): client 烟花秀" />
     <MESSAGE value="feat(playground): build conversation list flow from API to chat-style view" />
     <MESSAGE value="feat(login):添加后端模拟认证接口以及相关文档" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(login):添加后端模拟认证接口以及相关文档" />
+    <MESSAGE value="refactor(login):调整前端模拟认证ui" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactor(login):调整前端模拟认证ui" />
   </component>
 </project>

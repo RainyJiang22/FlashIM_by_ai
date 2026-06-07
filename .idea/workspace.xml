@@ -4,44 +4,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(playground):整合JWT用户认证与聊天室">
-      <change afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/domain/auth_login_type.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/test/playground/auth/presentation/auth_playground_page_test.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/develop/modules/rust/01_mod_use_pub_crate_super.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/auth/jwt.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/auth/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/auth/password.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/config.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/error.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/models/auth.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/models/chat.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/models/common.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/models/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/models/user.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/response.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/routes/auth.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/routes/conversation.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/routes/health.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/routes/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/routes/user.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/routes/ws.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/services/auth_service.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/services/chat_room_service.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/services/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/services/user_service.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/state.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/store/memory.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/store/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/data/auth_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/data/auth_api.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/data/auth_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/data/auth_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/presentation/im_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/presentation/im_playground_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/playground/auth/data/auth_api_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/playground/auth/data/auth_api_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/playground/auth/data/auth_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/playground/auth/data/auth_repository_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main.rs" afterDir="false" />
-    </list>
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -201,7 +164,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780544690323</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画">
+      <option name="closed" value="true" />
+      <created>1780827941620</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1780827941620</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -226,6 +197,7 @@
     <MESSAGE value="feat(login):添加后端模拟认证接口以及相关文档" />
     <MESSAGE value="refactor(login):调整前端模拟认证ui" />
     <MESSAGE value="feat(playground):整合JWT用户认证与聊天室" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(playground):整合JWT用户认证与聊天室" />
+    <MESSAGE value="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
   </component>
 </project>

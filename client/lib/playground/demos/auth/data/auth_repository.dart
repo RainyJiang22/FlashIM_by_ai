@@ -12,7 +12,15 @@ abstract interface class AuthRepository {
 
   Future<SmsCodeInfo> sendSmsCode(String phone);
 
-  Future<AuthSession> login({required String phone, required String code});
+  Future<AuthSession> loginWithPassword({
+    required String account,
+    required String password,
+  });
+
+  Future<AuthSession> loginWithSmsCode({
+    required String phone,
+    required String code,
+  });
 
   Future<AuthProfile> fetchProfile();
 
@@ -41,11 +49,24 @@ class PlaygroundAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthSession> login({
+  Future<AuthSession> loginWithPassword({
+    required String account,
+    required String password,
+  }) async {
+    final dto = await _request.loginWithPassword(
+      account: account,
+      password: password,
+    );
+    await _sessionStore.saveToken(dto.token);
+    return _mapSession(dto);
+  }
+
+  @override
+  Future<AuthSession> loginWithSmsCode({
     required String phone,
     required String code,
   }) async {
-    final dto = await _request.login(phone: phone, code: code);
+    final dto = await _request.loginWithSmsCode(phone: phone, code: code);
     await _sessionStore.saveToken(dto.token);
     return _mapSession(dto);
   }

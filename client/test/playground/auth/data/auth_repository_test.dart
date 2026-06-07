@@ -17,7 +17,7 @@ void main() {
     );
 
     final sms = await repository.sendSmsCode('13800138000');
-    final session = await repository.login(
+    final session = await repository.loginWithSmsCode(
       phone: '13800138000',
       code: '654321',
     );
@@ -27,15 +27,41 @@ void main() {
     expect(session.token, 'jwt-token');
     expect(await sessionStore.readToken(), 'jwt-token');
     expect(request.lastToken, 'jwt-token');
+    expect(request.lastSmsPhone, '13800138000');
+    expect(request.lastSmsCode, '654321');
     expect(profile.avatarUrl, 'https://picsum.photos/seed/demo-user/120/120');
 
     await repository.logout();
     expect(await sessionStore.readToken(), isNull);
   });
+
+  test('repository saves token for password login', () async {
+    final request = _FakeAuthRequest();
+    final sessionStore = _InMemoryAuthSessionStore();
+    final repository = PlaygroundAuthRepository(
+      request: request,
+      sessionStore: sessionStore,
+    );
+
+    final session = await repository.loginWithPassword(
+      account: 'rainy',
+      password: 'rainy123',
+    );
+
+    expect(session.token, 'password-jwt-token');
+    expect(session.userId, 1001);
+    expect(await sessionStore.readToken(), 'password-jwt-token');
+    expect(request.lastPasswordAccount, 'rainy');
+    expect(request.lastPasswordValue, 'rainy123');
+  });
 }
 
 class _FakeAuthRequest implements AuthRequest {
   String? lastToken;
+  String? lastPasswordAccount;
+  String? lastPasswordValue;
+  String? lastSmsPhone;
+  String? lastSmsCode;
 
   @override
   Future<AuthProfileDto> fetchProfile({required String token}) async {
@@ -49,10 +75,22 @@ class _FakeAuthRequest implements AuthRequest {
   }
 
   @override
-  Future<AuthSessionDto> login({
+  Future<AuthSessionDto> loginWithPassword({
+    required String account,
+    required String password,
+  }) async {
+    lastPasswordAccount = account;
+    lastPasswordValue = password;
+    return const AuthSessionDto(token: 'password-jwt-token', userId: 1001);
+  }
+
+  @override
+  Future<AuthSessionDto> loginWithSmsCode({
     required String phone,
     required String code,
   }) async {
+    lastSmsPhone = phone;
+    lastSmsCode = code;
     return const AuthSessionDto(token: 'jwt-token', userId: 7);
   }
 

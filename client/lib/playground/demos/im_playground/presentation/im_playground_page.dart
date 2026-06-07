@@ -8,8 +8,10 @@ import '../../../../core/network/dio_factory.dart';
 import '../../auth/data/auth_api.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/data/auth_session_store.dart';
+import '../../auth/domain/auth_login_type.dart';
 import '../../auth/domain/auth_profile.dart';
 import '../../auth/domain/sms_code_info.dart';
+import '../../auth/presentation/widgets/auth_login_mode_switch.dart';
 import '../data/chat_room_api.dart';
 import '../data/chat_room_repository.dart';
 import '../domain/chat_room_connection_status.dart';
@@ -120,20 +122,31 @@ class _ImLoginViewState extends State<_ImLoginView> {
 
   late final TextEditingController _phoneController;
   late final TextEditingController _codeController;
+  late final TextEditingController _accountController;
+  late final TextEditingController _passwordController;
 
   Timer? _countdownTimer;
   bool _isSendingCode = false;
   bool _isSubmitting = false;
   bool _agreed = true;
+  AuthLoginType _loginType = AuthLoginType.smsCode;
   int _secondsUntilResend = 0;
   String? _inlineError;
   SmsCodeInfo? _latestSmsCode;
 
   bool get _canLogin {
+    final hasCredentials = switch (_loginType) {
+      AuthLoginType.smsCode =>
+        _phoneController.text.trim().isNotEmpty &&
+            _codeController.text.trim().isNotEmpty,
+      AuthLoginType.password =>
+        _accountController.text.trim().isNotEmpty &&
+            _passwordController.text.trim().isNotEmpty,
+    };
+
     return !_isSubmitting &&
         _agreed &&
-        _phoneController.text.trim().isNotEmpty &&
-        _codeController.text.trim().isNotEmpty;
+        hasCredentials;
   }
 
   @override
@@ -141,8 +154,12 @@ class _ImLoginViewState extends State<_ImLoginView> {
     super.initState();
     _phoneController = TextEditingController(text: '13800138000');
     _codeController = TextEditingController();
+    _accountController = TextEditingController(text: 'rainy');
+    _passwordController = TextEditingController(text: 'rainy123');
     _phoneController.addListener(_onInputChanged);
     _codeController.addListener(_onInputChanged);
+    _accountController.addListener(_onInputChanged);
+    _passwordController.addListener(_onInputChanged);
   }
 
   @override
@@ -152,6 +169,12 @@ class _ImLoginViewState extends State<_ImLoginView> {
       ..removeListener(_onInputChanged)
       ..dispose();
     _codeController
+      ..removeListener(_onInputChanged)
+      ..dispose();
+    _accountController
+      ..removeListener(_onInputChanged)
+      ..dispose();
+    _passwordController
       ..removeListener(_onInputChanged)
       ..dispose();
     super.dispose();
@@ -212,10 +235,20 @@ class _ImLoginViewState extends State<_ImLoginView> {
   Future<void> _login() async {
     final phone = _phoneController.text.trim();
     final code = _codeController.text.trim();
+    final account = _accountController.text.trim();
+    final password = _passwordController.text.trim();
 
-    if (phone.isEmpty || code.isEmpty) {
+    if (_loginType == AuthLoginType.smsCode && (phone.isEmpty || code.isEmpty)) {
       setState(() {
         _inlineError = '请输入手机号和验证码';
+      });
+      return;
+    }
+
+    if (_loginType == AuthLoginType.password &&
+        (account.isEmpty || password.isEmpty)) {
+      setState(() {
+        _inlineError = '请输入账号和密码';
       });
       return;
     }
@@ -233,10 +266,16 @@ class _ImLoginViewState extends State<_ImLoginView> {
     });
 
     try {
-      final session = await widget.authRepository.login(
-        phone: phone,
-        code: code,
-      );
+      final session = switch (_loginType) {
+        AuthLoginType.smsCode => await widget.authRepository.loginWithSmsCode(
+          phone: phone,
+          code: code,
+        ),
+        AuthLoginType.password => await widget.authRepository.loginWithPassword(
+          account: account,
+          password: password,
+        ),
+      };
       if (!mounted) {
         return;
       }
@@ -255,6 +294,17 @@ class _ImLoginViewState extends State<_ImLoginView> {
         });
       }
     }
+  }
+
+  void _handleLoginTypeChanged(AuthLoginType value) {
+    if (_loginType == value) {
+      return;
+    }
+
+    setState(() {
+      _loginType = value;
+      _inlineError = null;
+    });
   }
 
   void _startCountdown() {
@@ -291,6 +341,35 @@ class _ImLoginViewState extends State<_ImLoginView> {
       return error.message ?? '请求失败，请稍后重试';
     }
     return error.toString();
+  }
+
+  Widget _buildModeHint() {
+    if (_loginType == AuthLoginType.password) {
+      return const Padding(
+        key: ValueKey('im-password-hint'),
+        padding: EdgeInsets.only(top: 10),
+        child: Text(
+          'playground 体验账号：rainy/rainy123、alice/alice123、bob/bob123',
+          style: TextStyle(color: Color(0xFF9FA1AB), fontSize: 11),
+        ),
+      );
+    }
+
+    if (_latestSmsCode == null) {
+      return const SizedBox.shrink(key: ValueKey('im-empty-hint'));
+    }
+
+    return Padding(
+      key: const ValueKey('im-sms-code-hint'),
+      padding: const EdgeInsets.only(top: 10),
+      child: Text(
+        'playground 验证码：${_latestSmsCode!.code}',
+        style: const TextStyle(
+          color: Color(0xFF9FA1AB),
+          fontSize: 11,
+        ),
+      ),
+    );
   }
 
   @override
@@ -340,72 +419,146 @@ class _ImLoginViewState extends State<_ImLoginView> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 54),
-                _UnderlineInputRow(
-                  leading: const Text(
-                    '+86',
-                    style: TextStyle(
-                      color: Color(0xFF17171F),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    style: const TextStyle(
-                      color: Color(0xFF17171F),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    decoration: const InputDecoration(
-                      hintText: '请输入手机号',
-                      border: InputBorder.none,
-                      isDense: true,
-                      hintStyle: TextStyle(
-                        color: Color(0xFFB1B2BA),
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 24),
+                AuthLoginModeSwitch(
+                  loginType: _loginType,
+                  onChanged: _handleLoginTypeChanged,
                 ),
-                const SizedBox(height: 20),
-                _UnderlineInputRow(
-                  leading: const Text(
-                    '验证码',
-                    style: TextStyle(
-                      color: Color(0xFF17171F),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _codeController,
-                    keyboardType: TextInputType.number,
-                    style: const TextStyle(
-                      color: Color(0xFF17171F),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: '请输入 6 位验证码',
-                      border: InputBorder.none,
-                      isDense: true,
-                      hintStyle: const TextStyle(
-                        color: Color(0xFFB1B2BA),
-                        fontSize: 18,
-                      ),
-                      suffixIconConstraints: const BoxConstraints(
-                        minWidth: 56,
-                        minHeight: 24,
-                      ),
-                      suffixIcon: _SendCodeAction(
-                        isSendingCode: _isSendingCode,
-                        secondsUntilResend: _secondsUntilResend,
-                        onTap: _sendCode,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 54),
+                _AnimatedLoginSection(
+                  child: _loginType == AuthLoginType.smsCode
+                      ? _ImCredentialFields(
+                          key: const ValueKey('im-sms-code-fields'),
+                          children: [
+                            _UnderlineInputRow(
+                              leading: const Text(
+                                '+86',
+                                style: TextStyle(
+                                  color: Color(0xFF17171F),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _phoneController,
+                                keyboardType: TextInputType.phone,
+                                style: const TextStyle(
+                                  color: Color(0xFF17171F),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText: '请输入手机号',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  hintStyle: TextStyle(
+                                    color: Color(0xFFB1B2BA),
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _UnderlineInputRow(
+                              leading: const Text(
+                                '验证码',
+                                style: TextStyle(
+                                  color: Color(0xFF17171F),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _codeController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(
+                                  color: Color(0xFF17171F),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: '请输入 6 位验证码',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  hintStyle: const TextStyle(
+                                    color: Color(0xFFB1B2BA),
+                                    fontSize: 18,
+                                  ),
+                                  suffixIconConstraints: const BoxConstraints(
+                                    minWidth: 56,
+                                    minHeight: 24,
+                                  ),
+                                  suffixIcon: _SendCodeAction(
+                                    isSendingCode: _isSendingCode,
+                                    secondsUntilResend: _secondsUntilResend,
+                                    onTap: _sendCode,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : _ImCredentialFields(
+                          key: const ValueKey('im-password-fields'),
+                          children: [
+                            _UnderlineInputRow(
+                              leading: const Text(
+                                '账号',
+                                style: TextStyle(
+                                  color: Color(0xFF17171F),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _accountController,
+                                style: const TextStyle(
+                                  color: Color(0xFF17171F),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText: '请输入账号，例如 rainy',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  hintStyle: TextStyle(
+                                    color: Color(0xFFB1B2BA),
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _UnderlineInputRow(
+                              leading: const Text(
+                                '密码',
+                                style: TextStyle(
+                                  color: Color(0xFF17171F),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              child: TextField(
+                                controller: _passwordController,
+                                obscureText: true,
+                                style: const TextStyle(
+                                  color: Color(0xFF17171F),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText: '请输入密码',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  hintStyle: TextStyle(
+                                    color: Color(0xFFB1B2BA),
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
                 const SizedBox(height: 18),
                 Row(
@@ -452,22 +605,20 @@ class _ImLoginViewState extends State<_ImLoginView> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            TextSpan(text: '，未注册绑定的手机号验证成功后将自动注册'),
+                            TextSpan(
+                              text: _loginType == AuthLoginType.smsCode
+                                  ? '，未注册绑定的手机号验证成功后将自动注册'
+                                  : '，password 模式使用内置体验账号即可进入',
+                            ),
                           ],
                         ),
                       ),
                     ),
                   ],
                 ),
-                if (_latestSmsCode != null) const SizedBox(height: 10),
-                if (_latestSmsCode != null)
-                  Text(
-                    'playground 验证码：${_latestSmsCode!.code}',
-                    style: const TextStyle(
-                      color: Color(0xFF9FA1AB),
-                      fontSize: 11,
-                    ),
-                  ),
+                _AnimatedLoginHintSection(
+                  child: _buildModeHint(),
+                ),
                 if (_inlineError != null) const SizedBox(height: 10),
                 if (_inlineError != null)
                   Text(
@@ -516,6 +667,93 @@ class _ImLoginViewState extends State<_ImLoginView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AnimatedLoginSection extends StatelessWidget {
+  const _AnimatedLoginSection({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 260),
+        reverseDuration: const Duration(milliseconds: 220),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final offset = Tween<Offset>(
+            begin: const Offset(0, 0.035),
+            end: Offset.zero,
+          ).animate(animation);
+
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(position: offset, child: child),
+          );
+        },
+        layoutBuilder: (currentChild, previousChildren) {
+          return AnimatedSize(
+            duration: const Duration(milliseconds: 260),
+            reverseDuration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: Stack(
+              alignment: Alignment.topCenter,
+              children: [
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            ),
+          );
+        },
+        child: child,
+      ),
+    );
+  }
+}
+
+class _AnimatedLoginHintSection extends StatelessWidget {
+  const _AnimatedLoginHintSection({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      reverseDuration: const Duration(milliseconds: 180),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SizeTransition(
+            sizeFactor: animation,
+            axisAlignment: -1,
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+class _ImCredentialFields extends StatelessWidget {
+  const _ImCredentialFields({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
     );
   }
 }

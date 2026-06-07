@@ -7,7 +7,15 @@ import 'models/sms_code_dto.dart';
 abstract interface class AuthRequest {
   Future<SmsCodeDto> sendSmsCode(String phone);
 
-  Future<AuthSessionDto> login({required String phone, required String code});
+  Future<AuthSessionDto> loginWithPassword({
+    required String account,
+    required String password,
+  });
+
+  Future<AuthSessionDto> loginWithSmsCode({
+    required String phone,
+    required String code,
+  });
 
   Future<AuthProfileDto> fetchProfile({required String token});
 }
@@ -30,13 +38,34 @@ class DioAuthApi implements AuthRequest {
   }
 
   @override
-  Future<AuthSessionDto> login({
+  Future<AuthSessionDto> loginWithPassword({
+    required String account,
+    required String password,
+  }) async {
+    final response = await _dio.post<dynamic>(
+      '/auth/login',
+      data: <String, String>{
+        'login_type': 'password',
+        'account': account,
+        'password': password,
+      },
+    );
+
+    return AuthSessionDto.fromJson(_readJsonMap(response.data));
+  }
+
+  @override
+  Future<AuthSessionDto> loginWithSmsCode({
     required String phone,
     required String code,
   }) async {
     final response = await _dio.post<dynamic>(
       '/auth/login',
-      data: <String, String>{'phone': phone, 'code': code},
+      data: <String, String>{
+        'login_type': 'sms_code',
+        'phone': phone,
+        'code': code,
+      },
     );
 
     return AuthSessionDto.fromJson(_readJsonMap(response.data));

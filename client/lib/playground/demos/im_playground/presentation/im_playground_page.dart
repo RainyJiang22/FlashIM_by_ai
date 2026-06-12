@@ -144,9 +144,7 @@ class _ImLoginViewState extends State<_ImLoginView> {
             _passwordController.text.trim().isNotEmpty,
     };
 
-    return !_isSubmitting &&
-        _agreed &&
-        hasCredentials;
+    return !_isSubmitting && _agreed && hasCredentials;
   }
 
   @override
@@ -238,7 +236,8 @@ class _ImLoginViewState extends State<_ImLoginView> {
     final account = _accountController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (_loginType == AuthLoginType.smsCode && (phone.isEmpty || code.isEmpty)) {
+    if (_loginType == AuthLoginType.smsCode &&
+        (phone.isEmpty || code.isEmpty)) {
       setState(() {
         _inlineError = '请输入手机号和验证码';
       });
@@ -364,10 +363,7 @@ class _ImLoginViewState extends State<_ImLoginView> {
       padding: const EdgeInsets.only(top: 10),
       child: Text(
         'playground 验证码：${_latestSmsCode!.code}',
-        style: const TextStyle(
-          color: Color(0xFF9FA1AB),
-          fontSize: 11,
-        ),
+        style: const TextStyle(color: Color(0xFF9FA1AB), fontSize: 11),
       ),
     );
   }
@@ -616,9 +612,7 @@ class _ImLoginViewState extends State<_ImLoginView> {
                     ),
                   ],
                 ),
-                _AnimatedLoginHintSection(
-                  child: _buildModeHint(),
-                ),
+                _AnimatedLoginHintSection(child: _buildModeHint()),
                 if (_inlineError != null) const SizedBox(height: 10),
                 if (_inlineError != null)
                   Text(

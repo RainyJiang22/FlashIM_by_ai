@@ -52,9 +52,7 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
             _passwordController.text.trim().isNotEmpty,
     };
 
-    return !_isSubmitting &&
-        _agreedToTerms &&
-        hasCredentials;
+    return !_isSubmitting && _agreedToTerms && hasCredentials;
   }
 
   @override
@@ -126,7 +124,8 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
     final account = _accountController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (_loginType == AuthLoginType.smsCode && (phone.isEmpty || code.isEmpty)) {
+    if (_loginType == AuthLoginType.smsCode &&
+        (phone.isEmpty || code.isEmpty)) {
       setState(() {
         _inlineError = '请输入手机号和验证码';
       });
@@ -290,10 +289,7 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
         padding: EdgeInsets.only(top: 10),
         child: Text(
           'playground 体验账号：rainy/rainy123、alice/alice123、bob/bob123',
-          style: TextStyle(
-            color: Color(0xFF9FA1AB),
-            fontSize: 11,
-          ),
+          style: TextStyle(color: Color(0xFF9FA1AB), fontSize: 11),
         ),
       );
     }
@@ -307,10 +303,7 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
       padding: const EdgeInsets.only(top: 10),
       child: Text(
         'playground 验证码：${_latestSmsCode!.code}',
-        style: const TextStyle(
-          color: Color(0xFF9FA1AB),
-          fontSize: 11,
-        ),
+        style: const TextStyle(color: Color(0xFF9FA1AB), fontSize: 11),
       ),
     );
   }
@@ -440,7 +433,8 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
                                             ),
                                         suffixIcon: _AuthCountdownAction(
                                           isSendingCode: _isSendingCode,
-                                          secondsUntilResend: _secondsUntilResend,
+                                          secondsUntilResend:
+                                              _secondsUntilResend,
                                           onTap: _sendCode,
                                         ),
                                       ),
@@ -568,9 +562,7 @@ class _AuthPlaygroundPageState extends State<AuthPlaygroundPage> {
                           ),
                         ],
                       ),
-                      _AnimatedHintSection(
-                        child: _buildModeHint(),
-                      ),
+                      _AnimatedHintSection(child: _buildModeHint()),
                       if (_inlineError != null) const SizedBox(height: 10),
                       if (_inlineError != null)
                         Text(
@@ -740,7 +732,6 @@ class _AuthCredentialFields extends StatelessWidget {
     );
   }
 }
-
 
 class _AuthCountdownAction extends StatelessWidget {
   const _AuthCountdownAction({

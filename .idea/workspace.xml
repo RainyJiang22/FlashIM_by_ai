@@ -4,43 +4,46 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画">
-      <change afterPath="$PROJECT_DIR$/docs/features/auth-system-upgrade/v1/client/design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/auth-system-upgrade/v1/client/tasks.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/auth-system-upgrade/v1/server/design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/auth-system-upgrade/v1/server/tasks.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/research/project/relational_database_selection_for_auth_persistence.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/database/install_pgadmin4.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/database/new_sqlx_migration.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/database/reset_sqlx_database.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/database/setup_sqlx_database.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/database/sqlx_common.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/database/start_postgres_service.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/setup/install_postgres" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/.env.example" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/migrations/20260612170000_auth_accounts_core.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/store/postgres.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat:后端认证系统升级">
+      <change afterPath="$PROJECT_DIR$/client/assets/branding/flash_im_logo.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/core/auth/auth_cache_store.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/core/config/app_config.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/core/config/local_config_store.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/features/startup/data/startup_coordinator_impl.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/features/startup/domain/app_bootstrap_snapshot.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/features/startup/domain/launch_destination.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/features/startup/domain/startup_stage.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/features/startup/presentation/home_placeholder_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/features/startup/presentation/login_placeholder_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/lib/features/startup/presentation/startup_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/test/features/startup/data/startup_coordinator_impl_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/app-startup/v1/client/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/app-startup/v1/client/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/server/start_backend.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/auth/jwt.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/auth/jwt.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/auth/password.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/auth/password.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/config.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/error.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/models/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/models/auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/models/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/models/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/auth.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/services/auth_service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/services/auth_service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/services/chat_room_service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/services/chat_room_service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/services/user_service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/services/user_service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/state.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/store/memory.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/store/memory.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/store/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/store/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/widgets/auth_login_mode_switch.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/widgets/auth_login_mode_switch.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/heartbeat/domain/heartbeat_connection_status.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/heartbeat/domain/heartbeat_connection_status.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/heartbeat/presentation/heartbeat_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/heartbeat/presentation/heartbeat_playground_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/data/chat_room_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/data/chat_room_api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/domain/chat_room_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/domain/chat_room_event.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/presentation/im_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/presentation/im_playground_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/linux/runner/my_application.cc" beforeDir="false" afterPath="$PROJECT_DIR$/client/linux/runner/my_application.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_1024.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_16.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_256.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_32.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_512.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_64.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/playground/auth/data/auth_api_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/playground/auth/data/auth_api_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/playground/auth/data/auth_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/playground/auth/data/auth_repository_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/widget_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/widget_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/windows/runner/resources/app_icon.ico" beforeDir="false" afterPath="$PROJECT_DIR$/client/windows/runner/resources/app_icon.ico" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -217,7 +220,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780828070460</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="feat:后端认证系统升级">
+      <option name="closed" value="true" />
+      <created>1781253393549</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1781253393549</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -243,6 +254,7 @@
     <MESSAGE value="refactor(login):调整前端模拟认证ui" />
     <MESSAGE value="feat(playground):整合JWT用户认证与聊天室" />
     <MESSAGE value="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
+    <MESSAGE value="feat:后端认证系统升级" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat:后端认证系统升级" />
   </component>
 </project>

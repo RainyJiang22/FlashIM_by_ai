@@ -80,7 +80,9 @@ class WebSocketChatRoomApi implements ChatRoomRequest {
         if (!controller.isClosed) {
           controller.add(ChatRoomApiEvent.error('聊天室连接失败：$error'));
           controller.add(
-            const ChatRoomApiEvent.status(ChatRoomConnectionStatus.disconnected),
+            const ChatRoomApiEvent.status(
+              ChatRoomConnectionStatus.disconnected,
+            ),
           );
           await controller.close();
         }
@@ -104,7 +106,9 @@ class WebSocketChatRoomApi implements ChatRoomRequest {
         if (!controller.isClosed) {
           controller.add(ChatRoomApiEvent.error('聊天室连接异常：$error'));
           controller.add(
-            const ChatRoomApiEvent.status(ChatRoomConnectionStatus.disconnected),
+            const ChatRoomApiEvent.status(
+              ChatRoomConnectionStatus.disconnected,
+            ),
           );
           await controller.close();
         }
@@ -112,7 +116,9 @@ class WebSocketChatRoomApi implements ChatRoomRequest {
       onDone: () async {
         if (!controller.isClosed) {
           controller.add(
-            const ChatRoomApiEvent.status(ChatRoomConnectionStatus.disconnected),
+            const ChatRoomApiEvent.status(
+              ChatRoomConnectionStatus.disconnected,
+            ),
           );
           await controller.close();
         }

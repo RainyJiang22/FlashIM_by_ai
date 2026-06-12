@@ -8,32 +8,35 @@ import 'package:flash_im/playground/demos/auth/data/models/auth_session_dto.dart
 import 'package:flash_im/playground/demos/auth/data/models/sms_code_dto.dart';
 
 void main() {
-  test('repository saves token and auto-carries it for profile requests', () async {
-    final request = _FakeAuthRequest();
-    final sessionStore = _InMemoryAuthSessionStore();
-    final repository = PlaygroundAuthRepository(
-      request: request,
-      sessionStore: sessionStore,
-    );
+  test(
+    'repository saves token and auto-carries it for profile requests',
+    () async {
+      final request = _FakeAuthRequest();
+      final sessionStore = _InMemoryAuthSessionStore();
+      final repository = PlaygroundAuthRepository(
+        request: request,
+        sessionStore: sessionStore,
+      );
 
-    final sms = await repository.sendSmsCode('13800138000');
-    final session = await repository.loginWithSmsCode(
-      phone: '13800138000',
-      code: '654321',
-    );
-    final profile = await repository.fetchProfile();
+      final sms = await repository.sendSmsCode('13800138000');
+      final session = await repository.loginWithSmsCode(
+        phone: '13800138000',
+        code: '654321',
+      );
+      final profile = await repository.fetchProfile();
 
-    expect(sms.code, '654321');
-    expect(session.token, 'jwt-token');
-    expect(await sessionStore.readToken(), 'jwt-token');
-    expect(request.lastToken, 'jwt-token');
-    expect(request.lastSmsPhone, '13800138000');
-    expect(request.lastSmsCode, '654321');
-    expect(profile.avatarUrl, 'https://picsum.photos/seed/demo-user/120/120');
+      expect(sms.code, '654321');
+      expect(session.token, 'jwt-token');
+      expect(await sessionStore.readToken(), 'jwt-token');
+      expect(request.lastToken, 'jwt-token');
+      expect(request.lastSmsPhone, '13800138000');
+      expect(request.lastSmsCode, '654321');
+      expect(profile.avatarUrl, 'https://picsum.photos/seed/demo-user/120/120');
 
-    await repository.logout();
-    expect(await sessionStore.readToken(), isNull);
-  });
+      await repository.logout();
+      expect(await sessionStore.readToken(), isNull);
+    },
+  );
 
   test('repository saves token for password login', () async {
     final request = _FakeAuthRequest();

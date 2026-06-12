@@ -4,5 +4,5 @@ enum HeartbeatConnectionStatus {
   //已连接
   connected,
   //断开连接
-  disconnected
+  disconnected,
 }

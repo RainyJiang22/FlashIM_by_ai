@@ -20,8 +20,7 @@ class ChatRoomEvent {
   const ChatRoomEvent.error(String message)
     : this._(type: ChatRoomEventType.error, errorMessage: message);
 
-  const ChatRoomEvent.pong()
-    : this._(type: ChatRoomEventType.pong);
+  const ChatRoomEvent.pong() : this._(type: ChatRoomEventType.pong);
 
   final ChatRoomEventType type;
   final ChatRoomConnectionStatus? status;

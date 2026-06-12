@@ -182,9 +182,7 @@ class _HeartbeatPlaygroundPageState extends State<HeartbeatPlaygroundPage> {
                 decoration: const InputDecoration(
                   labelText: 'WebSocket URL',
                   hintText: 'ws://127.0.0.1:9600/ws',
-                  hintStyle: TextStyle(
-                    color: Colors.grey,
-                  ),
+                  hintStyle: TextStyle(color: Colors.grey),
                   border: OutlineInputBorder(),
                   filled: true,
                   fillColor: Colors.white,

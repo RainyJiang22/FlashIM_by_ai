@@ -109,7 +109,9 @@ class _ModeTapTarget extends StatelessWidget {
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
             style: TextStyle(
-              color: selected ? const Color(0xFF17171F) : const Color(0xFF8A8A95),
+              color: selected
+                  ? const Color(0xFF17171F)
+                  : const Color(0xFF8A8A95),
               fontSize: 14,
               fontWeight: FontWeight.w700,
             ),

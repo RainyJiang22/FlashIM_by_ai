@@ -34,10 +34,7 @@ void main() {
         lastLoginPayload = jsonDecode(body) as Map<String, dynamic>;
         request.response.headers.contentType = ContentType.json;
         request.response.write(
-          jsonEncode(<String, dynamic>{
-            'token': 'jwt-token',
-            'user_id': 7,
-          }),
+          jsonEncode(<String, dynamic>{'token': 'jwt-token', 'user_id': 7}),
         );
         await request.response.close();
         return;

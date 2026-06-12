@@ -1,60 +1,21 @@
-use crate::models::user::UserRecord;
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
+};
 
-#[derive(Clone)]
-pub struct PasswordAccountRecord {
-    pub account: String,
-    pub password: String,
-    pub user_id: u64,
+pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
+    let salt = SaltString::generate(&mut OsRng);
+    Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .map(|hash| hash.to_string())
 }
 
-pub fn seeded_password_accounts() -> Vec<(PasswordAccountRecord, UserRecord)> {
-    vec![
-        seeded_account(
-            1001,
-            "rainy",
-            "rainy123",
-            "Rainy",
-            "13800138001",
-            "https://picsum.photos/seed/rainy/120/120",
-        ),
-        seeded_account(
-            1002,
-            "alice",
-            "alice123",
-            "Alice",
-            "13800138002",
-            "https://picsum.photos/seed/alice/120/120",
-        ),
-        seeded_account(
-            1003,
-            "bob",
-            "bob123",
-            "Bob",
-            "13800138003",
-            "https://picsum.photos/seed/bob/120/120",
-        ),
-    ]
-}
-
-fn seeded_account(
-    user_id: u64,
-    account: &str,
+pub fn verify_password(
     password: &str,
-    nickname: &str,
-    phone: &str,
-    avatar: &str,
-) -> (PasswordAccountRecord, UserRecord) {
-    (
-        PasswordAccountRecord {
-            account: account.to_string(),
-            password: password.to_string(),
-            user_id,
-        },
-        UserRecord {
-            user_id,
-            nickname: nickname.to_string(),
-            avatar: avatar.to_string(),
-            phone: phone.to_string(),
-        },
-    )
+    password_hash: &str,
+) -> Result<bool, argon2::password_hash::Error> {
+    let parsed_hash = PasswordHash::new(password_hash)?;
+    Ok(Argon2::default()
+        .verify_password(password.as_bytes(), &parsed_hash)
+        .is_ok())
 }

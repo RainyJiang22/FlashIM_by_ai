@@ -1,13 +1,19 @@
 use std::{
     collections::HashMap,
-    sync::atomic::{AtomicU64, Ordering},
+    sync::atomic::{AtomicI64, AtomicU64, Ordering},
 };
 
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
+use serde_json::json;
 use tokio::sync::{RwLock, mpsc};
 
 use crate::{
-    auth::password::{PasswordAccountRecord, seeded_password_accounts},
-    models::user::UserRecord,
+    error::AppResult,
+    store::{
+        AccountAggregate, AccountRecord, AuthStore, CredentialRecord, CredentialType, NewProfile,
+        ProfileRecord,
+    },
 };
 
 #[derive(Clone)]
@@ -15,112 +21,23 @@ pub struct ChatRoomConnection {
     pub sender: mpsc::UnboundedSender<String>,
 }
 
-pub struct InMemoryStore {
-    sms_codes: RwLock<HashMap<String, String>>,
-    users_by_id: RwLock<HashMap<u64, UserRecord>>,
-    user_ids_by_phone: RwLock<HashMap<String, u64>>,
-    password_accounts: RwLock<HashMap<String, PasswordAccountRecord>>,
+pub struct ChatRoomStore {
     chat_connections: RwLock<HashMap<usize, ChatRoomConnection>>,
-    next_user_id: AtomicU64,
     next_chat_message_id: AtomicU64,
 }
 
-impl InMemoryStore {
+impl Default for ChatRoomStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ChatRoomStore {
     pub fn new() -> Self {
-        let mut users_by_id = HashMap::new();
-        let mut user_ids_by_phone = HashMap::new();
-        let mut password_accounts = HashMap::new();
-        let mut max_user_id = 0_u64;
-
-        for (password_account, user) in seeded_password_accounts() {
-            max_user_id = max_user_id.max(user.user_id);
-            user_ids_by_phone.insert(user.phone.clone(), user.user_id);
-            users_by_id.insert(user.user_id, user);
-            password_accounts.insert(password_account.account.clone(), password_account);
-        }
-
         Self {
-            sms_codes: RwLock::new(HashMap::new()),
-            users_by_id: RwLock::new(users_by_id),
-            user_ids_by_phone: RwLock::new(user_ids_by_phone),
-            password_accounts: RwLock::new(password_accounts),
             chat_connections: RwLock::new(HashMap::new()),
-            next_user_id: AtomicU64::new(max_user_id + 1),
             next_chat_message_id: AtomicU64::new(1),
         }
-    }
-
-    pub async fn save_sms_code(&self, phone: String, code: String) {
-        self.sms_codes.write().await.insert(phone, code);
-    }
-
-    pub async fn consume_sms_code(&self, phone: &str, code: &str) -> bool {
-        let mut sms_codes = self.sms_codes.write().await;
-        match sms_codes.get(phone) {
-            Some(stored_code) if stored_code == code => {
-                sms_codes.remove(phone);
-                true
-            }
-            _ => false,
-        }
-    }
-
-    pub async fn user_by_id(&self, user_id: u64) -> Option<UserRecord> {
-        self.users_by_id.read().await.get(&user_id).cloned()
-    }
-
-    pub async fn user_by_phone(&self, phone: &str) -> Option<UserRecord> {
-        let user_id = self.user_ids_by_phone.read().await.get(phone).copied();
-        match user_id {
-            Some(user_id) => self.user_by_id(user_id).await,
-            None => None,
-        }
-    }
-
-    pub async fn verify_password_account(
-        &self,
-        account: &str,
-        password: &str,
-    ) -> Option<UserRecord> {
-        let user_id = self
-            .password_accounts
-            .read()
-            .await
-            .get(account)
-            .filter(|record| record.password == password)
-            .map(|record| record.user_id);
-
-        match user_id {
-            Some(user_id) => self.user_by_id(user_id).await,
-            None => None,
-        }
-    }
-
-    pub async fn find_or_create_user(&self, phone: &str, avatar: String) -> UserRecord {
-        {
-            if let Some(user) = self.user_by_phone(phone).await {
-                return user;
-            }
-        }
-
-        let mut user_ids_by_phone = self.user_ids_by_phone.write().await;
-        if let Some(user_id) = user_ids_by_phone.get(phone).copied()
-            && let Some(user) = self.users_by_id.read().await.get(&user_id).cloned()
-        {
-            return user;
-        }
-
-        let user_id = self.next_user_id.fetch_add(1, Ordering::Relaxed);
-        let user = UserRecord {
-            user_id,
-            nickname: phone.to_string(),
-            avatar,
-            phone: phone.to_string(),
-        };
-
-        user_ids_by_phone.insert(phone.to_string(), user_id);
-        self.users_by_id.write().await.insert(user_id, user.clone());
-        user
     }
 
     pub fn next_chat_message_id(&self) -> u64 {
@@ -150,4 +67,294 @@ impl InMemoryStore {
             .map(|(connection_id, connection)| (*connection_id, connection.clone()))
             .collect()
     }
+}
+
+pub struct InMemoryStore {
+    sms_codes: RwLock<HashMap<(String, String), Vec<SmsCodeRecord>>>,
+    accounts_by_id: RwLock<HashMap<i64, AccountRecord>>,
+    profiles_by_account_id: RwLock<HashMap<i64, ProfileRecord>>,
+    credentials_by_id: RwLock<HashMap<i64, CredentialRecord>>,
+    credential_ids_by_lookup: RwLock<HashMap<(String, String), i64>>,
+    next_account_id: AtomicI64,
+    next_credential_id: AtomicI64,
+    next_sms_code_id: AtomicI64,
+}
+
+impl Default for InMemoryStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl InMemoryStore {
+    pub fn new() -> Self {
+        Self {
+            sms_codes: RwLock::new(HashMap::new()),
+            accounts_by_id: RwLock::new(HashMap::new()),
+            profiles_by_account_id: RwLock::new(HashMap::new()),
+            credentials_by_id: RwLock::new(HashMap::new()),
+            credential_ids_by_lookup: RwLock::new(HashMap::new()),
+            next_account_id: AtomicI64::new(10001),
+            next_credential_id: AtomicI64::new(1),
+            next_sms_code_id: AtomicI64::new(1),
+        }
+    }
+
+    async fn load_account_aggregate(&self, account_id: i64) -> Option<AccountAggregate> {
+        let account = self.accounts_by_id.read().await.get(&account_id).cloned()?;
+        let profile = self
+            .profiles_by_account_id
+            .read()
+            .await
+            .get(&account_id)
+            .cloned()?;
+        let credentials = self
+            .credentials_by_id
+            .read()
+            .await
+            .values()
+            .filter(|credential| credential.account_id == account_id)
+            .cloned()
+            .collect();
+
+        Some(AccountAggregate {
+            account,
+            profile,
+            credentials,
+        })
+    }
+}
+
+#[async_trait]
+impl AuthStore for InMemoryStore {
+    async fn save_sms_code(
+        &self,
+        phone: &str,
+        code: &str,
+        purpose: &str,
+        expires_at: DateTime<Utc>,
+    ) -> AppResult<()> {
+        let record = SmsCodeRecord {
+            code: code.to_string(),
+            expires_at,
+            consumed_at: None,
+        };
+
+        let _ = self.next_sms_code_id.fetch_add(1, Ordering::Relaxed);
+
+        self.sms_codes
+            .write()
+            .await
+            .entry((phone.to_string(), purpose.to_string()))
+            .or_default()
+            .push(record);
+
+        Ok(())
+    }
+
+    async fn consume_sms_code(&self, phone: &str, code: &str, purpose: &str) -> AppResult<bool> {
+        let mut sms_codes = self.sms_codes.write().await;
+        let Some(records) = sms_codes.get_mut(&(phone.to_string(), purpose.to_string())) else {
+            return Ok(false);
+        };
+
+        let now = Utc::now();
+        if let Some(record) = records.iter_mut().rev().find(|record| {
+            record.code == code && record.consumed_at.is_none() && record.expires_at > now
+        }) {
+            record.consumed_at = Some(now);
+            return Ok(true);
+        }
+
+        Ok(false)
+    }
+
+    async fn find_account_by_id(&self, account_id: i64) -> AppResult<Option<AccountAggregate>> {
+        Ok(self.load_account_aggregate(account_id).await)
+    }
+
+    async fn find_account_by_credential(
+        &self,
+        credential_type: CredentialType,
+        identifier: &str,
+    ) -> AppResult<Option<AccountAggregate>> {
+        let credential_id = self
+            .credential_ids_by_lookup
+            .read()
+            .await
+            .get(&(credential_type.as_str().to_string(), identifier.to_string()))
+            .copied();
+
+        let Some(credential_id) = credential_id else {
+            return Ok(None);
+        };
+
+        let account_id = self
+            .credentials_by_id
+            .read()
+            .await
+            .get(&credential_id)
+            .map(|credential| credential.account_id);
+
+        match account_id {
+            Some(account_id) => Ok(self.load_account_aggregate(account_id).await),
+            None => Ok(None),
+        }
+    }
+
+    async fn create_account_with_phone(
+        &self,
+        phone: &str,
+        profile: NewProfile,
+    ) -> AppResult<AccountAggregate> {
+        let account_id = self.next_account_id.fetch_add(1, Ordering::Relaxed);
+        let now = Utc::now();
+        let account = AccountRecord {
+            id: account_id,
+            status: "active".to_string(),
+            primary_identifier: phone.to_string(),
+            created_at: now,
+            updated_at: now,
+        };
+        let profile = ProfileRecord {
+            account_id,
+            nickname: profile.nickname,
+            avatar_url: profile.avatar_url,
+            bio: profile.bio,
+            updated_at: now,
+        };
+        let phone_credential = CredentialRecord {
+            id: self.next_credential_id.fetch_add(1, Ordering::Relaxed),
+            account_id,
+            credential_type: CredentialType::Phone,
+            identifier: phone.to_string(),
+            password_hash: None,
+            metadata: json!({}),
+            verified_at: Some(now),
+            created_at: now,
+            updated_at: now,
+        };
+
+        self.accounts_by_id
+            .write()
+            .await
+            .insert(account_id, account.clone());
+        self.profiles_by_account_id
+            .write()
+            .await
+            .insert(account_id, profile.clone());
+        self.credential_ids_by_lookup.write().await.insert(
+            (
+                phone_credential.credential_type.as_str().to_string(),
+                phone_credential.identifier.clone(),
+            ),
+            phone_credential.id,
+        );
+        self.credentials_by_id
+            .write()
+            .await
+            .insert(phone_credential.id, phone_credential.clone());
+
+        Ok(AccountAggregate {
+            account,
+            profile,
+            credentials: vec![phone_credential],
+        })
+    }
+
+    async fn upsert_password_credential(
+        &self,
+        account_id: i64,
+        identifier: &str,
+        password_hash: &str,
+    ) -> AppResult<DateTime<Utc>> {
+        let now = Utc::now();
+        let lookup_key = (
+            CredentialType::Password.as_str().to_string(),
+            identifier.to_string(),
+        );
+
+        let existing_id = self
+            .credential_ids_by_lookup
+            .read()
+            .await
+            .get(&lookup_key)
+            .copied();
+
+        match existing_id {
+            Some(credential_id) => {
+                if let Some(credential) =
+                    self.credentials_by_id.write().await.get_mut(&credential_id)
+                {
+                    credential.account_id = account_id;
+                    credential.password_hash = Some(password_hash.to_string());
+                    credential.verified_at = Some(now);
+                    credential.updated_at = now;
+                }
+            }
+            None => {
+                let credential = CredentialRecord {
+                    id: self.next_credential_id.fetch_add(1, Ordering::Relaxed),
+                    account_id,
+                    credential_type: CredentialType::Password,
+                    identifier: identifier.to_string(),
+                    password_hash: Some(password_hash.to_string()),
+                    metadata: json!({}),
+                    verified_at: Some(now),
+                    created_at: now,
+                    updated_at: now,
+                };
+                self.credential_ids_by_lookup
+                    .write()
+                    .await
+                    .insert(lookup_key, credential.id);
+                self.credentials_by_id
+                    .write()
+                    .await
+                    .insert(credential.id, credential);
+            }
+        }
+
+        Ok(now)
+    }
+
+    async fn find_password_credential_by_identifier(
+        &self,
+        identifier: &str,
+    ) -> AppResult<Option<CredentialRecord>> {
+        let credential_id = self
+            .credential_ids_by_lookup
+            .read()
+            .await
+            .get(&(
+                CredentialType::Password.as_str().to_string(),
+                identifier.to_string(),
+            ))
+            .copied();
+
+        let credentials = self.credentials_by_id.read().await;
+        Ok(credential_id.and_then(|id| credentials.get(&id).cloned()))
+    }
+
+    async fn find_password_credential_by_account_id(
+        &self,
+        account_id: i64,
+    ) -> AppResult<Option<CredentialRecord>> {
+        Ok(self
+            .credentials_by_id
+            .read()
+            .await
+            .values()
+            .find(|credential| {
+                credential.account_id == account_id
+                    && matches!(credential.credential_type, CredentialType::Password)
+            })
+            .cloned())
+    }
+}
+
+struct SmsCodeRecord {
+    code: String,
+    expires_at: DateTime<Utc>,
+    consumed_at: Option<DateTime<Utc>>,
 }

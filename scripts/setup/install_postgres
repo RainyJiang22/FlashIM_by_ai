@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+POSTGRES_FORMULA="${POSTGRES_FORMULA:-postgresql@18}"
+POSTGRES_PORT="${POSTGRES_PORT:-5432}"
+POSTGRES_HOST="${POSTGRES_HOST:-127.0.0.1}"
+ENV_DIR="${HOME}/.config/postgres"
+ENV_FILE="${ENV_DIR}/postgres-env.zsh"
+SHELL_HOOK="[[ -f \"\$HOME/.config/postgres/postgres-env.zsh\" ]] && source \"\$HOME/.config/postgres/postgres-env.zsh\""
+
+require_command() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "Missing required command: $cmd"
+    exit 1
+  fi
+}
+
+append_if_missing() {
+  local target_file="$1"
+  local line="$2"
+
+  touch "$target_file"
+  if ! grep -Fqx "$line" "$target_file"; then
+    printf '\n%s\n' "$line" >>"$target_file"
+  fi
+}
+
+wait_for_postgres() {
+  local pg_isready_bin="$1"
+  local attempts=20
+
+  for ((i = 1; i <= attempts; i++)); do
+    if "$pg_isready_bin" -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
+if [[ "$(uname -s)" != "Darwin" ]]; then
+  echo "This script is for macOS only."
+  exit 1
+fi
+
+require_command brew
+
+brew_prefix="$(brew --prefix)"
+pg_root="${brew_prefix}/opt/${POSTGRES_FORMULA}"
+pg_bin="${pg_root}/bin"
+pg_data="${brew_prefix}/var/${POSTGRES_FORMULA}"
+
+echo "==> Using Homebrew prefix: ${brew_prefix}"
+echo "==> Installing formula: ${POSTGRES_FORMULA}"
+
+if brew list --versions "${POSTGRES_FORMULA}" >/dev/null 2>&1; then
+  brew upgrade "${POSTGRES_FORMULA}"
+else
+  brew install "${POSTGRES_FORMULA}"
+fi
+
+if [[ ! -x "${pg_bin}/psql" ]]; then
+  echo "Expected PostgreSQL binaries were not found at ${pg_bin}"
+  exit 1
+fi
+
+mkdir -p "${ENV_DIR}"
+cat >"${ENV_FILE}" <<EOF
+export HOMEBREW_PREFIX="${brew_prefix}"
+export POSTGRES_FORMULA="${POSTGRES_FORMULA}"
+export PGROOT="${pg_root}"
+export PGDATA="${pg_data}"
+export PGHOST="${POSTGRES_HOST}"
+export PGPORT="${POSTGRES_PORT}"
+export PGUSER="\${USER}"
+export PGDATABASE="\${USER}"
+
+if [[ ":\$PATH:" != *":\${PGROOT}/bin:"* ]]; then
+  export PATH="\${PGROOT}/bin:\$PATH"
+fi
+EOF
+
+append_if_missing "${HOME}/.zprofile" "${SHELL_HOOK}"
+append_if_missing "${HOME}/.zshrc" "${SHELL_HOOK}"
+
+# Load the same environment for the current script execution.
+# shellcheck disable=SC1090
+source "${ENV_FILE}"
+
+if [[ ! -s "${PGDATA}/PG_VERSION" ]]; then
+  echo "==> Initializing database cluster at ${PGDATA}"
+  initdb --locale=en_US.UTF-8 -E UTF-8 "${PGDATA}"
+fi
+
+echo "==> Starting PostgreSQL service"
+brew services start "${POSTGRES_FORMULA}"
+
+if ! wait_for_postgres "${pg_bin}/pg_isready"; then
+  echo "PostgreSQL did not become ready in time."
+  exit 1
+fi
+
+if ! psql -d postgres -Atqc "SELECT 1 FROM pg_database WHERE datname = current_user" | grep -qx '1'; then
+  echo "==> Creating default database: ${USER}"
+  createdb "${USER}"
+fi
+
+echo "==> PostgreSQL is ready"
+psql --version
+echo "PGROOT=${PGROOT}"
+echo "PGDATA=${PGDATA}"
+echo "PGHOST=${PGHOST}"
+echo "PGPORT=${PGPORT}"
+echo
+echo "Open a new terminal or run:"
+echo "  source ~/.zshrc"
+echo
+echo "Then test with:"
+echo "  psql"

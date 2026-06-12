@@ -2,15 +2,15 @@ use axum::http::{HeaderMap, header};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::{config::JWT_TTL, models::auth::AuthClaims, state::AppState};
+use crate::{models::auth::AuthClaims, state::AppState};
 
 pub(crate) fn sign_token(
     state: &AppState,
-    user_id: u64,
+    account_id: i64,
 ) -> Result<String, jsonwebtoken::errors::Error> {
     let claims = AuthClaims {
-        user_id,
-        exp: (unix_timestamp() + JWT_TTL.as_secs()) as usize,
+        account_id,
+        exp: (unix_timestamp() + state.jwt_ttl.as_secs()) as usize,
     };
 
     encode(

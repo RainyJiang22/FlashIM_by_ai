@@ -19,15 +19,15 @@ pub(crate) async fn handle_chat_room_socket(
     user: UserRecord,
 ) {
     println!(
-        "chat_room ws connected: connection_id={connection_id}, user_id={}",
-        user.user_id
+        "chat_room ws connected: connection_id={connection_id}, account_id={}",
+        user.account_id
     );
 
     let (mut ws_sender, mut ws_receiver) = socket.split();
     let (outgoing_tx, mut outgoing_rx) = mpsc::unbounded_channel::<String>();
 
     state
-        .store
+        .chat_room_store
         .insert_chat_connection(
             connection_id,
             ChatRoomConnection {
@@ -47,7 +47,7 @@ pub(crate) async fn handle_chat_room_socket(
     send_to_connection(
         &outgoing_tx,
         ChatRoomServerEvent::AuthReady {
-            user_id: user.user_id,
+            user_id: user.account_id as u64,
             nickname: user.nickname.clone(),
             avatar: user.avatar.clone(),
         },
@@ -92,27 +92,30 @@ pub(crate) async fn handle_chat_room_socket(
             Err(error) => {
                 println!(
                     "chat_room ws receive failed: connection_id={connection_id}, user_id={}, error={error}",
-                    user.user_id
+                    user.account_id
                 );
                 break;
             }
         }
     }
 
-    state.store.remove_chat_connection(connection_id).await;
+    state
+        .chat_room_store
+        .remove_chat_connection(connection_id)
+        .await;
     write_task.abort();
 
     println!(
-        "chat_room ws disconnected: connection_id={connection_id}, user_id={}",
-        user.user_id
+        "chat_room ws disconnected: connection_id={connection_id}, account_id={}",
+        user.account_id
     );
 }
 
 async fn broadcast_chat_room_message(state: &AppState, user: &UserRecord, text: String) {
-    let message_id = state.store.next_chat_message_id();
+    let message_id = state.chat_room_store.next_chat_message_id();
     let payload = serialize_chat_room_event(ChatRoomServerEvent::Chat {
         message_id,
-        user_id: user.user_id,
+        user_id: user.account_id as u64,
         nickname: user.nickname.clone(),
         avatar: user.avatar.clone(),
         text,
@@ -123,7 +126,7 @@ async fn broadcast_chat_room_message(state: &AppState, user: &UserRecord, text: 
 }
 
 async fn broadcast_chat_payload(state: &AppState, payload: String, exclude: Option<usize>) {
-    let connections = state.store.chat_connections().await;
+    let connections = state.chat_room_store.chat_connections().await;
     let mut stale_connections = Vec::new();
 
     for (connection_id, connection) in connections {
@@ -138,7 +141,10 @@ async fn broadcast_chat_payload(state: &AppState, payload: String, exclude: Opti
 
     if !stale_connections.is_empty() {
         for connection_id in stale_connections {
-            state.store.remove_chat_connection(connection_id).await;
+            state
+                .chat_room_store
+                .remove_chat_connection(connection_id)
+                .await;
         }
     }
 }

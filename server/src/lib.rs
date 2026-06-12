@@ -31,16 +31,16 @@ mod tests {
     use crate::{
         auth::jwt::sign_token,
         models::{
-            auth::{LoginResponse, SmsResponse},
+            auth::{LoginResponse, PasswordUpdatedResponse, SetPasswordResponse, SmsResponse},
             user::ProfileResponse,
         },
-        services::user_service::find_or_create_user,
+        services::user_service::find_or_create_account_by_phone,
     };
 
     #[tokio::test]
     async fn auth_flow_returns_profile_for_valid_token() {
-        let state = Arc::new(state::AppState::new("test-secret"));
-        let app = build_app(state);
+        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
+        let app = build_app(state.clone());
 
         let sms_request = Request::builder()
             .method("POST")
@@ -79,7 +79,8 @@ mod tests {
             .unwrap();
         let login: LoginResponse = serde_json::from_slice(&login_body).unwrap();
         assert!(!login.token.is_empty());
-        assert!(login.user_id >= 1004);
+        assert!(login.account_id >= 10001);
+        assert!(login.password_setup_required);
 
         let profile_request = Request::builder()
             .method("GET")
@@ -87,23 +88,95 @@ mod tests {
             .header(header::AUTHORIZATION, format!("Bearer {}", login.token))
             .body(Body::empty())
             .unwrap();
-        let profile_response = app.oneshot(profile_request).await.unwrap();
+        let profile_response = app.clone().oneshot(profile_request).await.unwrap();
         assert_eq!(profile_response.status(), StatusCode::OK);
 
         let profile_body = to_bytes(profile_response.into_body(), usize::MAX)
             .await
             .unwrap();
         let profile: ProfileResponse = serde_json::from_slice(&profile_body).unwrap();
-        assert_eq!(profile.user_id, login.user_id);
+        assert_eq!(profile.account_id, login.account_id);
         assert_eq!(profile.nickname, "13800138000");
         assert_eq!(profile.phone, "13800138000");
+        assert!(!profile.has_password);
         assert!(profile.avatar.starts_with("https://picsum.photos/seed/"));
         assert!(profile.avatar.ends_with("/120/120"));
+
+        let set_password_request = Request::builder()
+            .method("POST")
+            .uri("/auth/password/set")
+            .header(header::AUTHORIZATION, format!("Bearer {}", login.token))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"new_password":"new-password"}"#))
+            .unwrap();
+        let set_password_response = app.clone().oneshot(set_password_request).await.unwrap();
+        assert_eq!(set_password_response.status(), StatusCode::OK);
+
+        let set_password_body = to_bytes(set_password_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let set_password: SetPasswordResponse = serde_json::from_slice(&set_password_body).unwrap();
+        assert!(!set_password.password_setup_required);
+
+        let profile_request = Request::builder()
+            .method("GET")
+            .uri("/user/profile")
+            .header(header::AUTHORIZATION, format!("Bearer {}", login.token))
+            .body(Body::empty())
+            .unwrap();
+        let profile_response = app.clone().oneshot(profile_request).await.unwrap();
+        assert_eq!(profile_response.status(), StatusCode::OK);
+
+        let profile_body = to_bytes(profile_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let profile: ProfileResponse = serde_json::from_slice(&profile_body).unwrap();
+        assert!(profile.has_password);
+
+        let change_password_request = Request::builder()
+            .method("POST")
+            .uri("/auth/password/change")
+            .header(header::AUTHORIZATION, format!("Bearer {}", login.token))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                r#"{"old_password":"new-password","new_password":"new-password-2"}"#,
+            ))
+            .unwrap();
+        let change_password_response = app.clone().oneshot(change_password_request).await.unwrap();
+        assert_eq!(change_password_response.status(), StatusCode::OK);
+
+        let change_password_body = to_bytes(change_password_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let _: PasswordUpdatedResponse = serde_json::from_slice(&change_password_body).unwrap();
+
+        let password_login_request = Request::builder()
+            .method("POST")
+            .uri("/auth/login")
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "login_type": "password",
+                    "identifier": "13800138000",
+                    "password": "new-password-2",
+                })
+                .to_string(),
+            ))
+            .unwrap();
+        let password_login_response = app.oneshot(password_login_request).await.unwrap();
+        assert_eq!(password_login_response.status(), StatusCode::OK);
+
+        let password_login_body = to_bytes(password_login_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let password_login: LoginResponse = serde_json::from_slice(&password_login_body).unwrap();
+        assert_eq!(password_login.account_id, login.account_id);
+        assert!(!password_login.password_setup_required);
     }
 
     #[tokio::test]
     async fn missing_or_invalid_token_returns_401() {
-        let state = Arc::new(state::AppState::new("test-secret"));
+        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
         let app = build_app(state);
 
         let missing_token_request = Request::builder()
@@ -125,9 +198,21 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn password_login_returns_profile_for_seeded_user() {
-        let state = Arc::new(state::AppState::new("test-secret"));
+    async fn set_password_rejects_duplicate_setup() {
+        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
         let app = build_app(state);
+
+        let sms_request = Request::builder()
+            .method("POST")
+            .uri("/auth/sms")
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"phone":"13800138009"}"#))
+            .unwrap();
+        let sms_response = app.clone().oneshot(sms_request).await.unwrap();
+        let sms_body = to_bytes(sms_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let sms: SmsResponse = serde_json::from_slice(&sms_body).unwrap();
 
         let login_request = Request::builder()
             .method("POST")
@@ -135,9 +220,9 @@ mod tests {
             .header(header::CONTENT_TYPE, "application/json")
             .body(Body::from(
                 serde_json::json!({
-                    "login_type": "password",
-                    "account": "rainy",
-                    "password": "rainy123",
+                    "login_type": "sms_code",
+                    "phone": sms.phone,
+                    "code": sms.code,
                 })
                 .to_string(),
             ))
@@ -149,30 +234,30 @@ mod tests {
             .await
             .unwrap();
         let login: LoginResponse = serde_json::from_slice(&login_body).unwrap();
-        assert!(!login.token.is_empty());
-        assert_eq!(login.user_id, 1001);
-
-        let profile_request = Request::builder()
-            .method("GET")
-            .uri("/user/profile")
+        let set_password_request = Request::builder()
+            .method("POST")
+            .uri("/auth/password/set")
             .header(header::AUTHORIZATION, format!("Bearer {}", login.token))
-            .body(Body::empty())
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"new_password":"new-password"}"#))
             .unwrap();
-        let profile_response = app.oneshot(profile_request).await.unwrap();
-        assert_eq!(profile_response.status(), StatusCode::OK);
+        let set_password_response = app.clone().oneshot(set_password_request).await.unwrap();
+        assert_eq!(set_password_response.status(), StatusCode::OK);
 
-        let profile_body = to_bytes(profile_response.into_body(), usize::MAX)
-            .await
+        let duplicate_request = Request::builder()
+            .method("POST")
+            .uri("/auth/password/set")
+            .header(header::AUTHORIZATION, format!("Bearer {}", login.token))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"new_password":"another-password"}"#))
             .unwrap();
-        let profile: ProfileResponse = serde_json::from_slice(&profile_body).unwrap();
-        assert_eq!(profile.user_id, 1001);
-        assert_eq!(profile.nickname, "Rainy");
-        assert_eq!(profile.phone, "13800138001");
+        let duplicate_response = app.oneshot(duplicate_request).await.unwrap();
+        assert_eq!(duplicate_response.status(), StatusCode::CONFLICT);
     }
 
     #[tokio::test]
     async fn chat_room_websocket_requires_valid_token() {
-        let state = Arc::new(state::AppState::new("test-secret"));
+        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
         let app = build_app(state);
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
@@ -189,9 +274,11 @@ mod tests {
 
     #[tokio::test]
     async fn chat_room_websocket_supports_auth_ping_and_chat() {
-        let state = Arc::new(state::AppState::new("test-secret"));
-        let user = find_or_create_user(state.as_ref(), "13800138000").await;
-        let token = sign_token(state.as_ref(), user.user_id).unwrap();
+        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
+        let user = find_or_create_account_by_phone(state.as_ref(), "13800138000")
+            .await
+            .unwrap();
+        let token = sign_token(state.as_ref(), user.account_id).unwrap();
         let app = build_app(state.clone());
 
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -205,7 +292,7 @@ mod tests {
 
         let auth_ready = next_text_message(&mut stream).await;
         assert!(auth_ready.contains("\"type\":\"auth_ready\""));
-        assert!(auth_ready.contains(&format!("\"user_id\":{}", user.user_id)));
+        assert!(auth_ready.contains(&format!("\"user_id\":{}", user.account_id)));
 
         stream
             .send(TungsteniteMessage::Text(
@@ -227,7 +314,7 @@ mod tests {
         let user_chat = next_text_message(&mut stream).await;
         assert!(user_chat.contains("\"type\":\"chat\""));
         assert!(user_chat.contains("\"text\":\"hello chat room\""));
-        assert!(user_chat.contains(&format!("\"user_id\":{}", user.user_id)));
+        assert!(user_chat.contains(&format!("\"user_id\":{}", user.account_id)));
 
         server_task.abort();
     }

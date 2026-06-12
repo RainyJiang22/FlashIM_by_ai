@@ -26,6 +26,13 @@ impl AppError {
         }
     }
 
+    pub const fn conflict(message: &'static str) -> Self {
+        Self {
+            status: StatusCode::CONFLICT,
+            message,
+        }
+    }
+
     pub const fn internal_server_error(message: &'static str) -> Self {
         Self {
             status: StatusCode::INTERNAL_SERVER_ERROR,

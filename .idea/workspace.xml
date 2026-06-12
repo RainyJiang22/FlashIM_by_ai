@@ -4,7 +4,44 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画">
+      <change afterPath="$PROJECT_DIR$/docs/features/auth-system-upgrade/v1/client/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/auth-system-upgrade/v1/client/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/auth-system-upgrade/v1/server/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/auth-system-upgrade/v1/server/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/research/project/relational_database_selection_for_auth_persistence.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/database/install_pgadmin4.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/database/new_sqlx_migration.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/database/reset_sqlx_database.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/database/setup_sqlx_database.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/database/sqlx_common.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/database/start_postgres_service.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/setup/install_postgres" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/.env.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/migrations/20260612170000_auth_accounts_core.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/store/postgres.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/auth/jwt.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/auth/jwt.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/auth/password.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/auth/password.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/config.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/config.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/error.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/error.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/models/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/models/auth.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/models/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/models/user.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/routes/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/auth.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/routes/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/services/auth_service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/services/auth_service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/services/chat_room_service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/services/chat_room_service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/services/user_service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/services/user_service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/state.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/store/memory.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/store/memory.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/store/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/store/mod.rs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -172,7 +209,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780827941620</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画">
+      <option name="closed" value="true" />
+      <created>1780828070460</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1780828070460</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

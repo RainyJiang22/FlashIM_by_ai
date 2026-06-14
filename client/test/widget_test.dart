@@ -1,46 +1,96 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flash_im/app/flash_im_app.dart';
 import 'package:flash_im/core/config/app_config.dart';
-import 'package:flash_im/features/startup/data/startup_coordinator_impl.dart';
-import 'package:flash_im/features/startup/domain/app_bootstrap_snapshot.dart';
-import 'package:flash_im/features/startup/domain/launch_destination.dart';
+import 'package:flash_im/core/auth/auth_cache_store.dart';
+import 'package:flash_im/features/auth/cubit/app_session_cubit.dart';
+import 'package:flash_im/features/auth/data/auth_repository.dart';
+import 'package:flash_im/features/auth/domain/app_session.dart';
+import 'package:flash_im/features/auth/domain/auth_profile.dart';
 
 void main() {
-  testWidgets('main app opens startup flow first', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+  testWidgets('main app restores cached session into home shell', (
+    WidgetTester tester,
+  ) async {
+    final repository = _FakeAuthRepository(
+      cachedSession: const CachedAuthSession(
+        token: 'jwt-token',
+        accountId: 10001,
+      ),
+    );
+    final cubit = AppSessionCubit(repository: repository);
 
     await tester.pumpWidget(
-      const FlashImApp(startupCoordinator: _ImmediateStartupCoordinator()),
+      FlashImApp(
+        appConfig: const LocalAppConfig(
+          appName: 'Flash IM',
+          apiBaseUrl: 'http://127.0.0.1:9600',
+          enableDebugTools: false,
+        ),
+        authRepository: repository,
+        appSessionCubit: cubit,
+      ),
     );
     await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.text('主页面占位'), findsOneWidget);
+    expect(find.text('消息'), findsOneWidget);
+    await cubit.close();
   });
 }
 
-class _ImmediateStartupCoordinator implements StartupCoordinator {
-  const _ImmediateStartupCoordinator();
+class _FakeAuthRepository implements AuthRepository {
+  _FakeAuthRepository({this.cachedSession});
+
+  final CachedAuthSession? cachedSession;
 
   @override
-  Future<AppBootstrapSnapshot> bootstrap() async {
-    return const AppBootstrapSnapshot(
-      destination: LaunchDestination.home,
-      hasAuthSession: true,
-      config: LocalAppConfig(
-        appName: 'Flash IM',
-        apiBaseUrl: 'http://127.0.0.1:9600',
-        enableDebugTools: false,
-      ),
+  Future<AuthProfile> fetchProfile() async {
+    return const AuthProfile(
+      accountId: 10001,
+      nickname: 'Rainy',
+      avatarUrl: 'https://picsum.photos/seed/rainy/120/120',
+      phone: '13800138000',
+      hasPassword: true,
     );
   }
+
+  @override
+  Future<AppSession> loginWithPassword({
+    required String identifier,
+    required String password,
+  }) async {
+    return const AppSession(
+      token: 'password-token',
+      accountId: 10001,
+      passwordSetupRequired: false,
+    );
+  }
+
+  @override
+  Future<AppSession> loginWithSmsCode({
+    required String phone,
+    required String code,
+  }) async {
+    return const AppSession(
+      token: 'sms-token',
+      accountId: 10001,
+      passwordSetupRequired: false,
+    );
+  }
+
+  @override
+  Future<void> logout() async {}
+
+  @override
+  Future<void> persistSession(AppSession session) async {}
+
+  @override
+  Future<CachedAuthSession?> readCachedSession() async => cachedSession;
+
+  @override
+  Future<void> setPassword({required String newPassword}) async {}
+
+  @override
+  Future<String> sendSmsCode(String phone) async => '654321';
 }

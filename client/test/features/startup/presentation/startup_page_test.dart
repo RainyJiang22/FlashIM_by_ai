@@ -1,41 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flash_im/core/config/app_config.dart';
-import 'package:flash_im/features/startup/data/startup_coordinator_impl.dart';
-import 'package:flash_im/features/startup/domain/app_bootstrap_snapshot.dart';
-import 'package:flash_im/features/startup/domain/launch_destination.dart';
+import 'package:flash_im/app/app_router.dart';
+import 'package:flash_im/core/auth/auth_cache_store.dart';
+import 'package:flash_im/features/auth/cubit/app_session_cubit.dart';
+import 'package:flash_im/features/auth/data/auth_repository.dart';
+import 'package:flash_im/features/auth/domain/app_session.dart';
+import 'package:flash_im/features/auth/domain/auth_profile.dart';
 import 'package:flash_im/features/startup/presentation/startup_page.dart';
 
 void main() {
-  testWidgets('startup page routes to login placeholder', (tester) async {
+  testWidgets('startup page routes to login page', (tester) async {
+    final repository = _FakeAuthRepository();
+    final cubit = AppSessionCubit(repository: repository);
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: StartupPage(coordinator: _FakeStartupCoordinator.login()),
+      RepositoryProvider<AuthRepository>.value(
+        value: repository,
+        child: BlocProvider<AppSessionCubit>.value(
+          value: cubit,
+          child: MaterialApp(
+            onGenerateRoute: onGenerateAppRoute,
+            home: const StartupPage(),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+
+    expect(find.text('进入轻聊'), findsOneWidget);
+    await cubit.close();
+  });
+
+  testWidgets('startup page routes to home shell', (tester) async {
+    final repository = _FakeAuthRepository(
+      cachedSession: const CachedAuthSession(
+        token: 'jwt-token',
+        accountId: 10001,
+      ),
+    );
+    final cubit = AppSessionCubit(repository: repository);
+
+    await tester.pumpWidget(
+      RepositoryProvider<AuthRepository>.value(
+        value: repository,
+        child: BlocProvider<AppSessionCubit>.value(
+          value: cubit,
+          child: MaterialApp(
+            onGenerateRoute: onGenerateAppRoute,
+            home: const StartupPage(),
+          ),
+        ),
       ),
     );
     await tester.pump();
     await tester.pumpAndSettle();
 
-    expect(find.text('登录页占位'), findsOneWidget);
+    expect(find.text('消息'), findsOneWidget);
+    await cubit.close();
   });
 
-  testWidgets('startup page routes to home placeholder', (tester) async {
+  testWidgets('startup page shows retry on restore failure', (tester) async {
+    final repository = _ThrowingThenSuccessAuthRepository();
+    final cubit = AppSessionCubit(repository: repository);
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: StartupPage(coordinator: _FakeStartupCoordinator.home()),
+      RepositoryProvider<AuthRepository>.value(
+        value: repository,
+        child: BlocProvider<AppSessionCubit>.value(
+          value: cubit,
+          child: MaterialApp(
+            onGenerateRoute: onGenerateAppRoute,
+            home: const StartupPage(),
+          ),
+        ),
       ),
-    );
-    await tester.pump();
-    await tester.pumpAndSettle();
-
-    expect(find.text('主页面占位'), findsOneWidget);
-  });
-
-  testWidgets('startup page shows retry on bootstrap failure', (tester) async {
-    final coordinator = _FailingThenSuccessCoordinator();
-    await tester.pumpWidget(
-      MaterialApp(home: StartupPage(coordinator: coordinator)),
     );
     await tester.pump();
     await tester.pumpAndSettle();
@@ -45,55 +87,79 @@ void main() {
 
     await tester.tap(find.text('重试'));
     await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
-    expect(find.text('登录页占位'), findsOneWidget);
+    expect(find.text('进入轻聊'), findsOneWidget);
+    await cubit.close();
   });
 }
 
-class _FakeStartupCoordinator implements StartupCoordinator {
-  const _FakeStartupCoordinator._(this.destination);
+class _FakeAuthRepository implements AuthRepository {
+  _FakeAuthRepository({this.cachedSession});
 
-  factory _FakeStartupCoordinator.home() =>
-      const _FakeStartupCoordinator._(LaunchDestination.home);
-
-  factory _FakeStartupCoordinator.login() =>
-      const _FakeStartupCoordinator._(LaunchDestination.login);
-
-  final LaunchDestination destination;
+  final CachedAuthSession? cachedSession;
 
   @override
-  Future<AppBootstrapSnapshot> bootstrap() async {
-    return AppBootstrapSnapshot(
-      destination: destination,
-      hasAuthSession: destination == LaunchDestination.home,
-      config: const LocalAppConfig(
-        appName: 'Flash IM',
-        apiBaseUrl: 'http://127.0.0.1:9600',
-        enableDebugTools: false,
-      ),
+  Future<AuthProfile> fetchProfile() async {
+    return const AuthProfile(
+      accountId: 10001,
+      nickname: 'Rainy',
+      avatarUrl: 'https://picsum.photos/seed/rainy/120/120',
+      phone: '13800138000',
+      hasPassword: true,
     );
   }
-}
-
-class _FailingThenSuccessCoordinator implements StartupCoordinator {
-  bool _didFail = false;
 
   @override
-  Future<AppBootstrapSnapshot> bootstrap() async {
-    if (!_didFail) {
-      _didFail = true;
-      throw Exception('bootstrap failed');
-    }
-
-    return const AppBootstrapSnapshot(
-      destination: LaunchDestination.login,
-      hasAuthSession: false,
-      config: LocalAppConfig(
-        appName: 'Flash IM',
-        apiBaseUrl: 'http://127.0.0.1:9600',
-        enableDebugTools: false,
-      ),
+  Future<AppSession> loginWithPassword({
+    required String identifier,
+    required String password,
+  }) async {
+    return const AppSession(
+      token: 'jwt-token',
+      accountId: 10001,
+      passwordSetupRequired: false,
     );
+  }
+
+  @override
+  Future<AppSession> loginWithSmsCode({
+    required String phone,
+    required String code,
+  }) async {
+    return const AppSession(
+      token: 'jwt-token',
+      accountId: 10001,
+      passwordSetupRequired: false,
+    );
+  }
+
+  @override
+  Future<void> logout() async {}
+
+  @override
+  Future<void> persistSession(AppSession session) async {}
+
+  @override
+  Future<CachedAuthSession?> readCachedSession() async => cachedSession;
+
+  @override
+  Future<void> setPassword({required String newPassword}) async {}
+
+  @override
+  Future<String> sendSmsCode(String phone) async => '654321';
+}
+
+class _ThrowingThenSuccessAuthRepository extends _FakeAuthRepository {
+  bool _didThrow = false;
+
+  @override
+  Future<CachedAuthSession?> readCachedSession() async {
+    if (!_didThrow) {
+      _didThrow = true;
+      throw const FormatException('corrupted cache');
+    }
+    return null;
   }
 }

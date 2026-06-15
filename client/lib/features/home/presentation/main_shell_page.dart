@@ -1,10 +1,8 @@
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../app/app_router.dart';
-import '../../auth/cubit/app_session_cubit.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../auth/domain/auth_status.dart';
 import '../../mine/presentation/dialogs/password_setup_prompt_dialog.dart';
 import '../../mine/presentation/mine_page.dart';
 import '../../contacts/presentation/contacts_placeholder_page.dart';

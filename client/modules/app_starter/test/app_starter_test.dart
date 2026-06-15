@@ -1,12 +1,32 @@
+import 'package:app_starter/app_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flash_im/app/app_router.dart';
-
 void main() {
-  testWidgets('password mode submits password login branch', (tester) async {
+  test('exports starter models', () {
+    const routes = AppStarterRoutes(
+      loginRouteName: '/login',
+      homeRouteName: '/home',
+    );
+    const options = AppStarterOptions(
+      routes: routes,
+      branding: AppStarterBranding(
+        logo: SizedBox(width: 100, height: 100),
+        title: 'Flash IM',
+        idleSubtitle: '轻量即时通讯',
+        loadingSubtitle: '正在恢复登录状态...',
+      ),
+    );
+
+    expect(AppStarterStage.values, hasLength(4));
+    expect(options.routes.homeRouteName, '/home');
+  });
+
+  testWidgets('routes to login when session restore reports unauthenticated', (
+    tester,
+  ) async {
     final repository = _FakeAuthRepository();
     final cubit = AppSessionCubit(repository: repository);
 
@@ -16,43 +36,39 @@ void main() {
         child: BlocProvider<AppSessionCubit>.value(
           value: cubit,
           child: MaterialApp(
-            home: const LoginPage(homeRouteName: AppRoutes.home),
-            onGenerateRoute: (settings) {
-              if (settings.name == AppRoutes.home) {
-                return MaterialPageRoute<void>(
-                  builder: (_) => const Scaffold(body: Text('home')),
-                );
-              }
-              return null;
+            routes: {
+              '/login': (_) => const Scaffold(body: Text('login')),
+              '/home': (_) => const Scaffold(body: Text('home')),
             },
+            home: AppStarterPage(
+              options: const AppStarterOptions(
+                routes: AppStarterRoutes(
+                  loginRouteName: '/login',
+                  homeRouteName: '/home',
+                ),
+                branding: AppStarterBranding(
+                  logo: SizedBox(width: 100, height: 100),
+                  title: 'Flash IM',
+                  idleSubtitle: '轻量即时通讯',
+                  loadingSubtitle: '正在恢复登录状态...',
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
 
-    await tester.tap(find.text('密码登录'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField).at(0), '13800138000');
-    await tester.enterText(find.byType(TextField).at(1), 'rainy123');
     await tester.pump();
-    final loginButton = find.widgetWithText(FilledButton, '登录');
-    await tester.ensureVisible(loginButton);
-    await tester.tap(loginButton);
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
-    expect(repository.passwordLoginCount, 1);
-    expect(repository.lastIdentifier, '13800138000');
-    expect(repository.lastPassword, 'rainy123');
-    expect(find.text('home'), findsOneWidget);
+    expect(find.text('login'), findsOneWidget);
     await cubit.close();
   });
 }
 
 class _FakeAuthRepository implements AuthRepository {
-  int passwordLoginCount = 0;
-  String? lastIdentifier;
-  String? lastPassword;
-
   @override
   Future<AuthProfile> fetchProfile() async {
     return const AuthProfile(
@@ -60,7 +76,7 @@ class _FakeAuthRepository implements AuthRepository {
       nickname: 'Rainy',
       avatarUrl: 'https://picsum.photos/seed/rainy/120/120',
       phone: '13800138000',
-      hasPassword: false,
+      hasPassword: true,
     );
   }
 
@@ -69,11 +85,8 @@ class _FakeAuthRepository implements AuthRepository {
     required String identifier,
     required String password,
   }) async {
-    passwordLoginCount += 1;
-    lastIdentifier = identifier;
-    lastPassword = password;
     return const AppSession(
-      token: 'jwt-token',
+      token: 'password-token',
       accountId: 10001,
       passwordSetupRequired: false,
     );
@@ -85,7 +98,7 @@ class _FakeAuthRepository implements AuthRepository {
     required String code,
   }) async {
     return const AppSession(
-      token: 'jwt-token',
+      token: 'sms-token',
       accountId: 10001,
       passwordSetupRequired: false,
     );

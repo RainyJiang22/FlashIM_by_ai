@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../app/app_router.dart';
 import '../cubit/app_session_cubit.dart';
 import '../data/auth_repository.dart';
 import '../domain/auth_status.dart';
@@ -13,7 +12,9 @@ import '../domain/login_method.dart';
 import 'widgets/auth_login_form_card.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, required this.homeRouteName});
+
+  final String homeRouteName;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -229,7 +230,7 @@ class _LoginPageState extends State<LoginPage> {
       listener: (context, state) {
         Navigator.of(
           context,
-        ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+        ).pushNamedAndRemoveUntil(widget.homeRouteName, (route) => false);
       },
       child: Scaffold(
         body: SafeArea(

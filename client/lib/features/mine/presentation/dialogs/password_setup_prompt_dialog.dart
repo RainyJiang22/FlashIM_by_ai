@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter/material.dart';
-
-import '../../../auth/cubit/app_session_cubit.dart';
-import '../../../auth/data/auth_repository.dart';
 
 class PasswordSetupPromptDialog extends StatefulWidget {
   const PasswordSetupPromptDialog({

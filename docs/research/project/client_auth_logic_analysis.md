@@ -22,8 +22,8 @@
 - 应用根：`client/lib/app/flash_im_app.dart`
 - 路由表：`client/lib/app/app_router.dart`
 - 启动页：`client/lib/features/startup/presentation/startup_page.dart`
-- 会话状态中心：`client/lib/features/auth/cubit/app_session_cubit.dart`
-- 登录页：`client/lib/features/auth/presentation/login_page.dart`
+- 会话状态中心：`client/modules/flash_auth/lib/src/cubit/app_session_cubit.dart`
+- 登录页：`client/modules/flash_auth/lib/src/presentation/login_page.dart`
 - 主壳层：`client/lib/features/main_shell/presentation/main_shell_page.dart`
 - 我的页面：`client/lib/features/mine/presentation/mine_page.dart`
 

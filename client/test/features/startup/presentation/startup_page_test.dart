@@ -1,14 +1,10 @@
+import 'package:app_starter/app_starter.dart';
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flash_im/app/app_router.dart';
-import 'package:flash_im/core/auth/auth_cache_store.dart';
-import 'package:flash_im/features/auth/cubit/app_session_cubit.dart';
-import 'package:flash_im/features/auth/data/auth_repository.dart';
-import 'package:flash_im/features/auth/domain/app_session.dart';
-import 'package:flash_im/features/auth/domain/auth_profile.dart';
-import 'package:flash_im/features/startup/presentation/startup_page.dart';
 
 void main() {
   testWidgets('startup page routes to login page', (tester) async {
@@ -22,7 +18,7 @@ void main() {
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
-            home: const StartupPage(),
+            home: _buildStarterPage(),
           ),
         ),
       ),
@@ -31,7 +27,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
-    expect(find.text('进入轻聊'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, '登录'), findsOneWidget);
     await cubit.close();
   });
 
@@ -51,7 +47,7 @@ void main() {
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
-            home: const StartupPage(),
+            home: _buildStarterPage(),
           ),
         ),
       ),
@@ -74,7 +70,7 @@ void main() {
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
-            home: const StartupPage(),
+            home: _buildStarterPage(),
           ),
         ),
       ),
@@ -90,9 +86,26 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
-    expect(find.text('进入轻聊'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, '登录'), findsOneWidget);
     await cubit.close();
   });
+}
+
+AppStarterPage _buildStarterPage() {
+  return AppStarterPage(
+    options: AppStarterOptions(
+      routes: const AppStarterRoutes(
+        loginRouteName: AppRoutes.login,
+        homeRouteName: AppRoutes.home,
+      ),
+      branding: const AppStarterBranding(
+        logo: SizedBox(width: 132, height: 132),
+        title: 'Flash IM',
+        idleSubtitle: '轻量即时通讯',
+        loadingSubtitle: '正在恢复登录状态...',
+      ),
+    ),
+  );
 }
 
 class _FakeAuthRepository implements AuthRepository {

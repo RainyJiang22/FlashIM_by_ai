@@ -1,4 +1,4 @@
-import '../../../core/auth/auth_cache_store.dart';
+import '../storage/auth_cache_store.dart';
 import '../domain/app_session.dart';
 import '../domain/auth_profile.dart';
 import 'auth_api.dart';

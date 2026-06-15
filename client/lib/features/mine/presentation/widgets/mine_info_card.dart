@@ -1,6 +1,5 @@
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter/material.dart';
-
-import '../../../auth/domain/auth_profile.dart';
 
 class MineInfoCard extends StatelessWidget {
   const MineInfoCard({super.key, required this.profile});

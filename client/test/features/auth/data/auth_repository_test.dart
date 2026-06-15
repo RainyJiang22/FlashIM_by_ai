@@ -1,12 +1,5 @@
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:flash_im/core/auth/auth_cache_store.dart';
-import 'package:flash_im/features/auth/data/auth_api.dart';
-import 'package:flash_im/features/auth/data/auth_repository.dart';
-import 'package:flash_im/features/auth/data/models/auth_profile_dto.dart';
-import 'package:flash_im/features/auth/data/models/auth_session_dto.dart';
-import 'package:flash_im/features/auth/data/models/password_setup_result_dto.dart';
-import 'package:flash_im/features/auth/data/models/sms_code_dto.dart';
 
 void main() {
   test(

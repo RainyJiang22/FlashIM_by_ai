@@ -1,12 +1,8 @@
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flash_im/core/auth/auth_cache_store.dart';
-import 'package:flash_im/features/auth/cubit/app_session_cubit.dart';
-import 'package:flash_im/features/auth/data/auth_repository.dart';
-import 'package:flash_im/features/auth/domain/app_session.dart';
-import 'package:flash_im/features/auth/domain/auth_profile.dart';
 import 'package:flash_im/features/home/presentation/main_shell_page.dart';
 
 void main() {

@@ -1,12 +1,9 @@
+import 'package:flash_auth/flash_auth.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../app/app_router.dart';
-import '../../auth/cubit/app_session_cubit.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../auth/domain/auth_profile.dart';
-import '../../auth/domain/auth_status.dart';
 import 'widgets/mine_error_view.dart';
 import 'widgets/mine_info_card.dart';
 import 'widgets/mine_profile_header.dart';

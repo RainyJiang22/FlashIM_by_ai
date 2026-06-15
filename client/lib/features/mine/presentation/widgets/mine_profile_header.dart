@@ -1,6 +1,5 @@
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter/material.dart';
-
-import '../../../auth/domain/auth_profile.dart';
 
 class MineProfileHeader extends StatelessWidget {
   const MineProfileHeader({super.key, required this.profile});

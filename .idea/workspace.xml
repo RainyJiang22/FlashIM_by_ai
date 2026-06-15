@@ -5,62 +5,69 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat:client启动页调整">
-      <change afterPath="$PROJECT_DIR$/client/assets/branding/flash_im_logo_alpha.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/cubit/app_session_cubit.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/data/auth_api.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/data/auth_repository.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/data/models/auth_profile_dto.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/data/models/auth_session_dto.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/data/models/password_setup_result_dto.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/data/models/sms_code_dto.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/domain/app_session.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/domain/auth_profile.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/domain/auth_status.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/domain/login_method.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/presentation/dialogs/password_setup_prompt.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/presentation/login_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/presentation/me/me_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/auth/presentation/widgets/auth_login_mode_switch.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/contacts/presentation/contacts_placeholder_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/main_shell/presentation/main_shell_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/test/features/auth/cubit/app_session_cubit_test.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/test/features/auth/data/auth_repository_test.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/test/features/auth/presentation/login_page_test.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/app-auth-shell/v1/client/design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/app-auth-shell/v1/client/tasks.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/research/novel/writing-humans.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-hdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-mdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/analysis_options.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/lib/app_starter.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_branding.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_options.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_routes.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_stage.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/app_starter_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/widgets/starter_brand_panel.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/widgets/starter_failure_panel.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/pubspec.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/app_starter/test/app_starter_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_auth/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_auth/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_auth/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_auth/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_auth/analysis_options.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/flash_auth.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_auth/pubspec.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_auth/test/flash_auth_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/app_starter/v0.1.0/client/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/app_starter/v0.1.0/client/tasks.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/lib/app/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/startup/presentation/startup_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/startup/presentation/startup_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/core/auth/auth_cache_store.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/storage/auth_cache_store.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/cubit/app_session_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/cubit/app_session_cubit.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/data/auth_api.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/data/auth_api.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/data/auth_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/data/auth_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/data/models/auth_profile_dto.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/data/models/auth_profile_dto.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/data/models/auth_session_dto.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/data/models/auth_session_dto.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/data/models/password_setup_result_dto.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/data/models/password_setup_result_dto.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/data/models/sms_code_dto.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/data/models/sms_code_dto.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/domain/app_session.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/domain/app_session.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/domain/auth_profile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/domain/auth_profile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/domain/auth_status.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/domain/auth_status.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/domain/login_method.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/domain/login_method.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/presentation/login_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/presentation/login_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/presentation/widgets/auth_login_form_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/presentation/widgets/auth_login_form_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/presentation/widgets/auth_login_header.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/presentation/widgets/auth_login_header.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/auth/presentation/widgets/auth_login_mode_switch.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_auth/lib/src/presentation/widgets/auth_login_mode_switch.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/mine/presentation/dialogs/password_setup_prompt_dialog.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/mine/presentation/dialogs/password_setup_prompt_dialog.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/mine/presentation/mine_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/mine/presentation/mine_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/mine/presentation/widgets/mine_info_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/mine/presentation/widgets/mine_info_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/mine/presentation/widgets/mine_profile_header.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/mine/presentation/widgets/mine_profile_header.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/startup/data/startup_coordinator_impl.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/startup/domain/app_bootstrap_snapshot.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/startup/domain/launch_destination.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/startup/domain/startup_stage.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/startup/presentation/startup_page.dart" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/auth/cubit/app_session_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/auth/cubit/app_session_cubit_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/auth/data/auth_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/auth/data/auth_repository_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/auth/presentation/login_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/auth/presentation/login_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/startup/data/startup_coordinator_impl_test.dart" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/test/widget_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/widget_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/research/project/client_auth_logic_analysis.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/research/project/client_auth_logic_analysis.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -93,26 +100,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "SHELLCHECK.PATH": "/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck",
-    "Shell Script.start_backend.sh.executor": "Run",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/research/project",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "show.migrate.to.gradle.popup": "false"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck&quot;,
+    &quot;Shell Script.start_backend.sh.executor&quot;: &quot;Run&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/research/project&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/docs/research/project" />

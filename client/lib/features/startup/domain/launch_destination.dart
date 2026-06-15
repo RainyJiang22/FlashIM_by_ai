@@ -1,1 +1,0 @@
-enum LaunchDestination { login, home }

@@ -1,12 +1,8 @@
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flash_im/app/flash_im_app.dart';
 import 'package:flash_im/core/config/app_config.dart';
-import 'package:flash_im/core/auth/auth_cache_store.dart';
-import 'package:flash_im/features/auth/cubit/app_session_cubit.dart';
-import 'package:flash_im/features/auth/data/auth_repository.dart';
-import 'package:flash_im/features/auth/domain/app_session.dart';
-import 'package:flash_im/features/auth/domain/auth_profile.dart';
 
 void main() {
   testWidgets('main app restores cached session into home shell', (

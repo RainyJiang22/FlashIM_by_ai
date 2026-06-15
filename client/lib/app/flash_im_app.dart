@@ -1,13 +1,10 @@
+import 'package:flash_auth/flash_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../core/auth/auth_cache_store.dart';
 import '../core/config/app_config.dart';
 import '../core/config/local_config_store.dart';
 import '../core/network/dio_factory.dart';
-import '../features/auth/cubit/app_session_cubit.dart';
-import '../features/auth/data/auth_api.dart';
-import '../features/auth/data/auth_repository.dart';
 import 'app_router.dart';
 
 class FlashImApp extends StatefulWidget {

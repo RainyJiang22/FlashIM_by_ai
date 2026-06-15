@@ -5,10 +5,11 @@ import '../../../app/app_router.dart';
 import '../../auth/cubit/app_session_cubit.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/auth_status.dart';
-import '../../auth/presentation/dialogs/password_setup_prompt.dart';
-import '../../auth/presentation/me/me_page.dart';
+import '../../mine/presentation/dialogs/password_setup_prompt_dialog.dart';
+import '../../mine/presentation/mine_page.dart';
 import '../../contacts/presentation/contacts_placeholder_page.dart';
 import '../../messages/presentation/messages_placeholder_page.dart';
+import 'widgets/home_navigation_bar.dart';
 
 class MainShellPage extends StatefulWidget {
   const MainShellPage({super.key});
@@ -24,7 +25,7 @@ class _MainShellPageState extends State<MainShellPage> {
   static const List<Widget> _pages = <Widget>[
     MessagesPlaceholderPage(),
     ContactsPlaceholderPage(),
-    MePage(),
+    MinePage(),
   ];
 
   Future<void> _showPasswordPrompt() async {
@@ -67,28 +68,13 @@ class _MainShellPageState extends State<MainShellPage> {
       },
       child: Scaffold(
         body: SafeArea(child: _pages[_currentIndex]),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _currentIndex,
-          elevation: 8,
+        bottomNavigationBar: HomeNavigationBar(
+          currentIndex: _currentIndex,
           onDestinationSelected: (index) {
             setState(() {
               _currentIndex = index;
             });
           },
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.chat_bubble_outline),
-              label: '消息',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.people_outline),
-              label: '通讯录',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              label: '我的',
-            ),
-          ],
         ),
       ),
     );

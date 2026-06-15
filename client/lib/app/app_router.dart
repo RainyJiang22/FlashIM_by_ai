@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../features/auth/presentation/login_page.dart';
-import '../features/main_shell/presentation/main_shell_page.dart';
+import '../features/home/presentation/main_shell_page.dart';
 import '../features/startup/presentation/startup_page.dart';
 
 abstract final class AppRoutes {

@@ -40,8 +40,9 @@ void main() {
     await tester.enterText(find.byType(TextField).at(0), '13800138000');
     await tester.enterText(find.byType(TextField).at(1), 'rainy123');
     await tester.pump();
-    await tester.ensureVisible(find.text('进入轻聊'));
-    await tester.tap(find.text('进入轻聊'));
+    final loginButton = find.widgetWithText(FilledButton, '登录');
+    await tester.ensureVisible(loginButton);
+    await tester.tap(loginButton);
     await tester.pumpAndSettle();
 
     expect(repository.passwordLoginCount, 1);

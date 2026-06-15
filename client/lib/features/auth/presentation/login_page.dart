@@ -10,7 +10,7 @@ import '../cubit/app_session_cubit.dart';
 import '../data/auth_repository.dart';
 import '../domain/auth_status.dart';
 import '../domain/login_method.dart';
-import 'widgets/auth_login_mode_switch.dart';
+import 'widgets/auth_login_form_card.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -222,7 +222,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return BlocListener<AppSessionCubit, AppSessionState>(
       listenWhen: (previous, current) =>
           previous.status != current.status &&
@@ -239,152 +238,28 @@ class _LoginPageState extends State<LoginPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x141C4EFF),
-                        blurRadius: 28,
-                        offset: Offset(0, 14),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 30, 24, 28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Column(
-                            children: [
-                              Image.asset(
-                                'assets/branding/flash_im_logo.png',
-                                width: 84,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Flash IM',
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF1C4EFF),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '轻量、干净、直接的体验',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: const Color(0xFF6A7B92),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 28),
-                        AuthLoginModeSwitch(
-                          value: _method,
-                          onChanged: (value) {
-                            if (_method == value) {
-                              return;
-                            }
-                            FocusScope.of(context).unfocus();
-                            setState(() {
-                              _method = value;
-                              _inlineError = null;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        TextField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                            labelText: '手机号',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _AnimatedCredentialSection(
-                          child: _method == LoginMethod.smsCode
-                              ? _CredentialSection(
-                                  key: const ValueKey('sms-code-fields'),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller: _codeController,
-                                          keyboardType: TextInputType.number,
-                                          decoration: const InputDecoration(
-                                            labelText: '验证码',
-                                            border: OutlineInputBorder(),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      SizedBox(
-                                        width: 116,
-                                        child: OutlinedButton(
-                                          onPressed:
-                                              _isSendingCode ||
-                                                  _cooldownSeconds > 0
-                                              ? null
-                                              : _sendCode,
-                                          style: OutlinedButton.styleFrom(
-                                            minimumSize: const Size.fromHeight(
-                                              64,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            _isSendingCode
-                                                ? '发送中...'
-                                                : _cooldownSeconds > 0
-                                                ? '${_cooldownSeconds}s'
-                                                : '发送',
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : _CredentialSection(
-                                  key: const ValueKey('password-fields'),
-                                  child: TextField(
-                                    controller: _passwordController,
-                                    obscureText: true,
-                                    decoration: const InputDecoration(
-                                      labelText: '密码',
-                                      border: OutlineInputBorder(),
-                                    ),
-                                  ),
-                                ),
-                        ),
-                        if (_inlineError != null) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            _inlineError!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFFE35D6A),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: _canSubmit ? _submit : null,
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(54),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: Text(_isSubmitting ? '登录中...' : '进入轻聊'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                child: AuthLoginFormCard(
+                  method: _method,
+                  phoneController: _phoneController,
+                  codeController: _codeController,
+                  passwordController: _passwordController,
+                  inlineError: _inlineError,
+                  isSendingCode: _isSendingCode,
+                  cooldownSeconds: _cooldownSeconds,
+                  isSubmitting: _isSubmitting,
+                  canSubmit: _canSubmit,
+                  onMethodChanged: (value) {
+                    if (_method == value) {
+                      return;
+                    }
+                    FocusScope.of(context).unfocus();
+                    setState(() {
+                      _method = value;
+                      _inlineError = null;
+                    });
+                  },
+                  onSendCode: _sendCode,
+                  onSubmit: _submit,
                 ),
               ),
             ),
@@ -392,53 +267,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-}
-
-class _AnimatedCredentialSection extends StatelessWidget {
-  const _AnimatedCredentialSection({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 260),
-      reverseDuration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      alignment: Alignment.topCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 260),
-          reverseDuration: const Duration(milliseconds: 220),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          transitionBuilder: (child, animation) {
-            final offset = Tween<Offset>(
-              begin: const Offset(0, 0.035),
-              end: Offset.zero,
-            ).animate(animation);
-
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(position: offset, child: child),
-            );
-          },
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-class _CredentialSection extends StatelessWidget {
-  const _CredentialSection({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
   }
 }

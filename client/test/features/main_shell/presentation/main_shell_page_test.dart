@@ -7,7 +7,7 @@ import 'package:flash_im/features/auth/cubit/app_session_cubit.dart';
 import 'package:flash_im/features/auth/data/auth_repository.dart';
 import 'package:flash_im/features/auth/domain/app_session.dart';
 import 'package:flash_im/features/auth/domain/auth_profile.dart';
-import 'package:flash_im/features/main_shell/presentation/main_shell_page.dart';
+import 'package:flash_im/features/home/presentation/main_shell_page.dart';
 
 void main() {
   testWidgets('main shell shows password setup prompt and switches tabs', (

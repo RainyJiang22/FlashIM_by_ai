@@ -4,37 +4,17 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat:模块化隔离，提取flash_auth,app_starter">
-      <change afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/server-modularization/v0.1.0/server/design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/server-modularization/v0.1.0/server/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/auth/jwt.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/auth/mod.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/auth/password.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/config.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/error.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/models/auth.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/models/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/models/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/models/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/models/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/response.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/auth.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/conversation.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/conversation.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/health.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/health.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/user.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/ws.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/ws.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/services/auth_service.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/services/chat_room_service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/services/chat_room_service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/services/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/services/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/services/user_service.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/state.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/store/memory.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/store/mod.rs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/store/postgres.rs" beforeDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat:后端rust模块化隔离">
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/Cargo.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/src/config.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/src/context.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/src/error.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/src/lib.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/src/response.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/src/runtime/chat_room.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/src/runtime/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/flash_core/server/modules/flash_core/src/runtime/postgres.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +25,7 @@
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/server/modules/flash_core" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -289,6 +269,7 @@
     <MESSAGE value="feat:后端认证系统升级" />
     <MESSAGE value="feat:client启动页调整" />
     <MESSAGE value="feat:模块化隔离，提取flash_auth,app_starter" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat:模块化隔离，提取flash_auth,app_starter" />
+    <MESSAGE value="feat:后端rust模块化隔离" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat:后端rust模块化隔离" />
   </component>
 </project>

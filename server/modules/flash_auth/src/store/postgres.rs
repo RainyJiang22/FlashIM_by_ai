@@ -1,32 +1,23 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use flash_core::{AppError, AppResult, runtime::postgres::PostgresRuntime};
 use serde_json::Value;
-use sqlx::{FromRow, PgPool, postgres::PgPoolOptions};
+use sqlx::FromRow;
+use std::sync::Arc;
 
-use crate::{
-    error::{AppError, AppResult},
-    store::{
-        AccountAggregate, AccountRecord, AuthStore, CredentialRecord, CredentialType, NewProfile,
-        ProfileRecord,
-    },
+use crate::store::{
+    AccountAggregate, AccountRecord, AuthStore, CredentialRecord, CredentialType, NewProfile,
+    ProfileRecord,
 };
 
 #[derive(Clone)]
-pub struct PostgresStore {
-    pool: PgPool,
+pub struct PostgresAuthStore {
+    postgres: Arc<PostgresRuntime>,
 }
 
-impl PostgresStore {
-    pub async fn connect(database_url: &str) -> Result<Self, sqlx::Error> {
-        let pool = PgPoolOptions::new()
-            .max_connections(5)
-            .connect(database_url)
-            .await?;
-        Ok(Self { pool })
-    }
-
-    pub async fn run_migrations(&self) -> Result<(), sqlx::migrate::MigrateError> {
-        sqlx::migrate!("./migrations").run(&self.pool).await
+impl PostgresAuthStore {
+    pub fn new(postgres: Arc<PostgresRuntime>) -> Self {
+        Self { postgres }
     }
 
     async fn load_account_aggregate(&self, account_id: i64) -> AppResult<Option<AccountAggregate>> {
@@ -38,7 +29,7 @@ impl PostgresStore {
             "#,
         )
         .bind(account_id)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.postgres.pool())
         .await
         .map_err(database_error)?
         else {
@@ -53,7 +44,7 @@ impl PostgresStore {
             "#,
         )
         .bind(account_id)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.postgres.pool())
         .await
         .map_err(database_error)?
         else {
@@ -78,7 +69,7 @@ impl PostgresStore {
             "#,
         )
         .bind(account_id)
-        .fetch_all(&self.pool)
+        .fetch_all(self.postgres.pool())
         .await
         .map_err(database_error)?;
 
@@ -96,7 +87,7 @@ impl PostgresStore {
 }
 
 #[async_trait]
-impl AuthStore for PostgresStore {
+impl AuthStore for PostgresAuthStore {
     async fn save_sms_code(
         &self,
         phone: &str,
@@ -114,7 +105,7 @@ impl AuthStore for PostgresStore {
         .bind(code)
         .bind(purpose)
         .bind(expires_at)
-        .execute(&self.pool)
+        .execute(self.postgres.pool())
         .await
         .map_err(database_error)?;
 
@@ -145,7 +136,7 @@ impl AuthStore for PostgresStore {
         .bind(phone)
         .bind(code)
         .bind(purpose)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.postgres.pool())
         .await
         .map_err(database_error)?;
 
@@ -171,7 +162,7 @@ impl AuthStore for PostgresStore {
         )
         .bind(credential_type.as_str())
         .bind(identifier)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.postgres.pool())
         .await
         .map_err(database_error)?;
 
@@ -186,7 +177,7 @@ impl AuthStore for PostgresStore {
         phone: &str,
         profile: NewProfile,
     ) -> AppResult<AccountAggregate> {
-        let mut tx = self.pool.begin().await.map_err(database_error)?;
+        let mut tx = self.postgres.pool().begin().await.map_err(database_error)?;
 
         let account_row = sqlx::query_as::<_, AccountRow>(
             r#"
@@ -259,7 +250,6 @@ impl AuthStore for PostgresStore {
             VALUES ($1, $2, $3, $4, '{}'::jsonb, NOW())
             ON CONFLICT (credential_type, identifier)
             DO UPDATE SET
-                account_id = EXCLUDED.account_id,
                 password_hash = EXCLUDED.password_hash,
                 verified_at = NOW(),
                 updated_at = NOW()
@@ -270,7 +260,7 @@ impl AuthStore for PostgresStore {
         .bind(CredentialType::Password.as_str())
         .bind(identifier)
         .bind(password_hash)
-        .fetch_one(&self.pool)
+        .fetch_one(self.postgres.pool())
         .await
         .map_err(database_error)
     }
@@ -279,7 +269,7 @@ impl AuthStore for PostgresStore {
         &self,
         identifier: &str,
     ) -> AppResult<Option<CredentialRecord>> {
-        let credential = sqlx::query_as::<_, CredentialRow>(
+        sqlx::query_as::<_, CredentialRow>(
             r#"
             SELECT
                 id,
@@ -298,18 +288,18 @@ impl AuthStore for PostgresStore {
         )
         .bind(CredentialType::Password.as_str())
         .bind(identifier)
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.postgres.pool())
         .await
-        .map_err(database_error)?;
-
-        credential.map(CredentialRecord::try_from).transpose()
+        .map_err(database_error)?
+        .map(CredentialRecord::try_from)
+        .transpose()
     }
 
     async fn find_password_credential_by_account_id(
         &self,
         account_id: i64,
     ) -> AppResult<Option<CredentialRecord>> {
-        let credential = sqlx::query_as::<_, CredentialRow>(
+        sqlx::query_as::<_, CredentialRow>(
             r#"
             SELECT
                 id,
@@ -323,18 +313,22 @@ impl AuthStore for PostgresStore {
                 updated_at
             FROM auth_credentials
             WHERE account_id = $1 AND credential_type = $2
-            ORDER BY id DESC
             LIMIT 1
             "#,
         )
         .bind(account_id)
         .bind(CredentialType::Password.as_str())
-        .fetch_optional(&self.pool)
+        .fetch_optional(self.postgres.pool())
         .await
-        .map_err(database_error)?;
-
-        credential.map(CredentialRecord::try_from).transpose()
+        .map_err(database_error)?
+        .map(CredentialRecord::try_from)
+        .transpose()
     }
+}
+
+fn database_error(error: sqlx::Error) -> AppError {
+    println!("database error: {error}");
+    AppError::internal_server_error("internal server error")
 }
 
 #[derive(FromRow)]
@@ -393,7 +387,7 @@ struct CredentialRow {
 }
 
 impl TryFrom<CredentialRow> for CredentialRecord {
-    type Error = crate::error::AppError;
+    type Error = AppError;
 
     fn try_from(value: CredentialRow) -> Result<Self, Self::Error> {
         let credential_type = CredentialType::from_db(&value.credential_type)
@@ -411,9 +405,4 @@ impl TryFrom<CredentialRow> for CredentialRecord {
             updated_at: value.updated_at,
         })
     }
-}
-
-fn database_error(error: sqlx::Error) -> AppError {
-    println!("database error: {error}");
-    AppError::internal_server_error("internal server error")
 }

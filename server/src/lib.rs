@@ -1,18 +1,13 @@
-pub mod auth;
-pub mod config;
-pub mod error;
 pub mod models;
-pub mod response;
 pub mod routes;
 pub mod services;
-pub mod state;
-pub mod store;
 
 use axum::Router;
-use state::SharedState;
+use flash_auth::SharedAuthStore;
+use flash_core::SharedContext;
 
-pub fn build_app(state: SharedState) -> Router {
-    routes::build_router(state)
+pub fn build_app(state: SharedContext, auth_store: SharedAuthStore) -> Router {
+    routes::build_router(state, auth_store)
 }
 
 #[cfg(test)]
@@ -28,19 +23,25 @@ mod tests {
     use tokio_tungstenite::{connect_async, tungstenite::Message as TungsteniteMessage};
     use tower::ServiceExt;
 
-    use crate::{
-        auth::jwt::sign_token,
-        models::{
-            auth::{LoginResponse, PasswordUpdatedResponse, SetPasswordResponse, SmsResponse},
-            user::ProfileResponse,
-        },
+    use crate::models::user::ProfileResponse;
+    use flash_auth::{
+        InMemoryStore,
+        jwt::sign_token,
+        models::auth::{LoginResponse, PasswordUpdatedResponse, SetPasswordResponse, SmsResponse},
         services::user_service::find_or_create_account_by_phone,
     };
+    use flash_core::AppContext;
+
+    fn build_test_app() -> (SharedContext, SharedAuthStore, Router) {
+        let context = Arc::new(AppContext::new_for_tests("test-secret"));
+        let auth_store: SharedAuthStore = Arc::new(InMemoryStore::new());
+        let app = build_app(context.clone(), auth_store.clone());
+        (context, auth_store, app)
+    }
 
     #[tokio::test]
     async fn auth_flow_returns_profile_for_valid_token() {
-        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
-        let app = build_app(state.clone());
+        let (_, _, app) = build_test_app();
 
         let sms_request = Request::builder()
             .method("POST")
@@ -176,8 +177,7 @@ mod tests {
 
     #[tokio::test]
     async fn missing_or_invalid_token_returns_401() {
-        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
-        let app = build_app(state);
+        let (_, _, app) = build_test_app();
 
         let missing_token_request = Request::builder()
             .method("GET")
@@ -199,8 +199,7 @@ mod tests {
 
     #[tokio::test]
     async fn set_password_rejects_duplicate_setup() {
-        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
-        let app = build_app(state);
+        let (_, _, app) = build_test_app();
 
         let sms_request = Request::builder()
             .method("POST")
@@ -257,8 +256,7 @@ mod tests {
 
     #[tokio::test]
     async fn chat_room_websocket_requires_valid_token() {
-        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
-        let app = build_app(state);
+        let (_, _, app) = build_test_app();
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();
         let server_task = tokio::spawn(async move {
@@ -274,12 +272,11 @@ mod tests {
 
     #[tokio::test]
     async fn chat_room_websocket_supports_auth_ping_and_chat() {
-        let state = Arc::new(state::AppState::new_for_tests("test-secret"));
-        let user = find_or_create_account_by_phone(state.as_ref(), "13800138000")
+        let (context, auth_store, app) = build_test_app();
+        let user = find_or_create_account_by_phone(auth_store.as_ref(), "13800138000")
             .await
             .unwrap();
-        let token = sign_token(state.as_ref(), user.account_id).unwrap();
-        let app = build_app(state.clone());
+        let token = sign_token(context.as_ref(), user.account_id).unwrap();
 
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();

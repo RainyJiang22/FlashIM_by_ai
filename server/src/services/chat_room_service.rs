@@ -1,21 +1,16 @@
 use axum::extract::ws::{Message, WebSocket};
+use flash_auth::models::user::UserRecord;
+use flash_core::{SharedContext, runtime::chat_room::ChatRoomConnection};
 use futures_util::{SinkExt, StreamExt};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::mpsc;
 
-use crate::{
-    models::{
-        chat::{ChatRoomClientEvent, ChatRoomServerEvent},
-        user::UserRecord,
-    },
-    state::{AppState, SharedState},
-    store::memory::ChatRoomConnection,
-};
+use crate::models::chat::{ChatRoomClientEvent, ChatRoomServerEvent};
 
 pub(crate) async fn handle_chat_room_socket(
     socket: WebSocket,
     connection_id: usize,
-    state: SharedState,
+    context: SharedContext,
     user: UserRecord,
 ) {
     println!(
@@ -26,7 +21,7 @@ pub(crate) async fn handle_chat_room_socket(
     let (mut ws_sender, mut ws_receiver) = socket.split();
     let (outgoing_tx, mut outgoing_rx) = mpsc::unbounded_channel::<String>();
 
-    state
+    context
         .chat_room_store
         .insert_chat_connection(
             connection_id,
@@ -76,7 +71,7 @@ pub(crate) async fn handle_chat_room_socket(
                         continue;
                     }
 
-                    broadcast_chat_room_message(state.as_ref(), &user, content).await;
+                    broadcast_chat_room_message(context.as_ref(), &user, content).await;
                 }
                 Err(_) => {
                     send_to_connection(
@@ -99,7 +94,7 @@ pub(crate) async fn handle_chat_room_socket(
         }
     }
 
-    state
+    context
         .chat_room_store
         .remove_chat_connection(connection_id)
         .await;
@@ -111,8 +106,12 @@ pub(crate) async fn handle_chat_room_socket(
     );
 }
 
-async fn broadcast_chat_room_message(state: &AppState, user: &UserRecord, text: String) {
-    let message_id = state.chat_room_store.next_chat_message_id();
+async fn broadcast_chat_room_message(
+    context: &flash_core::AppContext,
+    user: &UserRecord,
+    text: String,
+) {
+    let message_id = context.chat_room_store.next_chat_message_id();
     let payload = serialize_chat_room_event(ChatRoomServerEvent::Chat {
         message_id,
         user_id: user.account_id as u64,
@@ -122,11 +121,15 @@ async fn broadcast_chat_room_message(state: &AppState, user: &UserRecord, text: 
         sent_at: unix_timestamp(),
     });
 
-    broadcast_chat_payload(state, payload, None).await;
+    broadcast_chat_payload(context, payload, None).await;
 }
 
-async fn broadcast_chat_payload(state: &AppState, payload: String, exclude: Option<usize>) {
-    let connections = state.chat_room_store.chat_connections().await;
+async fn broadcast_chat_payload(
+    context: &flash_core::AppContext,
+    payload: String,
+    exclude: Option<usize>,
+) {
+    let connections = context.chat_room_store.chat_connections().await;
     let mut stale_connections = Vec::new();
 
     for (connection_id, connection) in connections {
@@ -141,7 +144,7 @@ async fn broadcast_chat_payload(state: &AppState, payload: String, exclude: Opti
 
     if !stale_connections.is_empty() {
         for connection_id in stale_connections {
-            state
+            context
                 .chat_room_store
                 .remove_chat_connection(connection_id)
                 .await;

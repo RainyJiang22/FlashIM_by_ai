@@ -1,73 +1,18 @@
 use std::{
     collections::HashMap,
-    sync::atomic::{AtomicI64, AtomicU64, Ordering},
+    sync::atomic::{AtomicI64, Ordering},
 };
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use flash_core::AppResult;
 use serde_json::json;
-use tokio::sync::{RwLock, mpsc};
+use tokio::sync::RwLock;
 
-use crate::{
-    error::AppResult,
-    store::{
-        AccountAggregate, AccountRecord, AuthStore, CredentialRecord, CredentialType, NewProfile,
-        ProfileRecord,
-    },
+use crate::store::{
+    AccountAggregate, AccountRecord, AuthStore, CredentialRecord, CredentialType, NewProfile,
+    ProfileRecord,
 };
-
-#[derive(Clone)]
-pub struct ChatRoomConnection {
-    pub sender: mpsc::UnboundedSender<String>,
-}
-
-pub struct ChatRoomStore {
-    chat_connections: RwLock<HashMap<usize, ChatRoomConnection>>,
-    next_chat_message_id: AtomicU64,
-}
-
-impl Default for ChatRoomStore {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ChatRoomStore {
-    pub fn new() -> Self {
-        Self {
-            chat_connections: RwLock::new(HashMap::new()),
-            next_chat_message_id: AtomicU64::new(1),
-        }
-    }
-
-    pub fn next_chat_message_id(&self) -> u64 {
-        self.next_chat_message_id.fetch_add(1, Ordering::Relaxed)
-    }
-
-    pub async fn insert_chat_connection(
-        &self,
-        connection_id: usize,
-        connection: ChatRoomConnection,
-    ) {
-        self.chat_connections
-            .write()
-            .await
-            .insert(connection_id, connection);
-    }
-
-    pub async fn remove_chat_connection(&self, connection_id: usize) {
-        self.chat_connections.write().await.remove(&connection_id);
-    }
-
-    pub async fn chat_connections(&self) -> Vec<(usize, ChatRoomConnection)> {
-        self.chat_connections
-            .read()
-            .await
-            .iter()
-            .map(|(connection_id, connection)| (*connection_id, connection.clone()))
-            .collect()
-    }
-}
 
 pub struct InMemoryStore {
     sms_codes: RwLock<HashMap<(String, String), Vec<SmsCodeRecord>>>,
@@ -238,28 +183,27 @@ impl AuthStore for InMemoryStore {
         self.accounts_by_id
             .write()
             .await
-            .insert(account_id, account.clone());
+            .insert(account_id, account);
         self.profiles_by_account_id
             .write()
             .await
-            .insert(account_id, profile.clone());
+            .insert(account_id, profile);
         self.credential_ids_by_lookup.write().await.insert(
             (
                 phone_credential.credential_type.as_str().to_string(),
-                phone_credential.identifier.clone(),
+                phone.to_string(),
             ),
             phone_credential.id,
         );
         self.credentials_by_id
             .write()
             .await
-            .insert(phone_credential.id, phone_credential.clone());
+            .insert(phone_credential.id, phone_credential);
 
-        Ok(AccountAggregate {
-            account,
-            profile,
-            credentials: vec![phone_credential],
-        })
+        Ok(self
+            .load_account_aggregate(account_id)
+            .await
+            .expect("new account should be queryable"))
     }
 
     async fn upsert_password_credential(
@@ -273,7 +217,6 @@ impl AuthStore for InMemoryStore {
             CredentialType::Password.as_str().to_string(),
             identifier.to_string(),
         );
-
         let existing_id = self
             .credential_ids_by_lookup
             .read()
@@ -283,13 +226,11 @@ impl AuthStore for InMemoryStore {
 
         match existing_id {
             Some(credential_id) => {
-                if let Some(credential) =
-                    self.credentials_by_id.write().await.get_mut(&credential_id)
-                {
-                    credential.account_id = account_id;
+                let mut credentials_by_id = self.credentials_by_id.write().await;
+                if let Some(credential) = credentials_by_id.get_mut(&credential_id) {
                     credential.password_hash = Some(password_hash.to_string());
-                    credential.verified_at = Some(now);
                     credential.updated_at = now;
+                    credential.verified_at = Some(now);
                 }
             }
             None => {
@@ -322,25 +263,29 @@ impl AuthStore for InMemoryStore {
         &self,
         identifier: &str,
     ) -> AppResult<Option<CredentialRecord>> {
+        let lookup_key = (
+            CredentialType::Password.as_str().to_string(),
+            identifier.to_string(),
+        );
         let credential_id = self
             .credential_ids_by_lookup
             .read()
             .await
-            .get(&(
-                CredentialType::Password.as_str().to_string(),
-                identifier.to_string(),
-            ))
+            .get(&lookup_key)
             .copied();
+        let credential = match credential_id {
+            Some(id) => self.credentials_by_id.read().await.get(&id).cloned(),
+            None => None,
+        };
 
-        let credentials = self.credentials_by_id.read().await;
-        Ok(credential_id.and_then(|id| credentials.get(&id).cloned()))
+        Ok(credential)
     }
 
     async fn find_password_credential_by_account_id(
         &self,
         account_id: i64,
     ) -> AppResult<Option<CredentialRecord>> {
-        Ok(self
+        let credential = self
             .credentials_by_id
             .read()
             .await
@@ -349,10 +294,12 @@ impl AuthStore for InMemoryStore {
                 credential.account_id == account_id
                     && matches!(credential.credential_type, CredentialType::Password)
             })
-            .cloned())
+            .cloned();
+        Ok(credential)
     }
 }
 
+#[derive(Clone)]
 struct SmsCodeRecord {
     code: String,
     expires_at: DateTime<Utc>,

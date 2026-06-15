@@ -1,19 +1,16 @@
 use axum::{
     extract::{
-        Query, State,
+        Extension, Query, State,
         ws::{Message, WebSocket, WebSocketUpgrade},
     },
     response::IntoResponse,
 };
+use flash_auth::{SharedAuthStore, services::auth_service};
+use flash_core::{AppError, AppResult, SharedContext};
 use futures_util::StreamExt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use crate::{
-    error::{AppError, AppResult},
-    models::chat::ChatRoomWsQuery,
-    services::{auth_service, chat_room_service},
-    state::SharedState,
-};
+use crate::{models::chat::ChatRoomWsQuery, services::chat_room_service};
 
 static NEXT_CONNECTION_ID: AtomicUsize = AtomicUsize::new(1);
 
@@ -23,7 +20,8 @@ pub async fn websocket_handler(websocket: WebSocketUpgrade) -> impl IntoResponse
 }
 
 pub async fn chat_room_websocket_handler(
-    State(state): State<SharedState>,
+    State(context): State<SharedContext>,
+    Extension(store): Extension<SharedAuthStore>,
     Query(query): Query<ChatRoomWsQuery>,
     websocket: WebSocketUpgrade,
 ) -> AppResult<impl IntoResponse> {
@@ -32,11 +30,11 @@ pub async fn chat_room_websocket_handler(
         .as_deref()
         .filter(|token| !token.trim().is_empty())
         .ok_or(AppError::unauthorized("missing token"))?;
-    let user = auth_service::authenticate_user(state.as_ref(), token).await?;
+    let user = auth_service::authenticate_user(context.as_ref(), store.as_ref(), token).await?;
     let connection_id = next_connection_id();
 
     Ok(websocket.on_upgrade(move |socket| {
-        chat_room_service::handle_chat_room_socket(socket, connection_id, state, user)
+        chat_room_service::handle_chat_room_socket(socket, connection_id, context, user)
     }))
 }
 

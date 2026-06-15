@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
-pub struct ProfileResponse {
+#[derive(Clone, Serialize, Deserialize)]
+pub struct UserRecord {
     pub account_id: i64,
     pub nickname: String,
     pub avatar: String,

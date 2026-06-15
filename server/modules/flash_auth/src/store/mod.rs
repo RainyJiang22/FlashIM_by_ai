@@ -1,11 +1,13 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use flash_core::AppResult;
 use serde_json::Value;
-
-use crate::error::AppResult;
+use std::sync::Arc;
 
 pub mod memory;
 pub mod postgres;
+
+pub type SharedAuthStore = Arc<dyn AuthStore>;
 
 #[derive(Clone, Debug)]
 pub struct AccountRecord {

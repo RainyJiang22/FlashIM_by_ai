@@ -1,6 +1,7 @@
 use axum::{Json, response::IntoResponse};
+use flash_core::response::utf8_json;
 
-use crate::{models::chat::ConversationResponse, response::utf8_json};
+use crate::models::chat::ConversationResponse;
 
 pub async fn conversations() -> impl IntoResponse {
     utf8_json(Json(vec![

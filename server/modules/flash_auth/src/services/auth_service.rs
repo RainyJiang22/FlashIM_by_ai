@@ -1,38 +1,36 @@
 use chrono::Utc;
+use flash_core::{AppContext, AppError, AppResult};
 use rand::Rng;
 
 use crate::{
-    auth::{
-        jwt::{decode_token, sign_token},
-        password,
+    jwt::{decode_token, sign_token},
+    models::auth::{
+        ChangePasswordRequest, LoginRequest, LoginResponse, LoginType, PasswordUpdatedResponse,
+        SetPasswordRequest, SetPasswordResponse, SmsResponse,
     },
-    error::{AppError, AppResult},
-    models::{
-        auth::{
-            ChangePasswordRequest, LoginRequest, LoginResponse, LoginType, PasswordUpdatedResponse,
-            SetPasswordRequest, SetPasswordResponse, SmsResponse,
-        },
-        user::{ProfileResponse, UserRecord},
-    },
+    password,
     services::user_service,
-    state::AppState,
+    store::AuthStore,
 };
 
-pub(crate) async fn issue_sms_code(state: &AppState, phone: &str) -> AppResult<SmsResponse> {
+pub async fn issue_sms_code(
+    context: &AppContext,
+    store: &dyn AuthStore,
+    phone: &str,
+) -> AppResult<SmsResponse> {
     let phone = phone.trim().to_string();
     if phone.is_empty() {
         return Err(AppError::bad_request("phone is required"));
     }
 
     let code = random_sms_code();
-    state
-        .auth_store
-        .save_sms_code(&phone, &code, "login", Utc::now() + state.sms_code_ttl)
+    store
+        .save_sms_code(&phone, &code, "login", Utc::now() + context.sms_code_ttl)
         .await?;
 
     Ok(SmsResponse {
         phone,
-        code: if state.expose_debug_sms_code {
+        code: if context.expose_debug_sms_code {
             code
         } else {
             String::new()
@@ -40,14 +38,18 @@ pub(crate) async fn issue_sms_code(state: &AppState, phone: &str) -> AppResult<S
     })
 }
 
-pub(crate) async fn login(state: &AppState, request: LoginRequest) -> AppResult<LoginResponse> {
+pub async fn login(
+    context: &AppContext,
+    store: &dyn AuthStore,
+    request: LoginRequest,
+) -> AppResult<LoginResponse> {
     let user = match request.login_type {
         LoginType::SmsCode => {
-            login_with_sms_code(state, request.phone.as_deref(), request.code.as_deref()).await?
+            login_with_sms_code(store, request.phone.as_deref(), request.code.as_deref()).await?
         }
         LoginType::Password => {
             login_with_password(
-                state,
+                store,
                 request.identifier.as_deref(),
                 request.password.as_deref(),
             )
@@ -55,7 +57,7 @@ pub(crate) async fn login(state: &AppState, request: LoginRequest) -> AppResult<
         }
     };
 
-    let token = sign_token(state, user.account_id).map_err(|error| {
+    let token = sign_token(context, user.account_id).map_err(|error| {
         println!(
             "jwt sign failed: account_id={}, error={error}",
             user.account_id
@@ -71,34 +73,29 @@ pub(crate) async fn login(state: &AppState, request: LoginRequest) -> AppResult<
 }
 
 async fn login_with_sms_code(
-    state: &AppState,
+    store: &dyn AuthStore,
     phone: Option<&str>,
     code: Option<&str>,
-) -> AppResult<UserRecord> {
+) -> AppResult<crate::models::user::UserRecord> {
     let phone = required_field(phone, "phone and code are required")?;
     let code = required_field(code, "phone and code are required")?;
 
-    if !state
-        .auth_store
-        .consume_sms_code(&phone, &code, "login")
-        .await?
-    {
+    if !store.consume_sms_code(&phone, &code, "login").await? {
         return Err(AppError::unauthorized("invalid or expired code"));
     }
 
-    user_service::find_or_create_account_by_phone(state, &phone).await
+    user_service::find_or_create_account_by_phone(store, &phone).await
 }
 
 async fn login_with_password(
-    state: &AppState,
+    store: &dyn AuthStore,
     identifier: Option<&str>,
     password: Option<&str>,
-) -> AppResult<UserRecord> {
+) -> AppResult<crate::models::user::UserRecord> {
     let identifier = required_field(identifier, "identifier and password are required")?;
     let password = required_field(password, "identifier and password are required")?;
 
-    let credential = state
-        .auth_store
+    let credential = store
         .find_password_credential_by_identifier(&identifier)
         .await?
         .ok_or(AppError::unauthorized("invalid phone or password"))?;
@@ -118,31 +115,26 @@ async fn login_with_password(
         return Err(AppError::unauthorized("invalid phone or password"));
     }
 
-    user_service::load_user_by_account_id(state, credential.account_id).await
+    user_service::load_user_by_account_id(store, credential.account_id).await
 }
 
-pub(crate) async fn load_profile(state: &AppState, token: &str) -> AppResult<ProfileResponse> {
-    let user = authenticate_user(state, token).await?;
-    Ok(ProfileResponse {
-        account_id: user.account_id,
-        nickname: user.nickname,
-        avatar: user.avatar,
-        phone: user.phone,
-        has_password: user.has_password,
-    })
+pub async fn authenticate_user(
+    context: &AppContext,
+    store: &dyn AuthStore,
+    token: &str,
+) -> AppResult<crate::models::user::UserRecord> {
+    let claims =
+        decode_token(context, token).map_err(|_| AppError::unauthorized("invalid token"))?;
+    user_service::load_user_by_account_id(store, claims.account_id).await
 }
 
-pub(crate) async fn authenticate_user(state: &AppState, token: &str) -> AppResult<UserRecord> {
-    let claims = decode_token(state, token).map_err(|_| AppError::unauthorized("invalid token"))?;
-    user_service::load_user_by_account_id(state, claims.account_id).await
-}
-
-pub(crate) async fn set_password(
-    state: &AppState,
+pub async fn set_password(
+    context: &AppContext,
+    store: &dyn AuthStore,
     token: &str,
     request: SetPasswordRequest,
 ) -> AppResult<SetPasswordResponse> {
-    let user = authenticate_user(state, token).await?;
+    let user = authenticate_user(context, store, token).await?;
     if user.has_password {
         return Err(AppError::conflict("password already set"));
     }
@@ -155,8 +147,7 @@ pub(crate) async fn set_password(
         );
         AppError::internal_server_error("internal server error")
     })?;
-    let updated_at = state
-        .auth_store
+    let updated_at = store
         .upsert_password_credential(user.account_id, &user.phone, &password_hash)
         .await?;
 
@@ -166,17 +157,17 @@ pub(crate) async fn set_password(
     })
 }
 
-pub(crate) async fn change_password(
-    state: &AppState,
+pub async fn change_password(
+    context: &AppContext,
+    store: &dyn AuthStore,
     token: &str,
     request: ChangePasswordRequest,
 ) -> AppResult<PasswordUpdatedResponse> {
-    let user = authenticate_user(state, token).await?;
+    let user = authenticate_user(context, store, token).await?;
     let old_password = required_nonempty(request.old_password, "old_password is required")?;
     let new_password = required_nonempty(request.new_password, "new_password is required")?;
 
-    let credential = state
-        .auth_store
+    let credential = store
         .find_password_credential_by_account_id(user.account_id)
         .await?
         .ok_or(AppError::conflict("password is not set"))?;
@@ -203,8 +194,7 @@ pub(crate) async fn change_password(
         );
         AppError::internal_server_error("internal server error")
     })?;
-    let updated_at = state
-        .auth_store
+    let updated_at = store
         .upsert_password_credential(user.account_id, &credential.identifier, &new_hash)
         .await?;
 

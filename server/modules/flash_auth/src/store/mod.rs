@@ -23,6 +23,7 @@ pub struct ProfileRecord {
     pub account_id: i64,
     pub nickname: String,
     pub avatar_url: String,
+    pub signature: String,
     pub bio: String,
     pub updated_at: DateTime<Utc>,
 }
@@ -50,8 +51,16 @@ pub struct AccountAggregate {
 #[derive(Clone, Debug)]
 pub struct NewProfile {
     pub nickname: String,
-    pub avatar_url: String,
+    pub avatar_url: Option<String>,
+    pub signature: String,
     pub bio: String,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct UpdateProfilePatch {
+    pub nickname: Option<String>,
+    pub avatar_url: Option<String>,
+    pub signature: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -104,6 +113,11 @@ pub trait AuthStore: Send + Sync {
         phone: &str,
         profile: NewProfile,
     ) -> AppResult<AccountAggregate>;
+    async fn update_profile(
+        &self,
+        account_id: i64,
+        patch: UpdateProfilePatch,
+    ) -> AppResult<Option<AccountAggregate>>;
     async fn upsert_password_credential(
         &self,
         account_id: i64,

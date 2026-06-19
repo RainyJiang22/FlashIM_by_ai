@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -27,7 +27,7 @@ class _AppStarterPageState extends State<AppStarterPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AppSessionCubit>().restoreSession();
+      context.read<SessionCubit>().restoreSession();
     });
   }
 
@@ -52,27 +52,27 @@ class _AppStarterPageState extends State<AppStarterPage> {
   }
 
   void _retryRestore() {
-    context.read<AppSessionCubit>().restoreSession();
+    context.read<SessionCubit>().restoreSession();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AppSessionCubit, AppSessionState>(
+    return BlocListener<SessionCubit, SessionState>(
       listenWhen: (previous, current) =>
           previous.status != current.status ||
           previous.errorMessage != current.errorMessage,
       listener: (context, state) {
         switch (state.status) {
-          case AuthStatus.initial:
+          case SessionStatus.initial:
             break;
-          case AuthStatus.restoring:
+          case SessionStatus.restoring:
             _loginRouteTimer?.cancel();
             setState(() {
               _stage = AppStarterStage.loading;
               _errorMessage = null;
             });
             break;
-          case AuthStatus.authenticated:
+          case SessionStatus.authenticated:
             _loginRouteTimer?.cancel();
             setState(() {
               _stage = AppStarterStage.ready;
@@ -80,14 +80,14 @@ class _AppStarterPageState extends State<AppStarterPage> {
             });
             _goToRoute(widget.options.routes.homeRouteName);
             break;
-          case AuthStatus.unauthenticated:
+          case SessionStatus.unauthenticated:
             setState(() {
               _stage = AppStarterStage.ready;
               _errorMessage = null;
             });
             _scheduleLoginRoute();
             break;
-          case AuthStatus.failure:
+          case SessionStatus.failure:
             _loginRouteTimer?.cancel();
             setState(() {
               _stage = AppStarterStage.failed;

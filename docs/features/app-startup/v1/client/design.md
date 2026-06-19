@@ -1,6 +1,6 @@
 ---
 module: app-startup
-version: v1
+version: v0.0.1
 date: 2026-06-12
 tags: [startup, splash, bootstrap, auth, client, flutter]
 ---

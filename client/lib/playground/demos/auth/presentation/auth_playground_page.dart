@@ -680,7 +680,7 @@ class _AnimatedAuthSection extends StatelessWidget {
               alignment: Alignment.topCenter,
               children: [
                 ...previousChildren,
-                if (currentChild != null) currentChild,
+                ..._maybeChild(currentChild),
               ],
             ),
           );
@@ -689,6 +689,13 @@ class _AnimatedAuthSection extends StatelessWidget {
       ),
     );
   }
+}
+
+List<Widget> _maybeChild(Widget? child) {
+  if (child == null) {
+    return const <Widget>[];
+  }
+  return <Widget>[child];
 }
 
 class _AnimatedHintSection extends StatelessWidget {

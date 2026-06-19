@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 
-import 'models/auth_profile_dto.dart';
 import 'models/auth_session_dto.dart';
-import 'models/password_setup_result_dto.dart';
 import 'models/sms_code_dto.dart';
 
 abstract interface class AuthApi {
@@ -18,30 +16,12 @@ abstract interface class AuthApi {
     required String password,
   });
 
-  Future<AuthProfileDto> fetchProfile({required String token});
-
-  Future<PasswordSetupResultDto> setPassword({
-    required String token,
-    required String newPassword,
-  });
 }
 
 class DioAuthApi implements AuthApi {
   DioAuthApi({required Dio dio}) : _dio = dio;
 
   final Dio _dio;
-
-  @override
-  Future<AuthProfileDto> fetchProfile({required String token}) async {
-    final response = await _dio.get<dynamic>(
-      '/user/profile',
-      options: Options(
-        headers: <String, String>{'Authorization': 'Bearer $token'},
-      ),
-    );
-
-    return AuthProfileDto.fromJson(_readJsonMap(response.data));
-  }
 
   @override
   Future<AuthSessionDto> loginWithPassword({
@@ -85,22 +65,6 @@ class DioAuthApi implements AuthApi {
     );
 
     return SmsCodeDto.fromJson(_readJsonMap(response.data));
-  }
-
-  @override
-  Future<PasswordSetupResultDto> setPassword({
-    required String token,
-    required String newPassword,
-  }) async {
-    final response = await _dio.post<dynamic>(
-      '/auth/password/set',
-      data: <String, String>{'new_password': newPassword},
-      options: Options(
-        headers: <String, String>{'Authorization': 'Bearer $token'},
-      ),
-    );
-
-    return PasswordSetupResultDto.fromJson(_readJsonMap(response.data));
   }
 
   Map<String, dynamic> _readJsonMap(dynamic payload) {

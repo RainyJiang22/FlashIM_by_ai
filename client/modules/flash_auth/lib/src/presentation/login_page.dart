@@ -5,16 +5,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubit/app_session_cubit.dart';
 import '../data/auth_repository.dart';
-import '../domain/auth_status.dart';
+import '../domain/app_session.dart';
 import '../domain/login_method.dart';
 import 'widgets/auth_login_form_card.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, required this.homeRouteName});
+  const LoginPage({
+    super.key,
+    required this.homeRouteName,
+    required this.onLoginSuccess,
+  });
 
   final String homeRouteName;
+  final Future<void> Function(AppSession session) onLoginSuccess;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -164,7 +168,13 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) {
         return;
       }
-      await context.read<AppSessionCubit>().completeLogin(session);
+      await widget.onLoginSuccess(session);
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(widget.homeRouteName, (route) => false);
     } catch (error) {
       if (!mounted) {
         return;
@@ -223,45 +233,35 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AppSessionCubit, AppSessionState>(
-      listenWhen: (previous, current) =>
-          previous.status != current.status &&
-          current.status == AuthStatus.authenticated,
-      listener: (context, state) {
-        Navigator.of(
-          context,
-        ).pushNamedAndRemoveUntil(widget.homeRouteName, (route) => false);
-      },
-      child: Scaffold(
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: AuthLoginFormCard(
-                  method: _method,
-                  phoneController: _phoneController,
-                  codeController: _codeController,
-                  passwordController: _passwordController,
-                  inlineError: _inlineError,
-                  isSendingCode: _isSendingCode,
-                  cooldownSeconds: _cooldownSeconds,
-                  isSubmitting: _isSubmitting,
-                  canSubmit: _canSubmit,
-                  onMethodChanged: (value) {
-                    if (_method == value) {
-                      return;
-                    }
-                    FocusScope.of(context).unfocus();
-                    setState(() {
-                      _method = value;
-                      _inlineError = null;
-                    });
-                  },
-                  onSendCode: _sendCode,
-                  onSubmit: _submit,
-                ),
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: AuthLoginFormCard(
+                method: _method,
+                phoneController: _phoneController,
+                codeController: _codeController,
+                passwordController: _passwordController,
+                inlineError: _inlineError,
+                isSendingCode: _isSendingCode,
+                cooldownSeconds: _cooldownSeconds,
+                isSubmitting: _isSubmitting,
+                canSubmit: _canSubmit,
+                onMethodChanged: (value) {
+                  if (_method == value) {
+                    return;
+                  }
+                  FocusScope.of(context).unfocus();
+                  setState(() {
+                    _method = value;
+                    _inlineError = null;
+                  });
+                },
+                onSendCode: _sendCode,
+                onSubmit: _submit,
               ),
             ),
           ),

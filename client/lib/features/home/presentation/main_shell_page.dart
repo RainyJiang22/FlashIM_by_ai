@@ -1,4 +1,4 @@
-import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -31,29 +31,37 @@ class _MainShellPageState extends State<MainShellPage> {
       return;
     }
 
-    final repository = context.read<AuthRepository>();
-    final sessionCubit = context.read<AppSessionCubit>();
+    final sessionCubit = context.read<SessionCubit>();
     _isShowingPasswordPrompt = true;
-    await showDialog<void>(
+    final shouldSetNow = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (_) => PasswordSetupPromptDialog(
-        repository: repository,
-        appSessionCubit: sessionCubit,
+        onSkip: () {
+          sessionCubit.markPasswordPromptHandled();
+          Navigator.of(context).pop(false);
+        },
+        onSetNow: () {
+          sessionCubit.markPasswordPromptHandled();
+          Navigator.of(context).pop(true);
+        },
       ),
     );
     _isShowingPasswordPrompt = false;
+    if (shouldSetNow == true && mounted) {
+      await Navigator.of(context).pushNamed(AppRoutes.setPassword);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AppSessionCubit, AppSessionState>(
+    return BlocListener<SessionCubit, SessionState>(
       listenWhen: (previous, current) =>
           previous.status != current.status ||
           previous.shouldPromptPasswordSetup !=
               current.shouldPromptPasswordSetup,
       listener: (context, state) async {
-        if (state.status == AuthStatus.unauthenticated) {
+        if (state.status == SessionStatus.unauthenticated) {
           Navigator.of(
             context,
           ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);

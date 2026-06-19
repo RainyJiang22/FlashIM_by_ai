@@ -1,6 +1,6 @@
 ---
 module: app_starter
-version: v0.1.0
+version: v0.0.1
 date: 2026-06-15
 tags: [启动, 闪屏, 初始化, package, client, flutter, auth]
 ---

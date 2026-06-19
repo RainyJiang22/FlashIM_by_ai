@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use crate::store::{
     AccountAggregate, AccountRecord, AuthStore, CredentialRecord, CredentialType, NewProfile,
-    ProfileRecord,
+    ProfileRecord, UpdateProfilePatch,
 };
 
 #[derive(Clone)]
@@ -38,7 +38,7 @@ impl PostgresAuthStore {
 
         let Some(profile_row) = sqlx::query_as::<_, ProfileRow>(
             r#"
-            SELECT account_id, nickname, avatar_url, bio, updated_at
+            SELECT account_id, nickname, avatar_url, signature, bio, updated_at
             FROM user_profiles
             WHERE account_id = $1
             "#,
@@ -193,13 +193,18 @@ impl AuthStore for PostgresAuthStore {
 
         sqlx::query(
             r#"
-            INSERT INTO user_profiles (account_id, nickname, avatar_url, bio)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO user_profiles (account_id, nickname, avatar_url, signature, bio)
+            VALUES ($1, $2, $3, $4, $5)
             "#,
         )
         .bind(account_row.id)
         .bind(&profile.nickname)
-        .bind(&profile.avatar_url)
+        .bind(
+            profile
+                .avatar_url
+                .unwrap_or_else(|| format!("identicon:{}", account_row.id)),
+        )
+        .bind(&profile.signature)
         .bind(&profile.bio)
         .execute(&mut *tx)
         .await
@@ -229,6 +234,37 @@ impl AuthStore for PostgresAuthStore {
         self.load_account_aggregate(account_row.id)
             .await?
             .ok_or_else(|| AppError::internal_server_error("internal server error"))
+    }
+
+    async fn update_profile(
+        &self,
+        account_id: i64,
+        patch: UpdateProfilePatch,
+    ) -> AppResult<Option<AccountAggregate>> {
+        let updated = sqlx::query_scalar::<_, i64>(
+            r#"
+            UPDATE user_profiles
+            SET
+                nickname = COALESCE($2, nickname),
+                avatar_url = COALESCE($3, avatar_url),
+                signature = COALESCE($4, signature),
+                updated_at = NOW()
+            WHERE account_id = $1
+            RETURNING account_id
+            "#,
+        )
+        .bind(account_id)
+        .bind(patch.nickname.as_deref())
+        .bind(patch.avatar_url.as_deref())
+        .bind(patch.signature.as_deref())
+        .fetch_optional(self.postgres.pool())
+        .await
+        .map_err(database_error)?;
+
+        match updated {
+            Some(updated_account_id) => self.load_account_aggregate(updated_account_id).await,
+            None => Ok(None),
+        }
     }
 
     async fn upsert_password_credential(
@@ -357,6 +393,7 @@ struct ProfileRow {
     account_id: i64,
     nickname: String,
     avatar_url: String,
+    signature: String,
     bio: String,
     updated_at: DateTime<Utc>,
 }
@@ -367,6 +404,7 @@ impl From<ProfileRow> for ProfileRecord {
             account_id: value.account_id,
             nickname: value.nickname,
             avatar_url: value.avatar_url,
+            signature: value.signature,
             bio: value.bio,
             updated_at: value.updated_at,
         }

@@ -1,6 +1,6 @@
 ---
 module: app-auth-shell
-version: v1
+version: v0.0.1
 date: 2026-06-14
 tags: [auth, login, session, tab-shell, profile, client, flutter]
 ---

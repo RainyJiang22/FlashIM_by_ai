@@ -4,10 +4,7 @@ use rand::Rng;
 
 use crate::{
     jwt::{decode_token, sign_token},
-    models::auth::{
-        ChangePasswordRequest, LoginRequest, LoginResponse, LoginType, PasswordUpdatedResponse,
-        SetPasswordRequest, SetPasswordResponse, SmsResponse,
-    },
+    models::auth::{LoginRequest, LoginResponse, LoginType, SmsResponse},
     password,
     services::user_service,
     store::AuthStore,
@@ -128,79 +125,6 @@ pub async fn authenticate_user(
     user_service::load_user_by_account_id(store, claims.account_id).await
 }
 
-pub async fn set_password(
-    context: &AppContext,
-    store: &dyn AuthStore,
-    token: &str,
-    request: SetPasswordRequest,
-) -> AppResult<SetPasswordResponse> {
-    let user = authenticate_user(context, store, token).await?;
-    if user.has_password {
-        return Err(AppError::conflict("password already set"));
-    }
-
-    let new_password = required_nonempty(request.new_password, "new_password is required")?;
-    let password_hash = password::hash_password(&new_password).map_err(|error| {
-        println!(
-            "password hash failed: account_id={}, error={error}",
-            user.account_id
-        );
-        AppError::internal_server_error("internal server error")
-    })?;
-    let updated_at = store
-        .upsert_password_credential(user.account_id, &user.phone, &password_hash)
-        .await?;
-
-    Ok(SetPasswordResponse {
-        password_setup_required: false,
-        updated_at,
-    })
-}
-
-pub async fn change_password(
-    context: &AppContext,
-    store: &dyn AuthStore,
-    token: &str,
-    request: ChangePasswordRequest,
-) -> AppResult<PasswordUpdatedResponse> {
-    let user = authenticate_user(context, store, token).await?;
-    let old_password = required_nonempty(request.old_password, "old_password is required")?;
-    let new_password = required_nonempty(request.new_password, "new_password is required")?;
-
-    let credential = store
-        .find_password_credential_by_account_id(user.account_id)
-        .await?
-        .ok_or(AppError::conflict("password is not set"))?;
-
-    let current_hash = credential
-        .password_hash
-        .as_deref()
-        .ok_or(AppError::conflict("password is not set"))?;
-    let is_valid = password::verify_password(&old_password, current_hash).map_err(|error| {
-        println!(
-            "password verify failed: account_id={}, error={error}",
-            user.account_id
-        );
-        AppError::internal_server_error("internal server error")
-    })?;
-    if !is_valid {
-        return Err(AppError::unauthorized("invalid old password"));
-    }
-
-    let new_hash = password::hash_password(&new_password).map_err(|error| {
-        println!(
-            "password hash failed: account_id={}, error={error}",
-            user.account_id
-        );
-        AppError::internal_server_error("internal server error")
-    })?;
-    let updated_at = store
-        .upsert_password_credential(user.account_id, &credential.identifier, &new_hash)
-        .await?;
-
-    Ok(PasswordUpdatedResponse { updated_at })
-}
-
 fn random_sms_code() -> String {
     let mut rng = rand::rng();
     format!("{:06}", rng.random_range(0..1_000_000))
@@ -212,12 +136,4 @@ fn required_field(value: Option<&str>, message: &'static str) -> AppResult<Strin
         return Err(AppError::bad_request(message));
     }
     Ok(value)
-}
-
-fn required_nonempty(value: String, message: &'static str) -> AppResult<String> {
-    let trimmed = value.trim().to_string();
-    if trimmed.is_empty() {
-        return Err(AppError::bad_request(message));
-    }
-    Ok(trimmed)
 }

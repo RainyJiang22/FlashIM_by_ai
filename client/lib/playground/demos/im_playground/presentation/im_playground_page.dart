@@ -699,7 +699,7 @@ class _AnimatedLoginSection extends StatelessWidget {
               alignment: Alignment.topCenter,
               children: [
                 ...previousChildren,
-                if (currentChild != null) currentChild,
+                ..._maybeChild(currentChild),
               ],
             ),
           );
@@ -708,6 +708,13 @@ class _AnimatedLoginSection extends StatelessWidget {
       ),
     );
   }
+}
+
+List<Widget> _maybeChild(Widget? child) {
+  if (child == null) {
+    return const <Widget>[];
+  }
+  return <Widget>[child];
 }
 
 class _AnimatedLoginHintSection extends StatelessWidget {

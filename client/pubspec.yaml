@@ -32,6 +32,8 @@ dependencies:
     sdk: flutter
   flash_auth:
     path: modules/flash_auth
+  flash_session:
+    path: modules/flash_session
   app_starter:
     path: modules/app_starter
 

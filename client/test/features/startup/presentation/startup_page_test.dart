@@ -1,5 +1,6 @@
 import 'package:app_starter/app_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,13 +9,14 @@ import 'package:flash_im/app/app_router.dart';
 
 void main() {
   testWidgets('startup page routes to login page', (tester) async {
-    final repository = _FakeAuthRepository();
-    final cubit = AppSessionCubit(repository: repository);
+    final authRepository = _FakeAuthRepository();
+    final sessionRepository = _FakeSessionRepository();
+    final cubit = SessionCubit(repository: sessionRepository);
 
     await tester.pumpWidget(
       RepositoryProvider<AuthRepository>.value(
-        value: repository,
-        child: BlocProvider<AppSessionCubit>.value(
+        value: authRepository,
+        child: BlocProvider<SessionCubit>.value(
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
@@ -32,18 +34,19 @@ void main() {
   });
 
   testWidgets('startup page routes to home shell', (tester) async {
-    final repository = _FakeAuthRepository(
+    final authRepository = _FakeAuthRepository();
+    final sessionRepository = _FakeSessionRepository(
       cachedSession: const CachedAuthSession(
         token: 'jwt-token',
         accountId: 10001,
       ),
     );
-    final cubit = AppSessionCubit(repository: repository);
+    final cubit = SessionCubit(repository: sessionRepository);
 
     await tester.pumpWidget(
       RepositoryProvider<AuthRepository>.value(
-        value: repository,
-        child: BlocProvider<AppSessionCubit>.value(
+        value: authRepository,
+        child: BlocProvider<SessionCubit>.value(
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
@@ -60,13 +63,14 @@ void main() {
   });
 
   testWidgets('startup page shows retry on restore failure', (tester) async {
-    final repository = _ThrowingThenSuccessAuthRepository();
-    final cubit = AppSessionCubit(repository: repository);
+    final authRepository = _FakeAuthRepository();
+    final sessionRepository = _ThrowingThenSuccessSessionRepository();
+    final cubit = SessionCubit(repository: sessionRepository);
 
     await tester.pumpWidget(
       RepositoryProvider<AuthRepository>.value(
-        value: repository,
-        child: BlocProvider<AppSessionCubit>.value(
+        value: authRepository,
+        child: BlocProvider<SessionCubit>.value(
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
@@ -109,21 +113,6 @@ AppStarterPage _buildStarterPage() {
 }
 
 class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({this.cachedSession});
-
-  final CachedAuthSession? cachedSession;
-
-  @override
-  Future<AuthProfile> fetchProfile() async {
-    return const AuthProfile(
-      accountId: 10001,
-      nickname: 'Rainy',
-      avatarUrl: 'https://picsum.photos/seed/rainy/120/120',
-      phone: '13800138000',
-      hasPassword: true,
-    );
-  }
-
   @override
   Future<AppSession> loginWithPassword({
     required String identifier,
@@ -149,7 +138,34 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> logout() async {}
+  Future<String> sendSmsCode(String phone) async => '654321';
+}
+
+class _FakeSessionRepository implements SessionRepository {
+  _FakeSessionRepository({this.cachedSession});
+
+  final CachedAuthSession? cachedSession;
+
+  @override
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {}
+
+  @override
+  Future<void> clearSession() async {}
+
+  @override
+  Future<User> fetchProfile() async {
+    return const User(
+      userId: 10001,
+      nickname: 'Rainy',
+      avatar: 'identicon:startup-seed',
+      phone: '13800138000',
+      signature: '',
+      hasPassword: true,
+    );
+  }
 
   @override
   Future<void> persistSession(AppSession session) async {}
@@ -161,10 +177,16 @@ class _FakeAuthRepository implements AuthRepository {
   Future<void> setPassword({required String newPassword}) async {}
 
   @override
-  Future<String> sendSmsCode(String phone) async => '654321';
+  Future<User> updateProfile({
+    String? nickname,
+    String? signature,
+    String? avatar,
+  }) async {
+    return await fetchProfile();
+  }
 }
 
-class _ThrowingThenSuccessAuthRepository extends _FakeAuthRepository {
+class _ThrowingThenSuccessSessionRepository extends _FakeSessionRepository {
   bool _didThrow = false;
 
   @override

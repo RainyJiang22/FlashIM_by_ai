@@ -555,6 +555,7 @@ dependencies = [
  "chrono",
  "flash_auth",
  "flash_core",
+ "flash_user",
  "futures-util",
  "jsonwebtoken",
  "local-ip-address",
@@ -612,10 +613,22 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "chrono",
+ "jsonwebtoken",
  "local-ip-address",
  "serde",
+ "serde_json",
  "sqlx",
  "tokio",
+]
+
+[[package]]
+name = "flash_user"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "flash_auth",
+ "flash_core",
+ "serde",
 ]
 
 [[package]]

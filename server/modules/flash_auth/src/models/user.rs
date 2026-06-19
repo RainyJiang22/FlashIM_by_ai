@@ -6,5 +6,6 @@ pub struct UserRecord {
     pub nickname: String,
     pub avatar: String,
     pub phone: String,
+    pub signature: String,
     pub has_password: bool,
 }

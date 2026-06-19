@@ -11,7 +11,7 @@ use tokio::sync::RwLock;
 
 use crate::store::{
     AccountAggregate, AccountRecord, AuthStore, CredentialRecord, CredentialType, NewProfile,
-    ProfileRecord,
+    ProfileRecord, UpdateProfilePatch,
 };
 
 pub struct InMemoryStore {
@@ -164,7 +164,10 @@ impl AuthStore for InMemoryStore {
         let profile = ProfileRecord {
             account_id,
             nickname: profile.nickname,
-            avatar_url: profile.avatar_url,
+            avatar_url: profile
+                .avatar_url
+                .unwrap_or_else(|| format!("identicon:{account_id}")),
+            signature: profile.signature,
             bio: profile.bio,
             updated_at: now,
         };
@@ -204,6 +207,31 @@ impl AuthStore for InMemoryStore {
             .load_account_aggregate(account_id)
             .await
             .expect("new account should be queryable"))
+    }
+
+    async fn update_profile(
+        &self,
+        account_id: i64,
+        patch: UpdateProfilePatch,
+    ) -> AppResult<Option<AccountAggregate>> {
+        let mut profiles = self.profiles_by_account_id.write().await;
+        let Some(profile) = profiles.get_mut(&account_id) else {
+            return Ok(None);
+        };
+
+        if let Some(nickname) = patch.nickname {
+            profile.nickname = nickname;
+        }
+        if let Some(avatar_url) = patch.avatar_url {
+            profile.avatar_url = avatar_url;
+        }
+        if let Some(signature) = patch.signature {
+            profile.signature = signature;
+        }
+        profile.updated_at = Utc::now();
+        drop(profiles);
+
+        Ok(self.load_account_aggregate(account_id).await)
     }
 
     async fn upsert_password_credential(

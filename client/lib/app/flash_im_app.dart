@@ -1,4 +1,5 @@
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -12,12 +13,14 @@ class FlashImApp extends StatefulWidget {
     super.key,
     this.appConfig,
     this.authRepository,
-    this.appSessionCubit,
+    this.sessionRepository,
+    this.sessionCubit,
   });
 
   final LocalAppConfig? appConfig;
   final AuthRepository? authRepository;
-  final AppSessionCubit? appSessionCubit;
+  final SessionRepository? sessionRepository;
+  final SessionCubit? sessionCubit;
 
   @override
   State<FlashImApp> createState() => _FlashImAppState();
@@ -26,7 +29,8 @@ class FlashImApp extends StatefulWidget {
 class _FlashImAppState extends State<FlashImApp> {
   late final Future<LocalAppConfig> _configFuture;
   AuthRepository? _defaultAuthRepository;
-  AppSessionCubit? _defaultAppSessionCubit;
+  SessionRepository? _defaultSessionRepository;
+  SessionCubit? _defaultSessionCubit;
 
   @override
   void initState() {
@@ -38,7 +42,7 @@ class _FlashImAppState extends State<FlashImApp> {
 
   @override
   void dispose() {
-    _defaultAppSessionCubit?.close();
+    _defaultSessionCubit?.close();
     super.dispose();
   }
 
@@ -197,21 +201,27 @@ class _FlashImAppState extends State<FlashImApp> {
         final authRepository =
             widget.authRepository ??
             (_defaultAuthRepository ??= DefaultAuthRepository(
-              api: DioAuthApi(
-                dio: DioFactory.create(baseUrl: config.apiBaseUrl),
-              ),
+              api: DioAuthApi(dio: DioFactory.create(baseUrl: config.apiBaseUrl)),
+            ));
+        final sessionRepository =
+            widget.sessionRepository ??
+            (_defaultSessionRepository ??= DefaultSessionRepository(
+              api: DioSessionApi(dio: DioFactory.create(baseUrl: config.apiBaseUrl)),
               cacheStore: const SharedPreferencesAuthCacheStore(),
             ));
-        final appSessionCubit =
-            widget.appSessionCubit ??
-            (_defaultAppSessionCubit ??= AppSessionCubit(
-              repository: authRepository,
+        final sessionCubit =
+            widget.sessionCubit ??
+            (_defaultSessionCubit ??= SessionCubit(
+              repository: sessionRepository,
             ));
 
-        return RepositoryProvider<AuthRepository>.value(
-          value: authRepository,
-          child: BlocProvider<AppSessionCubit>.value(
-            value: appSessionCubit,
+        return MultiRepositoryProvider(
+          providers: [
+            RepositoryProvider<AuthRepository>.value(value: authRepository),
+            RepositoryProvider<SessionRepository>.value(value: sessionRepository),
+          ],
+          child: BlocProvider<SessionCubit>.value(
+            value: sessionCubit,
             child: MaterialApp(
               title: config.appName,
               debugShowCheckedModeBanner: false,

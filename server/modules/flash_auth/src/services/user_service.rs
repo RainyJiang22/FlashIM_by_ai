@@ -1,5 +1,3 @@
-use rand::Rng;
-
 use flash_core::{AppError, AppResult};
 
 use crate::{
@@ -23,7 +21,8 @@ pub async fn find_or_create_account_by_phone(
             phone,
             NewProfile {
                 nickname: phone.to_string(),
-                avatar_url: random_avatar_url(),
+                avatar_url: None,
+                signature: String::new(),
                 bio: String::new(),
             },
         )
@@ -56,15 +55,10 @@ fn account_to_user_record(account: AccountAggregate) -> UserRecord {
         nickname: account.profile.nickname,
         avatar: account.profile.avatar_url,
         phone,
+        signature: account.profile.signature,
         has_password: account.credentials.iter().any(|credential| {
             matches!(credential.credential_type, CredentialType::Password)
                 && credential.password_hash.is_some()
         }),
     }
-}
-
-fn random_avatar_url() -> String {
-    let mut rng = rand::rng();
-    let seed = rng.random::<u64>();
-    format!("https://picsum.photos/seed/{seed}/120/120")
 }

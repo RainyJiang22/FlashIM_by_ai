@@ -1,6 +1,8 @@
 import 'package:app_starter/app_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../features/home/presentation/main_shell_page.dart';
 
@@ -8,6 +10,9 @@ abstract final class AppRoutes {
   static const startup = '/startup';
   static const login = '/login';
   static const home = '/home';
+  static const editProfile = '/mine/profile/edit';
+  static const setPassword = '/mine/password/set';
+  static const changePassword = '/mine/password/change';
 }
 
 Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
@@ -35,12 +40,30 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
       );
     case AppRoutes.login:
       return MaterialPageRoute<void>(
-        builder: (_) => const LoginPage(homeRouteName: AppRoutes.home),
+        builder: (context) => LoginPage(
+          homeRouteName: AppRoutes.home,
+          onLoginSuccess: context.read<SessionCubit>().completeLogin,
+        ),
         settings: settings,
       );
     case AppRoutes.home:
       return MaterialPageRoute<void>(
         builder: (_) => const MainShellPage(),
+        settings: settings,
+      );
+    case AppRoutes.editProfile:
+      return MaterialPageRoute<void>(
+        builder: (_) => const EditProfilePage(),
+        settings: settings,
+      );
+    case AppRoutes.setPassword:
+      return MaterialPageRoute<void>(
+        builder: (_) => const SetPasswordPage(),
+        settings: settings,
+      );
+    case AppRoutes.changePassword:
+      return MaterialPageRoute<void>(
+        builder: (_) => const ChangePasswordPage(),
         settings: settings,
       );
     default:

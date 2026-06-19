@@ -1,5 +1,6 @@
 import 'package:app_starter/app_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,31 +28,27 @@ void main() {
   testWidgets('routes to login when session restore reports unauthenticated', (
     tester,
   ) async {
-    final repository = _FakeAuthRepository();
-    final cubit = AppSessionCubit(repository: repository);
+    final cubit = SessionCubit(repository: _FakeSessionRepository());
 
     await tester.pumpWidget(
-      RepositoryProvider<AuthRepository>.value(
-        value: repository,
-        child: BlocProvider<AppSessionCubit>.value(
-          value: cubit,
-          child: MaterialApp(
-            routes: {
-              '/login': (_) => const Scaffold(body: Text('login')),
-              '/home': (_) => const Scaffold(body: Text('home')),
-            },
-            home: AppStarterPage(
-              options: const AppStarterOptions(
-                routes: AppStarterRoutes(
-                  loginRouteName: '/login',
-                  homeRouteName: '/home',
-                ),
-                branding: AppStarterBranding(
-                  logo: SizedBox(width: 100, height: 100),
-                  title: 'Flash IM',
-                  idleSubtitle: '轻量即时通讯',
-                  loadingSubtitle: '正在恢复登录状态...',
-                ),
+      BlocProvider<SessionCubit>.value(
+        value: cubit,
+        child: MaterialApp(
+          routes: {
+            '/login': (_) => const Scaffold(body: Text('login')),
+            '/home': (_) => const Scaffold(body: Text('home')),
+          },
+          home: AppStarterPage(
+            options: const AppStarterOptions(
+              routes: AppStarterRoutes(
+                loginRouteName: '/login',
+                homeRouteName: '/home',
+              ),
+              branding: AppStarterBranding(
+                logo: SizedBox(width: 100, height: 100),
+                title: 'Flash IM',
+                idleSubtitle: '轻量即时通讯',
+                loadingSubtitle: '正在恢复登录状态...',
               ),
             ),
           ),
@@ -68,44 +65,27 @@ void main() {
   });
 }
 
-class _FakeAuthRepository implements AuthRepository {
+class _FakeSessionRepository implements SessionRepository {
   @override
-  Future<AuthProfile> fetchProfile() async {
-    return const AuthProfile(
-      accountId: 10001,
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {}
+
+  @override
+  Future<void> clearSession() async {}
+
+  @override
+  Future<User> fetchProfile() async {
+    return const User(
+      userId: 10001,
       nickname: 'Rainy',
-      avatarUrl: 'https://picsum.photos/seed/rainy/120/120',
+      avatar: 'identicon:app-starter',
       phone: '13800138000',
+      signature: '',
       hasPassword: true,
     );
   }
-
-  @override
-  Future<AppSession> loginWithPassword({
-    required String identifier,
-    required String password,
-  }) async {
-    return const AppSession(
-      token: 'password-token',
-      accountId: 10001,
-      passwordSetupRequired: false,
-    );
-  }
-
-  @override
-  Future<AppSession> loginWithSmsCode({
-    required String phone,
-    required String code,
-  }) async {
-    return const AppSession(
-      token: 'sms-token',
-      accountId: 10001,
-      passwordSetupRequired: false,
-    );
-  }
-
-  @override
-  Future<void> logout() async {}
 
   @override
   Future<void> persistSession(AppSession session) async {}
@@ -117,5 +97,11 @@ class _FakeAuthRepository implements AuthRepository {
   Future<void> setPassword({required String newPassword}) async {}
 
   @override
-  Future<String> sendSmsCode(String phone) async => '654321';
+  Future<User> updateProfile({
+    String? nickname,
+    String? signature,
+    String? avatar,
+  }) async {
+    return await fetchProfile();
+  }
 }

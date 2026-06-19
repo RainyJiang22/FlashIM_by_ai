@@ -1,126 +1,122 @@
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_session/flash_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('restoreSession emits authenticated when cached token exists', () async {
-    final repository = _FakeAuthRepository(
+    final repository = _FakeSessionRepository(
       cachedSession: const CachedAuthSession(
         token: 'jwt-token',
         accountId: 10001,
       ),
     );
-    final cubit = AppSessionCubit(repository: repository);
+    final cubit = SessionCubit(repository: repository);
 
     await cubit.restoreSession();
 
-    expect(cubit.state.status, AuthStatus.authenticated);
+    expect(cubit.state.status, SessionStatus.authenticated);
     expect(cubit.state.session?.token, 'jwt-token');
     await cubit.close();
   });
 
-  test(
-    'completeLogin persists session and keeps password prompt flag',
-    () async {
-      final repository = _FakeAuthRepository();
-      final cubit = AppSessionCubit(repository: repository);
+  test('completeLogin persists session and keeps password prompt flag', () async {
+    final repository = _FakeSessionRepository();
+    final cubit = SessionCubit(repository: repository);
 
-      await cubit.completeLogin(
-        const AppSession(
-          token: 'jwt-token',
-          accountId: 10001,
-          passwordSetupRequired: true,
-        ),
-      );
+    await cubit.completeLogin(
+      const AppSession(
+        token: 'jwt-token',
+        accountId: 10001,
+        passwordSetupRequired: true,
+      ),
+    );
 
-      expect(repository.persistedSession?.token, 'jwt-token');
-      expect(cubit.state.shouldPromptPasswordSetup, isTrue);
-      await cubit.close();
-    },
-  );
-
-  test('logout clears cache and emits unauthenticated', () async {
-    final repository = _FakeAuthRepository();
-    final cubit = AppSessionCubit(repository: repository);
-
-    await cubit.logout();
-
-    expect(repository.logoutCount, 1);
-    expect(cubit.state.status, AuthStatus.unauthenticated);
+    expect(repository.persistedSession?.token, 'jwt-token');
+    expect(cubit.state.shouldPromptPasswordSetup, isTrue);
     await cubit.close();
   });
 
-  test('refreshProfile syncs profile into authenticated state', () async {
-    final repository = _FakeAuthRepository(
+  test('refreshProfile syncs user into authenticated state', () async {
+    final repository = _FakeSessionRepository(
       cachedSession: const CachedAuthSession(
         token: 'jwt-token',
         accountId: 10001,
       ),
-      profile: const AuthProfile(
-        accountId: 10001,
+      user: const User(
+        userId: 10001,
         nickname: 'Rainy',
-        avatarUrl: 'https://picsum.photos/seed/rainy/120/120',
+        avatar: 'identicon:seed-1',
         phone: '13800138000',
+        signature: 'hello',
         hasPassword: false,
       ),
     );
-    final cubit = AppSessionCubit(repository: repository);
+    final cubit = SessionCubit(repository: repository);
 
     await cubit.restoreSession();
     await cubit.refreshProfile();
 
-    expect(cubit.state.profile?.nickname, 'Rainy');
+    expect(cubit.state.user?.nickname, 'Rainy');
     expect(cubit.state.shouldPromptPasswordSetup, isTrue);
+    await cubit.close();
+  });
+
+  test('setPassword updates prompt state and password flag', () async {
+    final repository = _FakeSessionRepository(
+      cachedSession: const CachedAuthSession(
+        token: 'jwt-token',
+        accountId: 10001,
+      ),
+      user: const User(
+        userId: 10001,
+        nickname: 'Rainy',
+        avatar: 'identicon:seed-1',
+        phone: '13800138000',
+        signature: '',
+        hasPassword: false,
+      ),
+    );
+    final cubit = SessionCubit(repository: repository);
+
+    await cubit.restoreSession();
+    await cubit.refreshProfile();
+    await cubit.setPassword(newPassword: 'rainy123');
+
+    expect(repository.lastSetPassword, 'rainy123');
+    expect(cubit.state.user?.hasPassword, isTrue);
+    expect(cubit.state.shouldPromptPasswordSetup, isFalse);
     await cubit.close();
   });
 }
 
-class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({this.cachedSession, this.profile});
+class _FakeSessionRepository implements SessionRepository {
+  _FakeSessionRepository({this.cachedSession, this.user});
 
   final CachedAuthSession? cachedSession;
-  final AuthProfile? profile;
+  User? user;
   AppSession? persistedSession;
-  int logoutCount = 0;
+  String? lastSetPassword;
 
   @override
-  Future<AuthProfile> fetchProfile() async {
-    return profile ??
-        const AuthProfile(
-          accountId: 10001,
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {}
+
+  @override
+  Future<void> clearSession() async {}
+
+  @override
+  Future<User> fetchProfile() async {
+    return user ??
+        const User(
+          userId: 10001,
           nickname: 'Rainy',
-          avatarUrl: 'https://picsum.photos/seed/rainy/120/120',
+          avatar: 'identicon:seed-default',
           phone: '13800138000',
+          signature: '',
           hasPassword: true,
         );
-  }
-
-  @override
-  Future<AppSession> loginWithPassword({
-    required String identifier,
-    required String password,
-  }) async {
-    return const AppSession(
-      token: 'password-token',
-      accountId: 10001,
-      passwordSetupRequired: false,
-    );
-  }
-
-  @override
-  Future<AppSession> loginWithSmsCode({
-    required String phone,
-    required String code,
-  }) async {
-    return const AppSession(
-      token: 'sms-token',
-      accountId: 10001,
-      passwordSetupRequired: false,
-    );
-  }
-
-  @override
-  Future<void> logout() async {
-    logoutCount += 1;
   }
 
   @override
@@ -132,8 +128,31 @@ class _FakeAuthRepository implements AuthRepository {
   Future<CachedAuthSession?> readCachedSession() async => cachedSession;
 
   @override
-  Future<void> setPassword({required String newPassword}) async {}
+  Future<void> setPassword({required String newPassword}) async {
+    lastSetPassword = newPassword;
+    user = (user ??
+            const User(
+              userId: 10001,
+              nickname: 'Rainy',
+              avatar: 'identicon:seed-default',
+              phone: '13800138000',
+              signature: '',
+              hasPassword: false,
+            ))
+        .copyWith(hasPassword: true);
+  }
 
   @override
-  Future<String> sendSmsCode(String phone) async => '654321';
+  Future<User> updateProfile({
+    String? nickname,
+    String? signature,
+    String? avatar,
+  }) async {
+    user = (await fetchProfile()).copyWith(
+      nickname: nickname,
+      signature: signature,
+      avatar: avatar,
+    );
+    return user!;
+  }
 }

@@ -10,7 +10,10 @@ use flash_core::SharedContext;
 use std::sync::Arc;
 
 pub use routes::register_auth_routes;
-pub use store::{AuthStore, SharedAuthStore, memory::InMemoryStore, postgres::PostgresAuthStore};
+pub use store::{
+    AuthStore, SharedAuthStore, UpdateProfilePatch, memory::InMemoryStore,
+    postgres::PostgresAuthStore,
+};
 
 pub fn build_auth_router(store: Arc<dyn AuthStore>) -> Router<SharedContext> {
     register_auth_routes(Router::new()).layer(Extension(store))

@@ -1,0 +1,11 @@
+[package]
+name = "flash_user"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+axum = { version = "0.8.9", features = ["ws"] }
+flash_auth = { path = "../flash_auth" }
+flash_core = { path = "../flash_core" }
+serde = { version = "1.0.228", features = ["derive"] }

@@ -8,8 +8,9 @@ CREATE TABLE accounts (
 
 CREATE TABLE user_profiles (
     account_id BIGINT PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE,
-    nickname VARCHAR(64) NOT NULL,
+    nickname VARCHAR(50) NOT NULL,
     avatar_url TEXT NOT NULL,
+    signature VARCHAR(100) NOT NULL DEFAULT '',
     bio TEXT NOT NULL DEFAULT '',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

@@ -11,8 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
-  flash_auth:
-    path: ../flash_auth
+  flash_session:
+    path: ../flash_session
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,5 @@
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_session/flash_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flash_im/app/flash_im_app.dart';
@@ -8,13 +9,14 @@ void main() {
   testWidgets('main app restores cached session into home shell', (
     WidgetTester tester,
   ) async {
-    final repository = _FakeAuthRepository(
+    final authRepository = _FakeAuthRepository();
+    final sessionRepository = _FakeSessionRepository(
       cachedSession: const CachedAuthSession(
         token: 'jwt-token',
         accountId: 10001,
       ),
     );
-    final cubit = AppSessionCubit(repository: repository);
+    final cubit = SessionCubit(repository: sessionRepository);
 
     await tester.pumpWidget(
       FlashImApp(
@@ -23,8 +25,9 @@ void main() {
           apiBaseUrl: 'http://127.0.0.1:9600',
           enableDebugTools: false,
         ),
-        authRepository: repository,
-        appSessionCubit: cubit,
+        authRepository: authRepository,
+        sessionRepository: sessionRepository,
+        sessionCubit: cubit,
       ),
     );
     await tester.pump();
@@ -36,21 +39,6 @@ void main() {
 }
 
 class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({this.cachedSession});
-
-  final CachedAuthSession? cachedSession;
-
-  @override
-  Future<AuthProfile> fetchProfile() async {
-    return const AuthProfile(
-      accountId: 10001,
-      nickname: 'Rainy',
-      avatarUrl: 'https://picsum.photos/seed/rainy/120/120',
-      phone: '13800138000',
-      hasPassword: true,
-    );
-  }
-
   @override
   Future<AppSession> loginWithPassword({
     required String identifier,
@@ -76,7 +64,34 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> logout() async {}
+  Future<String> sendSmsCode(String phone) async => '654321';
+}
+
+class _FakeSessionRepository implements SessionRepository {
+  _FakeSessionRepository({this.cachedSession});
+
+  final CachedAuthSession? cachedSession;
+
+  @override
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {}
+
+  @override
+  Future<void> clearSession() async {}
+
+  @override
+  Future<User> fetchProfile() async {
+    return const User(
+      userId: 10001,
+      nickname: 'Rainy',
+      avatar: 'identicon:widget-test',
+      phone: '13800138000',
+      signature: '',
+      hasPassword: true,
+    );
+  }
 
   @override
   Future<void> persistSession(AppSession session) async {}
@@ -88,5 +103,11 @@ class _FakeAuthRepository implements AuthRepository {
   Future<void> setPassword({required String newPassword}) async {}
 
   @override
-  Future<String> sendSmsCode(String phone) async => '654321';
+  Future<User> updateProfile({
+    String? nickname,
+    String? signature,
+    String? avatar,
+  }) async {
+    return await fetchProfile();
+  }
 }

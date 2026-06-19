@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
@@ -27,28 +26,6 @@ pub struct LoginResponse {
     pub token: String,
     pub account_id: i64,
     pub password_setup_required: bool,
-}
-
-#[derive(Deserialize)]
-pub struct SetPasswordRequest {
-    pub new_password: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct SetPasswordResponse {
-    pub password_setup_required: bool,
-    pub updated_at: DateTime<Utc>,
-}
-
-#[derive(Deserialize)]
-pub struct ChangePasswordRequest {
-    pub old_password: String,
-    pub new_password: String,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct PasswordUpdatedResponse {
-    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]

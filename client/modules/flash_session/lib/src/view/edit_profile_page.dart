@@ -26,17 +26,17 @@ class EditProfilePage extends StatelessWidget {
         }
 
         return Scaffold(
-          appBar: AppBar(title: const Text('个人资料')),
-          backgroundColor: const Color(0xFFF6F7F9),
+          appBar: _ProfileAppBar(title: '个人资料'),
+          backgroundColor: const Color(0xFFF1F1F1),
           body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: EdgeInsets.zero,
             children: [
+              const SizedBox(height: 1),
               _SectionCard(
                 children: [
                   _ProfileRow(
                     label: '头像',
-                    value: '查看并随机更换',
-                    leading: UserAvatar(user: user, size: 48),
+                    trailing: UserAvatar(user: user, size: 56),
                     onTap: () => _editAvatar(context, user),
                   ),
                   _ProfileRow(
@@ -47,24 +47,28 @@ class EditProfilePage extends StatelessWidget {
                       title: '修改名字',
                       label: '名字',
                       initialValue: user.nickname,
-                      onSubmit: (value) => _applyUpdate(context, nickname: value),
+                      onSubmit: (value) =>
+                          _applyUpdate(context, nickname: value),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               _SectionCard(
                 children: [
                   _ProfileRow(label: '手机号', value: _maskPhone(user.phone)),
                   _ProfileRow(label: '闪讯号', value: '${user.userId}'),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               _SectionCard(
                 children: [
                   _ProfileRow(
                     label: '签名',
-                    value: user.signature.trim().isEmpty ? '添加个性签名' : user.signature,
+                    value: user.signature.trim().isEmpty
+                        ? '添加个性签名'
+                        : user.signature,
+                    maxLines: 2,
                     onTap: () => _editText(
                       context,
                       title: '修改签名',
@@ -110,9 +114,7 @@ class EditProfilePage extends StatelessWidget {
 
   Future<void> _editAvatar(BuildContext context, User user) async {
     final result = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => _AvatarEditPage(initialUser: user),
-      ),
+      MaterialPageRoute(builder: (_) => _AvatarEditPage(initialUser: user)),
     );
 
     if (result == null || !context.mounted) {
@@ -154,7 +156,9 @@ class EditProfilePage extends StatelessWidget {
   }
 
   void _showError(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -178,7 +182,8 @@ class _AvatarEditPageState extends State<_AvatarEditPage> {
 
   void _shuffle() {
     final random = Random();
-    final seed = '${widget.initialUser.userId}-${DateTime.now().millisecondsSinceEpoch}-${random.nextInt(9999)}';
+    final seed =
+        '${widget.initialUser.userId}-${DateTime.now().millisecondsSinceEpoch}-${random.nextInt(9999)}';
     setState(() {
       _avatarValue = 'identicon:$seed';
     });
@@ -188,7 +193,8 @@ class _AvatarEditPageState extends State<_AvatarEditPage> {
   Widget build(BuildContext context) {
     final previewUser = widget.initialUser.copyWith(avatar: _avatarValue);
     return Scaffold(
-      appBar: AppBar(title: const Text('修改头像')),
+      appBar: _ProfileAppBar(title: '修改头像'),
+      backgroundColor: const Color(0xFFF1F1F1),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -197,10 +203,7 @@ class _AvatarEditPageState extends State<_AvatarEditPage> {
               const SizedBox(height: 24),
               UserAvatar(user: previewUser, size: 120),
               const SizedBox(height: 20),
-              OutlinedButton(
-                onPressed: _shuffle,
-                child: const Text('随机更换'),
-              ),
+              OutlinedButton(onPressed: _shuffle, child: const Text('随机更换')),
               const Spacer(),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(_avatarValue),
@@ -220,65 +223,74 @@ class _AvatarEditPageState extends State<_AvatarEditPage> {
 class _ProfileRow extends StatelessWidget {
   const _ProfileRow({
     required this.label,
-    required this.value,
-    this.leading,
+    this.value = '',
+    this.trailing,
     this.onTap,
+    this.maxLines = 1,
   });
 
   final String label;
   final String value;
-  final Widget? leading;
+  final Widget? trailing;
   final VoidCallback? onTap;
+  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
     final content = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      padding: const EdgeInsets.fromLTRB(22, 0, 20, 0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
-            width: 72,
+            width: 92,
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1A2A42),
+                fontSize: 19,
+                height: 1.15,
+                color: Color(0xFF191919),
               ),
             ),
           ),
-          if (leading != null) ...[
-            leading!,
-            const SizedBox(width: 12),
-          ],
           Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF6A7B92),
-              ),
-            ),
+            child: value.isEmpty
+                ? const SizedBox.shrink()
+                : Text(
+                    value,
+                    textAlign: TextAlign.right,
+                    maxLines: maxLines,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      height: 1.22,
+                      color: Color(0xFF7A7A7A),
+                    ),
+                  ),
           ),
+          if (trailing != null) ...[const SizedBox(width: 12), trailing!],
           if (onTap != null) ...[
             const SizedBox(width: 8),
             const Icon(
               Icons.chevron_right_rounded,
-              color: Color(0xFF98A7BA),
+              color: Color(0xFFC7C7C7),
+              size: 28,
             ),
           ],
         ],
       ),
     );
 
+    final row = SizedBox(
+      height: trailing == null && maxLines == 1 ? 64 : 82,
+      child: content,
+    );
+
     if (onTap == null) {
-      return content;
+      return row;
     }
 
-    return InkWell(onTap: onTap, child: content);
+    return InkWell(onTap: onTap, child: row);
   }
 }
 
@@ -292,17 +304,84 @@ class _SectionCard extends StatelessWidget {
     final rows = <Widget>[];
     for (var i = 0; i < children.length; i += 1) {
       if (i > 0) {
-        rows.add(const Divider(height: 1, indent: 16, endIndent: 16));
+        rows.add(
+          const Divider(height: 1, indent: 22, color: Color(0xFFEDEDED)),
+        );
       }
       rows.add(children[i]);
     }
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
+    return Material(
+      color: Colors.white,
       child: Column(children: rows),
+    );
+  }
+}
+
+class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const _ProfileAppBar({required this.title, this.action});
+
+  final String title;
+  final Widget? action;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      centerTitle: true,
+      backgroundColor: const Color(0xFFEDEDED),
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: const Color(0xFF191919),
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.chevron_left_rounded, size: 36),
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 22,
+          height: 1.1,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF111111),
+        ),
+      ),
+      actions: [
+        if (action != null)
+          Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: Center(child: action),
+          ),
+      ],
+    );
+  }
+}
+
+class _SaveButton extends StatelessWidget {
+  const _SaveButton({required this.enabled, required this.onPressed});
+
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: enabled ? onPressed : null,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(60, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        foregroundColor: Colors.white,
+        disabledForegroundColor: const Color(0xFFBFBFBF),
+        backgroundColor: enabled
+            ? const Color(0xFF07C160)
+            : const Color(0xFFE5E5E5),
+        disabledBackgroundColor: const Color(0xFFE5E5E5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      ),
+      child: const Text('保存'),
     );
   }
 }
@@ -328,10 +407,17 @@ class _TextEditPageState extends State<_TextEditPage> {
   late final TextEditingController _controller;
   String? _inlineError;
 
+  bool get _canSubmit => _controller.text.trim().isNotEmpty;
+
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialValue);
+    _controller.addListener(() {
+      setState(() {
+        _inlineError = null;
+      });
+    });
   }
 
   @override
@@ -354,36 +440,56 @@ class _TextEditPageState extends State<_TextEditPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: _ProfileAppBar(
+        title: widget.title,
+        action: _SaveButton(enabled: _canSubmit, onPressed: _submit),
+      ),
+      backgroundColor: const Color(0xFFF1F1F1),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 48, 20, 0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 controller: _controller,
+                autofocus: true,
                 maxLines: widget.maxLines,
                 minLines: widget.maxLines,
-                decoration: InputDecoration(
-                  labelText: widget.label,
-                  border: const OutlineInputBorder(),
+                cursorColor: const Color(0xFF07C160),
+                style: const TextStyle(
+                  fontSize: 23,
+                  height: 1.25,
+                  color: Color(0xFF191919),
+                ),
+                decoration: const InputDecoration(
+                  filled: false,
+                  isDense: true,
+                  contentPadding: EdgeInsets.fromLTRB(0, 0, 0, 8),
+                  border: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF07C160)),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF07C160)),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0xFF07C160),
+                      width: 1.4,
+                    ),
+                  ),
                 ),
               ),
               if (_inlineError != null) ...[
                 const SizedBox(height: 12),
                 Text(
                   _inlineError!,
-                  style: const TextStyle(color: Color(0xFFE35D6A), fontSize: 13),
+                  style: const TextStyle(
+                    color: Color(0xFFE64340),
+                    fontSize: 13,
+                  ),
                 ),
               ],
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _submit,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
-                ),
-                child: const Text('完成'),
-              ),
             ],
           ),
         ),

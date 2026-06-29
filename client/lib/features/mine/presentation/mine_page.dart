@@ -48,47 +48,41 @@ class _MinePageState extends State<MinePage> {
         final user = state.user;
         if (user == null) {
           if (state.errorMessage != null) {
-            return MineErrorView(message: state.errorMessage!, onRetry: _reload);
+            return MineErrorView(
+              message: state.errorMessage!,
+              onRetry: _reload,
+            );
           }
           return const Center(child: CircularProgressIndicator());
         }
 
         return RefreshIndicator(
           onRefresh: _reload,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-            children: [
-              UserCard(
-                user: user,
-                onTap: () => Navigator.of(context).pushNamed(AppRoutes.editProfile),
-              ),
-              const SizedBox(height: 24),
-              MineInfoCard(
-                user: user,
-                onPasswordTap: () => Navigator.of(context).pushNamed(
-                  user.hasPassword
-                      ? AppRoutes.changePassword
-                      : AppRoutes.setPassword,
+          color: const Color(0xFF07C160),
+          child: ColoredBox(
+            color: const Color(0xFFF1F1F1),
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                const SizedBox(height: 18),
+                UserCard(
+                  user: user,
+                  onTap: () =>
+                      Navigator.of(context).pushNamed(AppRoutes.editProfile),
                 ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _logout,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
-                    foregroundColor: const Color(0xFF1C4EFF),
-                    side: const BorderSide(color: Color(0xFFD5E2F3)),
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                const SizedBox(height: 10),
+                MineInfoCard(
+                  user: user,
+                  onPasswordTap: () => Navigator.of(context).pushNamed(
+                    user.hasPassword
+                        ? AppRoutes.changePassword
+                        : AppRoutes.setPassword,
                   ),
-                  child: const Text('退出登录'),
+                  onLogout: _logout,
                 ),
-              ),
-            ],
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
         );
       },

@@ -6,35 +6,21 @@ class MineInfoCard extends StatelessWidget {
     super.key,
     required this.user,
     required this.onPasswordTap,
+    required this.onLogout,
   });
 
   final User user;
   final VoidCallback onPasswordTap;
+  final VoidCallback onLogout;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      shadowColor: const Color(0x101C4EFF),
-      elevation: 0,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x101C4EFF),
-              blurRadius: 18,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
+    return Column(
+      children: [
+        _MineSection(
           children: [
             _MineInfoRow(label: '手机号', value: _maskPhone(user.phone)),
-            const Divider(height: 1),
             _MineInfoRow(label: '闪讯号', value: user.userId.toString()),
-            const Divider(height: 1),
             _MineInfoRow(
               label: '密码管理',
               value: user.hasPassword ? '修改密码' : '首次设置',
@@ -42,7 +28,18 @@ class MineInfoCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 10),
+        _MineSection(
+          children: [
+            _MineInfoRow(
+              label: '退出登录',
+              value: '',
+              destructive: true,
+              onTap: onLogout,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -54,49 +51,90 @@ class MineInfoCard extends StatelessWidget {
   }
 }
 
+class _MineSection extends StatelessWidget {
+  const _MineSection({required this.children});
+
+  final List<_MineInfoRow> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i += 1) ...[
+            children[i],
+            if (i < children.length - 1)
+              const Divider(height: 1, indent: 64, color: Color(0xFFEDEDED)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _MineInfoRow extends StatelessWidget {
   const _MineInfoRow({
     required this.label,
     required this.value,
     this.onTap,
+    this.destructive = false,
   });
 
   final String label;
   final String value;
   final VoidCallback? onTap;
+  final bool destructive;
 
   @override
   Widget build(BuildContext context) {
     final child = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      padding: const EdgeInsets.fromLTRB(22, 0, 20, 0),
       child: Row(
         children: [
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(fontSize: 14, color: Color(0xFF6A7B92)),
+              style: TextStyle(
+                fontSize: 17,
+                height: 1.15,
+                color: destructive
+                    ? const Color(0xFFE64340)
+                    : const Color(0xFF191919),
+              ),
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1A2A42),
+          if (value.isNotEmpty)
+            Flexible(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  height: 1.15,
+                  color: Color(0xFF8A8A8A),
+                ),
+              ),
             ),
-          ),
           if (onTap != null) ...[
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF98A7BA)),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFFC7C7C7),
+              size: 28,
+            ),
           ],
         ],
       ),
     );
 
+    final row = SizedBox(height: 56, child: child);
     if (onTap == null) {
-      return child;
+      return row;
     }
 
-    return InkWell(onTap: onTap, child: child);
+    return InkWell(onTap: onTap, child: row);
   }
 }

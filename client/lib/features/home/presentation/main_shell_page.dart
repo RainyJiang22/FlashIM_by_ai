@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,12 +22,51 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage> {
   int _currentIndex = 0;
   bool _isShowingPasswordPrompt = false;
+  bool _isRefreshingProfile = false;
 
   static const List<Widget> _pages = <Widget>[
     MessagesPlaceholderPage(),
     ContactsPlaceholderPage(),
     MinePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _syncSessionSideEffects(context.read<SessionCubit>().state);
+    });
+  }
+
+  void _syncSessionSideEffects(SessionState state) {
+    final wsClient = context.read<WsClient>();
+    if (state.status == SessionStatus.authenticated &&
+        state.session?.token.isNotEmpty == true) {
+      unawaited(wsClient.connect());
+      _refreshProfileIfNeeded(state);
+      return;
+    }
+
+    if (state.status == SessionStatus.unauthenticated) {
+      unawaited(wsClient.disconnect());
+    }
+  }
+
+  void _refreshProfileIfNeeded(SessionState state) {
+    if (_isRefreshingProfile || state.user != null) {
+      return;
+    }
+
+    _isRefreshingProfile = true;
+    unawaited(
+      context.read<SessionCubit>().refreshProfile().whenComplete(() {
+        _isRefreshingProfile = false;
+      }),
+    );
+  }
 
   Future<void> _showPasswordPrompt() async {
     if (_isShowingPasswordPrompt) {
@@ -61,6 +103,8 @@ class _MainShellPageState extends State<MainShellPage> {
           previous.shouldPromptPasswordSetup !=
               current.shouldPromptPasswordSetup,
       listener: (context, state) async {
+        _syncSessionSideEffects(state);
+
         if (state.status == SessionStatus.unauthenticated) {
           Navigator.of(
             context,
@@ -73,7 +117,14 @@ class _MainShellPageState extends State<MainShellPage> {
         }
       },
       child: Scaffold(
-        body: SafeArea(child: _pages[_currentIndex]),
+        body: SafeArea(
+          child: Column(
+            children: [
+              WsStatusIndicator(client: context.read<WsClient>()),
+              Expanded(child: _pages[_currentIndex]),
+            ],
+          ),
+        ),
         bottomNavigationBar: HomeNavigationBar(
           currentIndex: _currentIndex,
           onDestinationSelected: (index) {

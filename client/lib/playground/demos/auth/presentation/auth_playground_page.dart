@@ -678,10 +678,7 @@ class _AnimatedAuthSection extends StatelessWidget {
             alignment: Alignment.topCenter,
             child: Stack(
               alignment: Alignment.topCenter,
-              children: [
-                ...previousChildren,
-                ..._maybeChild(currentChild),
-              ],
+              children: [...previousChildren, ..._maybeChild(currentChild)],
             ),
           );
         },

@@ -19,22 +19,25 @@ void main() {
     await cubit.close();
   });
 
-  test('completeLogin persists session and keeps password prompt flag', () async {
-    final repository = _FakeSessionRepository();
-    final cubit = SessionCubit(repository: repository);
+  test(
+    'completeLogin persists session and keeps password prompt flag',
+    () async {
+      final repository = _FakeSessionRepository();
+      final cubit = SessionCubit(repository: repository);
 
-    await cubit.completeLogin(
-      const AppSession(
-        token: 'jwt-token',
-        accountId: 10001,
-        passwordSetupRequired: true,
-      ),
-    );
+      await cubit.completeLogin(
+        const AppSession(
+          token: 'jwt-token',
+          accountId: 10001,
+          passwordSetupRequired: true,
+        ),
+      );
 
-    expect(repository.persistedSession?.token, 'jwt-token');
-    expect(cubit.state.shouldPromptPasswordSetup, isTrue);
-    await cubit.close();
-  });
+      expect(repository.persistedSession?.token, 'jwt-token');
+      expect(cubit.state.shouldPromptPasswordSetup, isTrue);
+      await cubit.close();
+    },
+  );
 
   test('refreshProfile syncs user into authenticated state', () async {
     final repository = _FakeSessionRepository(
@@ -130,16 +133,17 @@ class _FakeSessionRepository implements SessionRepository {
   @override
   Future<void> setPassword({required String newPassword}) async {
     lastSetPassword = newPassword;
-    user = (user ??
-            const User(
-              userId: 10001,
-              nickname: 'Rainy',
-              avatar: 'identicon:seed-default',
-              phone: '13800138000',
-              signature: '',
-              hasPassword: false,
-            ))
-        .copyWith(hasPassword: true);
+    user =
+        (user ??
+                const User(
+                  userId: 10001,
+                  nickname: 'Rainy',
+                  avatar: 'identicon:seed-default',
+                  phone: '13800138000',
+                  signature: '',
+                  hasPassword: false,
+                ))
+            .copyWith(hasPassword: true);
   }
 
   @override

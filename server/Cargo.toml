@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "modules/flash_core", "modules/flash_auth", "modules/flash_user"]
+members = [".", "modules/flash_core", "modules/flash_auth", "modules/flash_user", "modules/im-ws"]
 resolver = "2"
 
 [package]
@@ -16,6 +16,7 @@ flash_auth = { path = "modules/flash_auth" }
 flash_core = { path = "modules/flash_core" }
 flash_user = { path = "modules/flash_user" }
 futures-util = "0.3.31"
+im-ws = { path = "modules/im-ws" }
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 local-ip-address = "0.6.13"
 rand = "0.9.2"

@@ -1,4 +1,5 @@
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,12 +16,14 @@ class FlashImApp extends StatefulWidget {
     this.authRepository,
     this.sessionRepository,
     this.sessionCubit,
+    this.wsClient,
   });
 
   final LocalAppConfig? appConfig;
   final AuthRepository? authRepository;
   final SessionRepository? sessionRepository;
   final SessionCubit? sessionCubit;
+  final WsClient? wsClient;
 
   @override
   State<FlashImApp> createState() => _FlashImAppState();
@@ -31,6 +34,7 @@ class _FlashImAppState extends State<FlashImApp> {
   AuthRepository? _defaultAuthRepository;
   SessionRepository? _defaultSessionRepository;
   SessionCubit? _defaultSessionCubit;
+  WsClient? _defaultWsClient;
 
   @override
   void initState() {
@@ -42,6 +46,7 @@ class _FlashImAppState extends State<FlashImApp> {
 
   @override
   void dispose() {
+    _defaultWsClient?.dispose();
     _defaultSessionCubit?.close();
     super.dispose();
   }
@@ -201,12 +206,16 @@ class _FlashImAppState extends State<FlashImApp> {
         final authRepository =
             widget.authRepository ??
             (_defaultAuthRepository ??= DefaultAuthRepository(
-              api: DioAuthApi(dio: DioFactory.create(baseUrl: config.apiBaseUrl)),
+              api: DioAuthApi(
+                dio: DioFactory.create(baseUrl: config.apiBaseUrl),
+              ),
             ));
         final sessionRepository =
             widget.sessionRepository ??
             (_defaultSessionRepository ??= DefaultSessionRepository(
-              api: DioSessionApi(dio: DioFactory.create(baseUrl: config.apiBaseUrl)),
+              api: DioSessionApi(
+                dio: DioFactory.create(baseUrl: config.apiBaseUrl),
+              ),
               cacheStore: const SharedPreferencesAuthCacheStore(),
             ));
         final sessionCubit =
@@ -214,11 +223,20 @@ class _FlashImAppState extends State<FlashImApp> {
             (_defaultSessionCubit ??= SessionCubit(
               repository: sessionRepository,
             ));
+        final wsClient =
+            widget.wsClient ??
+            (_defaultWsClient ??= WsClient(
+              config: ImConfig.fromApiBaseUrl(config.apiBaseUrl),
+              tokenProvider: () => sessionCubit.state.session?.token,
+            ));
 
         return MultiRepositoryProvider(
           providers: [
             RepositoryProvider<AuthRepository>.value(value: authRepository),
-            RepositoryProvider<SessionRepository>.value(value: sessionRepository),
+            RepositoryProvider<SessionRepository>.value(
+              value: sessionRepository,
+            ),
+            RepositoryProvider<WsClient>.value(value: wsClient),
           ],
           child: BlocProvider<SessionCubit>.value(
             value: sessionCubit,

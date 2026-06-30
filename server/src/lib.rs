@@ -18,8 +18,12 @@ mod tests {
         http::{Request, StatusCode, header},
     };
     use futures_util::{SinkExt, StreamExt};
-    use std::{sync::Arc, time::Duration};
-    use tokio::net::TcpListener;
+    use im_ws::{
+        frame,
+        proto::{AuthResult, WsFrameType},
+    };
+    use std::{net::SocketAddr, sync::Arc, time::Duration};
+    use tokio::{net::TcpListener, task::JoinHandle};
     use tokio_tungstenite::{connect_async, tungstenite::Message as TungsteniteMessage};
     use tower::ServiceExt;
 
@@ -431,6 +435,126 @@ mod tests {
         assert!(user_chat.contains(&format!("\"user_id\":{}", user.account_id)));
 
         server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn im_websocket_rejects_invalid_auth_frame() {
+        let (_, _, app) = build_test_app();
+        let (address, server_task) = spawn_test_server(app).await;
+
+        let url = format!("ws://{address}/ws/im");
+        let (mut stream, _) = connect_async(url).await.unwrap();
+
+        stream
+            .send(TungsteniteMessage::Binary(
+                frame::auth_request_frame("invalid-token").into(),
+            ))
+            .await
+            .unwrap();
+
+        let auth_result = next_auth_result(&mut stream).await;
+        assert!(!auth_result.success);
+        assert_eq!(auth_result.message, "invalid token");
+
+        server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn im_websocket_accepts_valid_auth_frame() {
+        let (context, auth_store, app) = build_test_app();
+        let user = find_or_create_account_by_phone(auth_store.as_ref(), "13800138001")
+            .await
+            .unwrap();
+        let token = sign_token(context.as_ref(), user.account_id).unwrap();
+        let (address, server_task) = spawn_test_server(app).await;
+
+        let url = format!("ws://{address}/ws/im");
+        let (mut stream, _) = connect_async(url).await.unwrap();
+
+        stream
+            .send(TungsteniteMessage::Binary(
+                frame::auth_request_frame(token).into(),
+            ))
+            .await
+            .unwrap();
+
+        let auth_result = next_auth_result(&mut stream).await;
+        assert!(auth_result.success);
+        assert_eq!(auth_result.message, "ok");
+
+        server_task.abort();
+    }
+
+    #[tokio::test]
+    async fn im_websocket_replies_pong_after_auth() {
+        let (context, auth_store, app) = build_test_app();
+        let user = find_or_create_account_by_phone(auth_store.as_ref(), "13800138002")
+            .await
+            .unwrap();
+        let token = sign_token(context.as_ref(), user.account_id).unwrap();
+        let (address, server_task) = spawn_test_server(app).await;
+
+        let url = format!("ws://{address}/ws/im");
+        let (mut stream, _) = connect_async(url).await.unwrap();
+
+        stream
+            .send(TungsteniteMessage::Binary(
+                frame::auth_request_frame(token).into(),
+            ))
+            .await
+            .unwrap();
+        let auth_result = next_auth_result(&mut stream).await;
+        assert!(auth_result.success);
+
+        stream
+            .send(TungsteniteMessage::Binary(frame::ping_frame().into()))
+            .await
+            .unwrap();
+
+        let message = next_binary_message(&mut stream).await;
+        let (frame_type, payload) = frame::decode_frame(&message).unwrap();
+        assert_eq!(frame_type, WsFrameType::Pong);
+        assert!(payload.is_empty());
+
+        server_task.abort();
+    }
+
+    async fn spawn_test_server(app: Router) -> (SocketAddr, JoinHandle<()>) {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server_task = tokio::spawn(async move {
+            axum::serve(listener, app).await.unwrap();
+        });
+
+        (address, server_task)
+    }
+
+    async fn next_auth_result(
+        stream: &mut tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
+    ) -> AuthResult {
+        let message = next_binary_message(stream).await;
+        let (frame_type, payload) = frame::decode_frame(&message).unwrap();
+        assert_eq!(frame_type, WsFrameType::AuthResult);
+        frame::decode_auth_result_payload(&payload).unwrap()
+    }
+
+    async fn next_binary_message(
+        stream: &mut tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
+    ) -> Vec<u8> {
+        let message = tokio::time::timeout(Duration::from_secs(3), stream.next())
+            .await
+            .expect("expected websocket message")
+            .expect("stream should stay open")
+            .expect("message should be ok");
+
+        match message {
+            TungsteniteMessage::Binary(bytes) => bytes.to_vec(),
+            other => panic!("expected binary message, got {other:?}"),
+        }
     }
 
     async fn next_text_message(

@@ -34,6 +34,8 @@ dependencies:
     path: modules/flash_auth
   flash_session:
     path: modules/flash_session
+  flash_im_core:
+    path: modules/flash_im_core
   app_starter:
     path: modules/app_starter
 

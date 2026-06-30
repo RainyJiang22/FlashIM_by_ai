@@ -4,10 +4,55 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="refactor:补充我的页相关ui样式">
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat:增加test_link机制">
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/analysis_options.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/im_config.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pb.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/view/.gitkeep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/view/ws_status_indicator.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/pubspec.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/im_config_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/proto_compile_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_status_indicator_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.1/client/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.1/client/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.1/server/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.1/server/tasks.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/client/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/client/tasks.md" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/server/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/server/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proto/ws.proto" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/proto/gen.ps1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/Cargo.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/build.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/src/handler.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/src/lib.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/src/proto.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/widgets/home_navigation_bar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/widgets/home_navigation_bar.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/auth/presentation/auth_playground_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/presentation/im_playground_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/playground/demos/im_playground/presentation/im_playground_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/auth/cubit/app_session_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/auth/cubit/app_session_cubit_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/routes/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,23 +99,26 @@
     "Shell Script.start_backend.sh.executor": "Run",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
     "dart.analysis.tool.window.visible": "false",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/proto/v0.0.1/server",
+    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/core/v0.0.1/client",
     "settings.editor.selected.configurable": "preferences.pluginManager",
     "show.migrate.to.gradle.popup": "false"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.1/client" />
+      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.1/server" />
       <recent name="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/server" />
       <recent name="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/client" />
       <recent name="$PROJECT_DIR$/docs/features/session" />
-      <recent name="$PROJECT_DIR$/docs/features/auth" />
-      <recent name="$PROJECT_DIR$/docs/research/project" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.1/server" />
+      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.1" />
       <recent name="$PROJECT_DIR$/docs/features/im/proto/v0.0.1" />
     </key>
   </component>
@@ -256,7 +304,15 @@
       <option name="project" value="LOCAL" />
       <updated>1781876434841</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="feat:增加test_link机制">
+      <option name="closed" value="true" />
+      <created>1782805947012</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1782805947012</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -290,14 +346,15 @@
     <MESSAGE value="feat:后端rust模块化隔离" />
     <MESSAGE value="fix:工作空间workspace" />
     <MESSAGE value="feat: 重构认证与会话模块并拆分服务端核心/用户模块，补齐客户端会话页与文档更新，同时修复 start_backend 脚本的环境兜底启动逻辑" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: 重构认证与会话模块并拆分服务端核心/用户模块，补齐客户端会话页与文档更新，同时修复 start_backend 脚本的环境兜底启动逻辑" />
+    <MESSAGE value="feat:增加test_link机制" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat:增加test_link机制" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart</url>
-          <line>22</line>
+          <line>26</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

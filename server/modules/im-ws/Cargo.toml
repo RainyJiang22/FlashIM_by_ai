@@ -1,0 +1,17 @@
+[package]
+name = "im-ws"
+version = "0.1.0"
+edition = "2024"
+build = "build.rs"
+
+[dependencies]
+axum = { version = "0.8.9", features = ["ws"] }
+flash_core = { path = "../flash_core" }
+futures-util = "0.3.31"
+prost = "0.14"
+tokio = { version = "1.52.3", features = ["time"] }
+uuid = { version = "1", features = ["v4"] }
+
+[build-dependencies]
+prost-build = "0.14"
+protoc-bin-vendored = "3"

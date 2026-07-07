@@ -177,6 +177,7 @@ class _AuthProfilePageState extends State<AuthProfilePage> {
                     onPressed: _logout,
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(54),
+                      alignment: Alignment.center,
                       side: const BorderSide(
                         color: Color(0xFFE35D5D),
                         width: 1.4,
@@ -190,7 +191,7 @@ class _AuthProfilePageState extends State<AuthProfilePage> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    child: const Text('退出登录'),
+                    child: const Text('退出登录', textAlign: TextAlign.center),
                   ),
                 ),
               ],

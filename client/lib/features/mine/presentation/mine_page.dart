@@ -59,30 +59,27 @@ class _MinePageState extends State<MinePage> {
         return RefreshIndicator(
           onRefresh: _reload,
           color: const Color(0xFF07C160),
-          child: ColoredBox(
-            color: const Color(0xFFF1F1F1),
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                const SizedBox(height: 18),
-                UserCard(
-                  user: user,
-                  onTap: () =>
-                      Navigator.of(context).pushNamed(AppRoutes.editProfile),
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const SizedBox(height: 18),
+              UserCard(
+                user: user,
+                onTap: () =>
+                    Navigator.of(context).pushNamed(AppRoutes.editProfile),
+              ),
+              const SizedBox(height: 10),
+              MineInfoCard(
+                user: user,
+                onPasswordTap: () => Navigator.of(context).pushNamed(
+                  user.hasPassword
+                      ? AppRoutes.changePassword
+                      : AppRoutes.setPassword,
                 ),
-                const SizedBox(height: 10),
-                MineInfoCard(
-                  user: user,
-                  onPasswordTap: () => Navigator.of(context).pushNamed(
-                    user.hasPassword
-                        ? AppRoutes.changePassword
-                        : AppRoutes.setPassword,
-                  ),
-                  onLogout: _logout,
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
+                onLogout: _logout,
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
         );
       },

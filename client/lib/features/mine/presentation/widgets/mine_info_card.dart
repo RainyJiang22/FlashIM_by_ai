@@ -92,39 +92,44 @@ class _MineInfoRow extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 0, 20, 0),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 17,
-                height: 1.15,
-                color: destructive
-                    ? const Color(0xFFE64340)
-                    : const Color(0xFF191919),
-              ),
-            ),
-          ),
-          if (value.isNotEmpty)
-            Flexible(
+          if (destructive && value.isEmpty)
+            Expanded(
               child: Text(
-                value,
-                textAlign: TextAlign.right,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                label,
+                textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 17,
                   height: 1.15,
-                  color: Color(0xFF8A8A8A),
+                  color: Color(0xFFE64340),
+                ),
+              ),
+            )
+          else ...[
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 17,
+                  height: 1.15,
+                  color: Color(0xFF191919),
                 ),
               ),
             ),
-          if (onTap != null) ...[
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: Color(0xFFC7C7C7),
-              size: 28,
-            ),
+            if (value.isNotEmpty)
+              Flexible(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.15,
+                    color: Color(0xFF8A8A8A),
+                  ),
+                ),
+              ),
+            if (onTap != null) ...[const SizedBox(width: 8)],
           ],
         ],
       ),

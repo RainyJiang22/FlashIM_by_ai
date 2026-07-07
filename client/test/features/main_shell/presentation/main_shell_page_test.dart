@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im/app/app_router.dart';
+import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,12 @@ void main() {
 
     await tester.pumpWidget(
       MultiRepositoryProvider(
-        providers: [RepositoryProvider<WsClient>.value(value: wsClient)],
+        providers: [
+          RepositoryProvider<WsClient>.value(value: wsClient),
+          RepositoryProvider<ConversationRepository>.value(
+            value: _FakeConversationRepository(),
+          ),
+        ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
           child: MaterialApp(
@@ -48,6 +54,9 @@ void main() {
     expect(find.text('Rainy'), findsOneWidget);
     expect(find.text('消息同步状态'), findsOneWidget);
     expect(find.text('已连接'), findsOneWidget);
+    expect(find.text('橘橙'), findsOneWidget);
+    expect(find.text('今天的接口联调先看会话列表。'), findsOneWidget);
+    expect(find.text('消息页暂未开放'), findsNothing);
 
     await tester.tap(find.text('通讯录'));
     await tester.pumpAndSettle();
@@ -60,6 +69,27 @@ void main() {
 
     await cubit.close();
   });
+}
+
+class _FakeConversationRepository implements ConversationRepository {
+  @override
+  Future<List<Conversation>> getList({int limit = 20, int offset = 0}) async {
+    if (offset > 0) {
+      return const <Conversation>[];
+    }
+    return [
+      Conversation(
+        id: 'conversation-1',
+        type: 0,
+        peerUserId: '10002',
+        peerNickname: '橘橙',
+        unreadCount: 0,
+        createdAt: DateTime(2026, 3, 29),
+        lastMessageAt: DateTime(2026, 3, 29, 9, 12),
+        lastMessagePreview: '今天的接口联调先看会话列表。',
+      ),
+    ];
+  }
 }
 
 class _FakeWsClient extends WsClient {

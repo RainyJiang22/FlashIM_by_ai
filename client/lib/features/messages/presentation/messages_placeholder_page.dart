@@ -1,3 +1,4 @@
+import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class MessagesPlaceholderPage extends StatelessWidget {
                     )
                   : UserAvatar(user: user, size: 48),
             ),
-            const Expanded(child: Center(child: Text('消息页暂未开放'))),
+            const Expanded(child: ConversationListPage()),
           ],
         );
       },

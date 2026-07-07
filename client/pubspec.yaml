@@ -36,6 +36,8 @@ dependencies:
     path: modules/flash_session
   flash_im_core:
     path: modules/flash_im_core
+  flash_im_conversation:
+    path: modules/flash_im_conversation
   app_starter:
     path: modules/app_starter
 

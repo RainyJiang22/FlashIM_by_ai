@@ -572,6 +572,7 @@ dependencies = [
  "flash_core",
  "flash_user",
  "futures-util",
+ "im-conversation",
  "im-ws",
  "jsonwebtoken",
  "local-ip-address",
@@ -1118,6 +1119,18 @@ checksum = "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714"
 dependencies = [
  "icu_normalizer",
  "icu_properties",
+]
+
+[[package]]
+name = "im-conversation"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "chrono",
+ "flash_core",
+ "serde",
+ "sqlx",
+ "uuid",
 ]
 
 [[package]]
@@ -2228,6 +2241,7 @@ dependencies = [
  "tokio-stream",
  "tracing",
  "url",
+ "uuid",
  "webpki-roots 0.26.11",
 ]
 
@@ -2309,6 +2323,7 @@ dependencies = [
  "stringprep",
  "thiserror",
  "tracing",
+ "uuid",
  "whoami",
 ]
 
@@ -2347,6 +2362,7 @@ dependencies = [
  "stringprep",
  "thiserror",
  "tracing",
+ "uuid",
  "whoami",
 ]
 
@@ -2373,6 +2389,7 @@ dependencies = [
  "thiserror",
  "tracing",
  "url",
+ "uuid",
 ]
 
 [[package]]
@@ -2712,6 +2729,7 @@ checksum = "bf80a72845275afea99e7f2b434723d3bc7e38470fcd1c7ed39a599c73319a53"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",
+ "serde_core",
  "wasm-bindgen",
 ]
 

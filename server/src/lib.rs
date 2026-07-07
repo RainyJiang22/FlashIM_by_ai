@@ -204,6 +204,20 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn conversations_route_requires_authentication() {
+        let (_, _, app) = build_test_app();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/conversations?limit=20&offset=0")
+            .body(Body::empty())
+            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
     async fn set_password_rejects_duplicate_setup() {
         let (_, _, app) = build_test_app();
 

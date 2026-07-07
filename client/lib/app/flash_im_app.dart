@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,7 @@ class FlashImApp extends StatefulWidget {
     this.appConfig,
     this.authRepository,
     this.sessionRepository,
+    this.conversationRepository,
     this.sessionCubit,
     this.wsClient,
   });
@@ -22,6 +25,7 @@ class FlashImApp extends StatefulWidget {
   final LocalAppConfig? appConfig;
   final AuthRepository? authRepository;
   final SessionRepository? sessionRepository;
+  final ConversationRepository? conversationRepository;
   final SessionCubit? sessionCubit;
   final WsClient? wsClient;
 
@@ -33,6 +37,7 @@ class _FlashImAppState extends State<FlashImApp> {
   late final Future<LocalAppConfig> _configFuture;
   AuthRepository? _defaultAuthRepository;
   SessionRepository? _defaultSessionRepository;
+  ConversationRepository? _defaultConversationRepository;
   SessionCubit? _defaultSessionCubit;
   WsClient? _defaultWsClient;
 
@@ -223,6 +228,14 @@ class _FlashImAppState extends State<FlashImApp> {
             (_defaultSessionCubit ??= SessionCubit(
               repository: sessionRepository,
             ));
+        final conversationRepository =
+            widget.conversationRepository ??
+            (_defaultConversationRepository ??= DioConversationRepository(
+              dio: _createAuthenticatedDio(
+                baseUrl: config.apiBaseUrl,
+                sessionCubit: sessionCubit,
+              ),
+            ));
         final wsClient =
             widget.wsClient ??
             (_defaultWsClient ??= WsClient(
@@ -235,6 +248,9 @@ class _FlashImAppState extends State<FlashImApp> {
             RepositoryProvider<AuthRepository>.value(value: authRepository),
             RepositoryProvider<SessionRepository>.value(
               value: sessionRepository,
+            ),
+            RepositoryProvider<ConversationRepository>.value(
+              value: conversationRepository,
             ),
             RepositoryProvider<WsClient>.value(value: wsClient),
           ],
@@ -251,5 +267,24 @@ class _FlashImAppState extends State<FlashImApp> {
         );
       },
     );
+  }
+
+  Dio _createAuthenticatedDio({
+    required String baseUrl,
+    required SessionCubit sessionCubit,
+  }) {
+    final dio = DioFactory.create(baseUrl: baseUrl);
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final token = sessionCubit.state.session?.token;
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          handler.next(options);
+        },
+      ),
+    );
+    return dio;
   }
 }

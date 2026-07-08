@@ -20,7 +20,7 @@ mod tests {
     use futures_util::{SinkExt, StreamExt};
     use im_ws::{
         frame,
-        proto::{AuthResult, WsFrameType},
+        proto::{AuthResult, ConversationUpdate, MessageAck, WsFrameType},
     };
     use std::{net::SocketAddr, sync::Arc, time::Duration};
     use tokio::{net::TcpListener, task::JoinHandle};
@@ -215,6 +215,72 @@ mod tests {
         let response = app.oneshot(request).await.unwrap();
 
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn conversation_messages_route_requires_authentication() {
+        let (_, _, app) = build_test_app();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/conversations/00000000-0000-0000-0000-000000000001/messages")
+            .body(Body::empty())
+            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn conversation_detail_route_requires_authentication() {
+        let (_, _, app) = build_test_app();
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/conversations/00000000-0000-0000-0000-000000000001")
+            .body(Body::empty())
+            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn conversation_read_route_requires_authentication() {
+        let (_, _, app) = build_test_app();
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/conversations/00000000-0000-0000-0000-000000000001/read")
+            .body(Body::empty())
+            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[test]
+    fn message_frame_types_round_trip() {
+        let ack = MessageAck {
+            message_id: "00000000-0000-0000-0000-000000000001".to_string(),
+            seq: 7,
+        };
+        let ack_frame = frame::message_ack_frame(ack);
+        let (frame_type, payload) = frame::decode_frame(&ack_frame).unwrap();
+        assert_eq!(frame_type, WsFrameType::MessageAck);
+        assert!(!payload.is_empty());
+
+        let update = ConversationUpdate {
+            conversation_id: "00000000-0000-0000-0000-000000000001".to_string(),
+            last_message_preview: "hello".to_string(),
+            last_message_at: "2026-03-30T00:00:00Z".to_string(),
+            unread_count: 1,
+            total_unread: 3,
+        };
+        let update_frame = frame::conversation_update_frame(update);
+        let (frame_type, payload) = frame::decode_frame(&update_frame).unwrap();
+        assert_eq!(frame_type, WsFrameType::ConversationUpdate);
+        assert!(!payload.is_empty());
     }
 
     #[tokio::test]

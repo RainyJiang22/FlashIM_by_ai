@@ -5,11 +5,15 @@ edition = "2024"
 build = "build.rs"
 
 [dependencies]
+async-trait = "0.1.89"
 axum = { version = "0.8.9", features = ["ws"] }
 flash_core = { path = "../flash_core" }
 futures-util = "0.3.31"
+im-message = { path = "../im-message" }
 prost = "0.14"
-tokio = { version = "1.52.3", features = ["time"] }
+serde_json = "1.0.145"
+sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "macros"] }
+tokio = { version = "1.52.3", features = ["macros", "sync", "time"] }
 uuid = { version = "1", features = ["v4"] }
 
 [build-dependencies]

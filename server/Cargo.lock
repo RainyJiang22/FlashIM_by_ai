@@ -573,6 +573,7 @@ dependencies = [
  "flash_user",
  "futures-util",
  "im-conversation",
+ "im-message",
  "im-ws",
  "jsonwebtoken",
  "local-ip-address",
@@ -1134,15 +1135,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "im-message"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "chrono",
+ "flash_core",
+ "im-conversation",
+ "prost",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "uuid",
+]
+
+[[package]]
 name = "im-ws"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "flash_core",
  "futures-util",
+ "im-message",
  "prost",
  "prost-build",
  "protoc-bin-vendored",
+ "serde_json",
+ "sqlx",
  "tokio",
  "uuid",
 ]

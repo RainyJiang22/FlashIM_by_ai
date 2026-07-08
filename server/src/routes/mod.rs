@@ -3,6 +3,7 @@ use flash_auth::{SharedAuthStore, register_auth_routes};
 use flash_core::SharedContext;
 use flash_user::router as build_user_router;
 use im_conversation::router as build_im_conversation_router;
+use im_message::router as build_im_message_router;
 use im_ws::router as build_im_ws_router;
 
 pub mod conversation;
@@ -17,6 +18,7 @@ pub fn build_router(state: SharedContext, auth_store: SharedAuthStore) -> Router
         .route("/chat_room/ws", get(ws::chat_room_websocket_handler))
         .merge(build_user_router())
         .merge(build_im_ws_router())
+        .merge(build_im_message_router())
         .merge(build_im_conversation_router());
 
     register_auth_routes(router)

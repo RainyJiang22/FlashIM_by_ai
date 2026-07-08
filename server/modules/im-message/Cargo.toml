@@ -1,0 +1,17 @@
+[package]
+name = "im-message"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+async-trait = "0.1.89"
+axum = "0.8.9"
+chrono = { version = "0.4.42", features = ["serde"] }
+flash_core = { path = "../flash_core" }
+im-conversation = { path = "../im-conversation" }
+prost = "0.14.1"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "macros", "chrono", "uuid", "json"] }
+uuid = { version = "1", features = ["serde", "v4"] }

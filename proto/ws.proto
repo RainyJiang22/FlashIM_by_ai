@@ -7,6 +7,9 @@ enum WsFrameType {
   PONG = 1;
   AUTH = 2;
   AUTH_RESULT = 3;
+  CHAT_MESSAGE = 4;
+  MESSAGE_ACK = 5;
+  CONVERSATION_UPDATE = 6;
 }
 
 message WsFrame {

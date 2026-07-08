@@ -2,7 +2,9 @@ use std::{error::Error, fmt};
 
 use prost::Message as ProstMessage;
 
-use crate::proto::{AuthRequest, AuthResult, WsFrame, WsFrameType};
+use crate::proto::{
+    AuthRequest, AuthResult, ChatMessage, ConversationUpdate, MessageAck, WsFrame, WsFrameType,
+};
 
 #[derive(Debug)]
 pub enum FrameDecodeError {
@@ -71,4 +73,16 @@ pub fn ping_frame() -> Vec<u8> {
 
 pub fn pong_frame() -> Vec<u8> {
     encode_frame(WsFrameType::Pong, Vec::new())
+}
+
+pub fn chat_message_frame(message: ChatMessage) -> Vec<u8> {
+    encode_frame(WsFrameType::ChatMessage, message.encode_to_vec())
+}
+
+pub fn message_ack_frame(ack: MessageAck) -> Vec<u8> {
+    encode_frame(WsFrameType::MessageAck, ack.encode_to_vec())
+}
+
+pub fn conversation_update_frame(update: ConversationUpdate) -> Vec<u8> {
+    encode_frame(WsFrameType::ConversationUpdate, update.encode_to_vec())
 }

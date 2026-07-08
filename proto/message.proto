@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package im;
+
+message ChatMessage {
+  string id = 1;
+  string conversation_id = 2;
+  int64 sender_id = 3;
+  int64 seq = 4;
+  int32 type = 5;
+  string content = 6;
+  string extra = 7;
+  int32 status = 8;
+  string created_at = 9;
+  string sender_name = 10;
+  string sender_avatar = 11;
+}
+
+message SendMessageRequest {
+  string conversation_id = 1;
+  int32 type = 2;
+  string content = 3;
+  string extra = 4;
+  string client_id = 5;
+}
+
+message MessageAck {
+  string message_id = 1;
+  int64 seq = 2;
+}
+
+message ConversationUpdate {
+  string conversation_id = 1;
+  string last_message_preview = 2;
+  string last_message_at = 3;
+  int32 unread_count = 4;
+  int32 total_unread = 5;
+}

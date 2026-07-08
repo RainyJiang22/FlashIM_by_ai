@@ -10,14 +10,18 @@ use axum::{
 };
 use flash_core::{AppResult, SharedContext, jwt::extract_user_id};
 use futures_util::SinkExt;
+use im_message::service::MessageService;
 use prost::Message as ProstMessage;
+use std::sync::Arc;
 use tokio::time::timeout;
 use uuid::Uuid;
 
 use crate::{
+    broadcaster::WsBroadcaster,
     dispatcher::{DispatchOutcome, dispatch_frame},
     frame::{auth_result_frame, decode_frame},
     proto::{AuthRequest, WsFrameType},
+    state::WsState,
 };
 
 const AUTH_TIMEOUT: Duration = Duration::from_secs(10);
@@ -27,10 +31,16 @@ pub async fn ws_handler(
     websocket: WebSocketUpgrade,
 ) -> AppResult<impl IntoResponse> {
     let connection_id = Uuid::new_v4();
-    Ok(websocket.on_upgrade(move |socket| handle_socket(socket, context, connection_id)))
+    let ws_state = crate::state::shared_ws_state();
+    Ok(websocket.on_upgrade(move |socket| handle_socket(socket, context, ws_state, connection_id)))
 }
 
-async fn handle_socket(mut socket: WebSocket, context: SharedContext, connection_id: Uuid) {
+async fn handle_socket(
+    mut socket: WebSocket,
+    context: SharedContext,
+    ws_state: WsState,
+    connection_id: Uuid,
+) {
     match authenticate_socket(&mut socket, &context).await {
         Ok(account_id) => {
             println!("im ws authenticated: connection_id={connection_id}, account_id={account_id}");
@@ -41,7 +51,7 @@ async fn handle_socket(mut socket: WebSocket, context: SharedContext, connection
             {
                 return;
             }
-            handle_authenticated_socket(socket, connection_id, account_id).await;
+            handle_authenticated_socket(socket, context, ws_state, connection_id, account_id).await;
         }
         Err(error) => {
             println!("im ws auth failed: connection_id={connection_id}, error={error}");
@@ -91,38 +101,82 @@ async fn authenticate_socket(
     extract_user_id(context.as_ref(), &headers).map_err(|_| AuthFailure::InvalidToken)
 }
 
-async fn handle_authenticated_socket(mut socket: WebSocket, connection_id: Uuid, account_id: i64) {
-    while let Some(result) = socket.recv().await {
-        let message = match result {
-            Ok(message) => message,
-            Err(error) => {
-                println!(
-                    "im ws receive failed: connection_id={connection_id}, account_id={account_id}, error={error}"
-                );
-                break;
-            }
-        };
+async fn handle_authenticated_socket(
+    mut socket: WebSocket,
+    context: SharedContext,
+    ws_state: WsState,
+    connection_id: Uuid,
+    account_id: i64,
+) {
+    let mut outbound = ws_state.register(account_id, connection_id);
+    let service = MessageService::new(Arc::new(WsBroadcaster::new(
+        ws_state.clone(),
+        context.postgres.pool().clone(),
+    )));
 
-        match message {
-            Message::Binary(bytes) => {
-                let Ok((frame_type, payload)) = decode_frame(&bytes) else {
+    loop {
+        tokio::select! {
+            result = socket.recv() => {
+                let Some(result) = result else {
                     break;
                 };
-                match dispatch_frame(frame_type, payload) {
-                    DispatchOutcome::Reply(reply) => {
-                        if socket.send(Message::Binary(reply.into())).await.is_err() {
-                            break;
-                        }
+                let message = match result {
+                    Ok(message) => message,
+                    Err(error) => {
+                        println!(
+                            "im ws receive failed: connection_id={connection_id}, account_id={account_id}, error={error}"
+                        );
+                        break;
                     }
-                    DispatchOutcome::Ignore => {}
+                };
+
+                if !handle_client_message(&mut socket, &context, account_id, &service, connection_id, message).await {
+                    break;
                 }
             }
-            Message::Close(_) => break,
-            _ => {}
+            Some(frame) = outbound.recv() => {
+                if socket.send(Message::Binary(frame.into())).await.is_err() {
+                    break;
+                }
+            }
         }
     }
 
+    ws_state.unregister(account_id, connection_id);
     println!("im ws disconnected: connection_id={connection_id}, account_id={account_id}");
+}
+
+async fn handle_client_message(
+    socket: &mut WebSocket,
+    context: &SharedContext,
+    account_id: i64,
+    service: &MessageService<WsBroadcaster>,
+    connection_id: Uuid,
+    message: Message,
+) -> bool {
+    match message {
+        Message::Binary(bytes) => {
+            let Ok((frame_type, payload)) = decode_frame(&bytes) else {
+                return false;
+            };
+
+            match dispatch_frame(context, account_id, service, frame_type, payload).await {
+                Ok(DispatchOutcome::Reply(reply)) => {
+                    socket.send(Message::Binary(reply.into())).await.is_ok()
+                }
+                Ok(DispatchOutcome::Ignore) => true,
+                Err(error) => {
+                    println!(
+                        "im ws dispatch failed: connection_id={connection_id}, account_id={account_id}, error={}",
+                        error.message()
+                    );
+                    true
+                }
+            }
+        }
+        Message::Close(_) => false,
+        _ => true,
+    }
 }
 
 #[derive(Debug)]

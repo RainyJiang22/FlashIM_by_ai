@@ -1,13 +1,91 @@
-use crate::{frame::pong_frame, proto::WsFrameType};
+use flash_core::{AppError, AppResult, SharedContext};
+use im_message::service::{MessageService, SendMessageInput};
+use prost::Message as ProstMessage;
+use uuid::Uuid;
+
+use crate::{
+    broadcaster::WsBroadcaster,
+    frame::{message_ack_frame, pong_frame},
+    proto::{MessageAck, SendMessageRequest, WsFrameType},
+};
 
 pub enum DispatchOutcome {
     Reply(Vec<u8>),
     Ignore,
 }
 
-pub fn dispatch_frame(frame_type: WsFrameType, _payload: Vec<u8>) -> DispatchOutcome {
+pub async fn dispatch_frame(
+    context: &SharedContext,
+    account_id: i64,
+    service: &MessageService<WsBroadcaster>,
+    frame_type: WsFrameType,
+    payload: Vec<u8>,
+) -> AppResult<DispatchOutcome> {
     match frame_type {
-        WsFrameType::Ping => DispatchOutcome::Reply(pong_frame()),
-        WsFrameType::Pong | WsFrameType::Auth | WsFrameType::AuthResult => DispatchOutcome::Ignore,
+        WsFrameType::Ping => Ok(DispatchOutcome::Reply(pong_frame())),
+        WsFrameType::ChatMessage => handle_chat_message(context, account_id, service, payload)
+            .await
+            .map(DispatchOutcome::Reply),
+        WsFrameType::Pong
+        | WsFrameType::Auth
+        | WsFrameType::AuthResult
+        | WsFrameType::MessageAck
+        | WsFrameType::ConversationUpdate => Ok(DispatchOutcome::Ignore),
+    }
+}
+
+async fn handle_chat_message(
+    context: &SharedContext,
+    account_id: i64,
+    service: &MessageService<WsBroadcaster>,
+    payload: Vec<u8>,
+) -> AppResult<Vec<u8>> {
+    let request = SendMessageRequest::decode(payload.as_slice())
+        .map_err(|_| AppError::bad_request("invalid chat message payload"))?;
+    let conversation_id = Uuid::parse_str(request.conversation_id.trim())
+        .map_err(|_| AppError::bad_request("invalid conversation id"))?;
+    let extra = parse_extra(request.extra.trim())?;
+
+    let output = service
+        .send(
+            context,
+            SendMessageInput {
+                conversation_id,
+                sender_id: account_id,
+                msg_type: request.r#type as i16,
+                content: request.content,
+                extra,
+            },
+        )
+        .await?;
+
+    Ok(message_ack_frame(MessageAck {
+        message_id: output.ack.message_id.to_string(),
+        seq: output.ack.seq,
+    }))
+}
+
+fn parse_extra(extra: &str) -> AppResult<Option<serde_json::Value>> {
+    if extra.is_empty() {
+        return Ok(None);
+    }
+
+    serde_json::from_str(extra)
+        .map(Some)
+        .map_err(|_| AppError::bad_request("invalid message extra"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_extra;
+
+    #[test]
+    fn parse_extra_allows_empty_payload() {
+        assert!(parse_extra("").expect("empty extra should parse").is_none());
+    }
+
+    #[test]
+    fn parse_extra_rejects_invalid_json() {
+        assert!(parse_extra("{").is_err());
     }
 }

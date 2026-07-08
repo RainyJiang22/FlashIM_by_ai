@@ -1,4 +1,6 @@
+use chrono::{DateTime, Utc};
 use flash_core::{AppError, AppResult, SharedContext};
+use uuid::Uuid;
 
 use crate::models::{ConversationListItem, ConversationListQuery};
 
@@ -34,6 +36,95 @@ pub async fn list_conversations(
     .await?;
 
     Ok(rows.into_iter().map(ConversationListItem::from).collect())
+}
+
+pub async fn get_conversation_by_id(
+    context: &SharedContext,
+    user_id: i64,
+    conversation_id: Uuid,
+) -> AppResult<ConversationListItem> {
+    let row = crate::repository::get_conversation_by_id(
+        context.postgres.pool(),
+        user_id,
+        conversation_id,
+    )
+    .await?
+    .ok_or(AppError::not_found("conversation not found"))?;
+
+    Ok(ConversationListItem::from(row))
+}
+
+pub async fn mark_read(
+    context: &SharedContext,
+    user_id: i64,
+    conversation_id: Uuid,
+) -> AppResult<()> {
+    let updated =
+        crate::repository::mark_read(context.postgres.pool(), user_id, conversation_id).await?;
+    if !updated {
+        return Err(AppError::not_found("conversation not found"));
+    }
+
+    Ok(())
+}
+
+pub struct ConversationMessageService<'a> {
+    context: &'a SharedContext,
+}
+
+impl<'a> ConversationMessageService<'a> {
+    pub fn new(context: &'a SharedContext) -> Self {
+        Self { context }
+    }
+
+    pub async fn is_member(&self, conversation_id: Uuid, user_id: i64) -> AppResult<bool> {
+        crate::repository::is_member(self.context.postgres.pool(), conversation_id, user_id).await
+    }
+
+    pub async fn get_member_ids(&self, conversation_id: Uuid) -> AppResult<Vec<i64>> {
+        crate::repository::get_member_ids(self.context.postgres.pool(), conversation_id).await
+    }
+
+    pub async fn update_last_message(
+        &self,
+        conversation_id: Uuid,
+        preview: &str,
+        last_message_at: DateTime<Utc>,
+    ) -> AppResult<()> {
+        crate::repository::update_last_message(
+            self.context.postgres.pool(),
+            conversation_id,
+            preview,
+            last_message_at,
+        )
+        .await
+    }
+
+    pub async fn increment_unread(&self, conversation_id: Uuid, sender_id: i64) -> AppResult<()> {
+        crate::repository::increment_unread(
+            self.context.postgres.pool(),
+            conversation_id,
+            sender_id,
+        )
+        .await
+    }
+
+    pub async fn get_unread_counts(
+        &self,
+        conversation_id: Uuid,
+        member_ids: &[i64],
+    ) -> AppResult<Vec<(i64, i32)>> {
+        crate::repository::get_unread_counts(
+            self.context.postgres.pool(),
+            conversation_id,
+            member_ids,
+        )
+        .await
+    }
+
+    pub async fn get_total_unread_by_user(&self, user_id: i64) -> AppResult<i32> {
+        crate::repository::get_total_unread_by_user(self.context.postgres.pool(), user_id).await
+    }
 }
 
 #[cfg(test)]

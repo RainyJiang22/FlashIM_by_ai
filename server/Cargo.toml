@@ -6,6 +6,7 @@ members = [
     "modules/flash_user",
     "modules/im-ws",
     "modules/im-conversation",
+    "modules/im-message",
 ]
 resolver = "2"
 
@@ -24,6 +25,7 @@ flash_core = { path = "modules/flash_core" }
 flash_user = { path = "modules/flash_user" }
 futures-util = "0.3.31"
 im-conversation = { path = "modules/im-conversation" }
+im-message = { path = "modules/im-message" }
 im-ws = { path = "modules/im-ws" }
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 local-ip-address = "0.6.13"

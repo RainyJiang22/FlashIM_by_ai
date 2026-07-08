@@ -121,6 +121,32 @@ void main() {
       ),
     ],
   );
+
+  blocTest<ConversationListCubit, ConversationListState>(
+    'markConversationReadLocally clears unread and totalUnread',
+    build: () => ConversationListCubit(
+      repository: _FakeConversationRepository(
+        pages: {
+          0: [firstConversation.copyWith(unreadCount: 5)],
+        },
+      ),
+    ),
+    act: (cubit) async {
+      await cubit.loadConversations();
+      cubit.markConversationReadLocally(firstConversation.id);
+    },
+    expect: () => [
+      const ConversationListLoading(),
+      ConversationListLoaded(
+        conversations: [firstConversation.copyWith(unreadCount: 5)],
+        hasMore: false,
+      ),
+      ConversationListLoaded(
+        conversations: [firstConversation],
+        hasMore: false,
+      ),
+    ],
+  );
 }
 
 class _FakeConversationRepository implements ConversationRepository {
@@ -141,4 +167,14 @@ class _FakeConversationRepository implements ConversationRepository {
     }
     return pages[offset] ?? const <Conversation>[];
   }
+
+  @override
+  Future<Conversation> getById(String id) async {
+    return pages.values
+        .expand((items) => items)
+        .firstWhere((conversation) => conversation.id == id);
+  }
+
+  @override
+  Future<void> markRead(String id) async {}
 }

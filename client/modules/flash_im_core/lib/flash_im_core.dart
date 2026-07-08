@@ -1,6 +1,9 @@
 library;
 
 export 'src/data/im_config.dart' show ImConfig;
+export 'src/data/proto/message.pb.dart'
+    show ChatMessage, ConversationUpdate, MessageAck, SendMessageRequest;
+export 'src/data/proto/ws.pb.dart' show WsFrame, WsFrameType;
 export 'src/logic/ws_client.dart'
     show TokenProvider, WebSocketChannelFactory, WsClient, WsConnectionState;
 export 'src/view/ws_status_indicator.dart' show WsStatusIndicator;

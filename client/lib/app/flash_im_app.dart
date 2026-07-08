@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
@@ -18,6 +19,7 @@ class FlashImApp extends StatefulWidget {
     this.authRepository,
     this.sessionRepository,
     this.conversationRepository,
+    this.messageRepository,
     this.sessionCubit,
     this.wsClient,
   });
@@ -26,6 +28,7 @@ class FlashImApp extends StatefulWidget {
   final AuthRepository? authRepository;
   final SessionRepository? sessionRepository;
   final ConversationRepository? conversationRepository;
+  final MessageRepository? messageRepository;
   final SessionCubit? sessionCubit;
   final WsClient? wsClient;
 
@@ -38,6 +41,7 @@ class _FlashImAppState extends State<FlashImApp> {
   AuthRepository? _defaultAuthRepository;
   SessionRepository? _defaultSessionRepository;
   ConversationRepository? _defaultConversationRepository;
+  MessageRepository? _defaultMessageRepository;
   SessionCubit? _defaultSessionCubit;
   WsClient? _defaultWsClient;
 
@@ -58,8 +62,8 @@ class _FlashImAppState extends State<FlashImApp> {
 
   @override
   Widget build(BuildContext context) {
-    const appBackgroundColor = Color(0xFFF6F7F9);
-    const appPrimaryColor = Color(0xFF1C4EFF);
+    const appBackgroundColor = Color(0xFFEDEDED);
+    const appPrimaryColor = Color(0xFF3B82F6);
     const appSurfaceColor = Colors.white;
     const appMutedBlue = Color(0xFFEAF1FF);
     const appOutlineColor = Color(0xFFD5E2F3);
@@ -99,6 +103,13 @@ class _FlashImAppState extends State<FlashImApp> {
         surfaceTintColor: Colors.transparent,
         foregroundColor: appTextPrimary,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -236,6 +247,14 @@ class _FlashImAppState extends State<FlashImApp> {
                 sessionCubit: sessionCubit,
               ),
             ));
+        final messageRepository =
+            widget.messageRepository ??
+            (_defaultMessageRepository ??= DioMessageRepository(
+              dio: _createAuthenticatedDio(
+                baseUrl: config.apiBaseUrl,
+                sessionCubit: sessionCubit,
+              ),
+            ));
         final wsClient =
             widget.wsClient ??
             (_defaultWsClient ??= WsClient(
@@ -251,6 +270,9 @@ class _FlashImAppState extends State<FlashImApp> {
             ),
             RepositoryProvider<ConversationRepository>.value(
               value: conversationRepository,
+            ),
+            RepositoryProvider<MessageRepository>.value(
+              value: messageRepository,
             ),
             RepositoryProvider<WsClient>.value(value: wsClient),
           ],

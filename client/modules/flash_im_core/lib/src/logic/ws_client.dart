@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../data/im_config.dart';
+import '../data/proto/message.pb.dart';
 import '../data/proto/ws.pb.dart';
 
 typedef TokenProvider = FutureOr<String?> Function();
@@ -31,6 +32,10 @@ class WsClient {
   final WebSocketChannelFactory _channelFactory;
   final _stateController = StreamController<WsConnectionState>.broadcast();
   final _frameController = StreamController<WsFrame>.broadcast();
+  final _chatMessageController = StreamController<ChatMessage>.broadcast();
+  final _messageAckController = StreamController<MessageAck>.broadcast();
+  final _conversationUpdateController =
+      StreamController<ConversationUpdate>.broadcast();
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _channelSubscription;
@@ -44,6 +49,10 @@ class WsClient {
 
   Stream<WsConnectionState> get stateStream => _stateController.stream;
   Stream<WsFrame> get frameStream => _frameController.stream;
+  Stream<ChatMessage> get chatMessageStream => _chatMessageController.stream;
+  Stream<MessageAck> get messageAckStream => _messageAckController.stream;
+  Stream<ConversationUpdate> get conversationUpdateStream =>
+      _conversationUpdateController.stream;
   WsConnectionState get state => _state;
 
   Future<void> connect() async {
@@ -92,6 +101,12 @@ class WsClient {
     _channel?.sink.add(Uint8List.fromList(frame.writeToBuffer()));
   }
 
+  void sendChatMessage(SendMessageRequest request) {
+    sendFrame(
+      WsFrame(type: WsFrameType.CHAT_MESSAGE, payload: request.writeToBuffer()),
+    );
+  }
+
   Future<void> disconnect() async {
     _manualDisconnect = true;
     _reconnectTimer?.cancel();
@@ -108,6 +123,9 @@ class WsClient {
     await disconnect();
     await _stateController.close();
     await _frameController.close();
+    await _chatMessageController.close();
+    await _messageAckController.close();
+    await _conversationUpdateController.close();
   }
 
   void _handleMessage(dynamic message) {
@@ -123,6 +141,17 @@ class WsClient {
         _handleAuthResult(frame.payload);
       case WsFrameType.PONG:
         _missedPongCount = 0;
+      case WsFrameType.CHAT_MESSAGE:
+        _chatMessageController.add(ChatMessage.fromBuffer(frame.payload));
+        _frameController.add(frame);
+      case WsFrameType.MESSAGE_ACK:
+        _messageAckController.add(MessageAck.fromBuffer(frame.payload));
+        _frameController.add(frame);
+      case WsFrameType.CONVERSATION_UPDATE:
+        _conversationUpdateController.add(
+          ConversationUpdate.fromBuffer(frame.payload),
+        );
+        _frameController.add(frame);
       case WsFrameType.PING:
       case WsFrameType.AUTH:
         _frameController.add(frame);

@@ -1,5 +1,7 @@
 import 'package:app_starter/app_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_im_chat/flash_im_chat.dart';
+import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +15,17 @@ abstract final class AppRoutes {
   static const editProfile = '/mine/profile/edit';
   static const setPassword = '/mine/password/set';
   static const changePassword = '/mine/password/change';
+  static const chat = '/chat';
+}
+
+class ChatRouteArguments {
+  const ChatRouteArguments({
+    required this.conversation,
+    required this.currentUserId,
+  });
+
+  final Conversation conversation;
+  final String currentUserId;
 }
 
 Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
@@ -64,6 +77,21 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
     case AppRoutes.changePassword:
       return MaterialPageRoute<void>(
         builder: (_) => const ChangePasswordPage(),
+        settings: settings,
+      );
+    case AppRoutes.chat:
+      final args = settings.arguments;
+      if (args is! ChatRouteArguments) {
+        return MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Center(child: Text('聊天参数异常'))),
+          settings: settings,
+        );
+      }
+      return MaterialPageRoute<void>(
+        builder: (_) => ChatPage(
+          conversation: args.conversation,
+          currentUserId: args.currentUserId,
+        ),
         settings: settings,
       );
     default:

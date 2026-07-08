@@ -29,6 +29,22 @@ class Conversation extends Equatable {
     );
   }
 
+  factory Conversation.placeholder({
+    required String id,
+    required String lastMessagePreview,
+    required DateTime lastMessageAt,
+    required int unreadCount,
+  }) {
+    return Conversation(
+      id: id,
+      type: 0,
+      unreadCount: unreadCount,
+      createdAt: lastMessageAt,
+      lastMessageAt: lastMessageAt,
+      lastMessagePreview: lastMessagePreview,
+    );
+  }
+
   final String id;
   final int type;
   final String? name;
@@ -39,6 +55,27 @@ class Conversation extends Equatable {
   final String? lastMessagePreview;
   final int unreadCount;
   final DateTime createdAt;
+
+  Conversation copyWith({
+    int? unreadCount,
+    DateTime? lastMessageAt,
+    String? lastMessagePreview,
+    String? peerNickname,
+    String? peerAvatar,
+  }) {
+    return Conversation(
+      id: id,
+      type: type,
+      unreadCount: unreadCount ?? this.unreadCount,
+      createdAt: createdAt,
+      name: name,
+      peerUserId: peerUserId,
+      peerNickname: peerNickname ?? this.peerNickname,
+      peerAvatar: peerAvatar ?? this.peerAvatar,
+      lastMessageAt: lastMessageAt ?? this.lastMessageAt,
+      lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
+    );
+  }
 
   @override
   List<Object?> get props => [

@@ -4,44 +4,33 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="docs: 补齐 IM 会话接口测试链文档与可复跑脚本">
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/client/design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/client/tasks.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/server/design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/server/patch1_design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/server/patch1_tasks.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/server/tasks.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/test/conversation_message.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/test/ws_chat_test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/research/project/message_delivery_backend_chain.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/proto/message.proto" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/migrations/20260708000100_im_messages.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-message/Cargo.toml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-message/src/broadcast.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-message/src/lib.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-message/src/models.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-message/src/routes.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-message/src/seq.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/modules/im-ws/src/state.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proto/ws.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/ws.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/repository.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/build.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/build.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/handler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/handler.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/routes/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/mod.rs" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="eat: 完成服务端消息收发闭环">
+      <change beforePath="$PROJECT_DIR$/client/lib/app/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/widgets/home_navigation_bar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/widgets/home_navigation_bar.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_cubit.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_state.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_state.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/proto_compile_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/proto_compile_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_session/lib/src/view/widget/user_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_session/lib/src/view/widget/user_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/client/tasks.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/proto/gen.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/proto/gen.ps1" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -317,7 +306,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783417836919</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="eat: 完成服务端消息收发闭环">
+      <option name="closed" value="true" />
+      <created>1783494178054</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1783494178054</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -354,14 +351,15 @@
     <MESSAGE value="feat:增加test_link机制" />
     <MESSAGE value="feat:实现 IM Core 客户端 WebSocket 连接管理、主应用接入、消息页用户/连接状态展示，并补充对应测试与任务文档" />
     <MESSAGE value="docs: 补齐 IM 会话接口测试链文档与可复跑脚本" />
-    <option name="LAST_COMMIT_MESSAGE" value="docs: 补齐 IM 会话接口测试链文档与可复跑脚本" />
+    <MESSAGE value="eat: 完成服务端消息收发闭环" />
+    <option name="LAST_COMMIT_MESSAGE" value="eat: 完成服务端消息收发闭环" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart</url>
-          <line>26</line>
+          <line>27</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

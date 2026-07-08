@@ -93,6 +93,58 @@ void main() {
 
     await client.dispose();
   });
+
+  test('dispatches typed message frames to streams', () async {
+    final channel = _FakeWebSocketChannel();
+    final client = WsClient(
+      config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+      tokenProvider: () => 'jwt-token',
+      channelFactory: (_) => channel,
+    );
+    final acks = <MessageAck>[];
+    final updates = <ConversationUpdate>[];
+    final messages = <ChatMessage>[];
+    final ackSub = client.messageAckStream.listen(acks.add);
+    final updateSub = client.conversationUpdateStream.listen(updates.add);
+    final messageSub = client.chatMessageStream.listen(messages.add);
+
+    await client.connect();
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.MESSAGE_ACK,
+        payload: MessageAck(messageId: 'm1', seq: 1).writeToBuffer(),
+      ),
+    );
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.CONVERSATION_UPDATE,
+        payload: ConversationUpdate(
+          conversationId: 'c1',
+          totalUnread: 3,
+        ).writeToBuffer(),
+      ),
+    );
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.CHAT_MESSAGE,
+        payload: ChatMessage(
+          id: 'm2',
+          conversationId: 'c1',
+          content: 'hello',
+        ).writeToBuffer(),
+      ),
+    );
+    await _flushMicrotasks();
+
+    expect(acks.single.seq, 1);
+    expect(updates.single.totalUnread, 3);
+    expect(messages.single.content, 'hello');
+
+    await ackSub.cancel();
+    await updateSub.cancel();
+    await messageSub.cancel();
+    await client.dispose();
+  });
 }
 
 Future<void> _flushMicrotasks() async {

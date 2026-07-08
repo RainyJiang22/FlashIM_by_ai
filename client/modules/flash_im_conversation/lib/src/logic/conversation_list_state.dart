@@ -18,27 +18,31 @@ final class ConversationListLoading extends ConversationListState {
 }
 
 final class ConversationListLoaded extends ConversationListState {
-  const ConversationListLoaded({
+  ConversationListLoaded({
     required this.conversations,
     required this.hasMore,
+    int? totalUnread,
     this.isLoadingMore = false,
     this.loadMoreError,
-  });
+  }) : totalUnread = totalUnread ?? conversations.fold<int>(0, _sumUnread);
 
   final List<Conversation> conversations;
   final bool hasMore;
+  final int totalUnread;
   final bool isLoadingMore;
   final String? loadMoreError;
 
   ConversationListLoaded copyWith({
     List<Conversation>? conversations,
     bool? hasMore,
+    int? totalUnread,
     bool? isLoadingMore,
     Object? loadMoreError = _unset,
   }) {
     return ConversationListLoaded(
       conversations: conversations ?? this.conversations,
       hasMore: hasMore ?? this.hasMore,
+      totalUnread: totalUnread,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       loadMoreError: identical(loadMoreError, _unset)
           ? this.loadMoreError
@@ -50,6 +54,7 @@ final class ConversationListLoaded extends ConversationListState {
   List<Object?> get props => [
     conversations,
     hasMore,
+    totalUnread,
     isLoadingMore,
     loadMoreError,
   ];
@@ -65,3 +70,7 @@ final class ConversationListError extends ConversationListState {
 }
 
 const Object _unset = Object();
+
+int _sumUnread(int total, Conversation conversation) {
+  return total + conversation.unreadCount;
+}

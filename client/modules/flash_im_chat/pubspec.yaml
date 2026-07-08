@@ -1,0 +1,30 @@
+name: flash_im_chat
+description: "Flash IM chat feature package."
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.11.5
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  dio: ^5.9.0
+  equatable: ^2.0.7
+  flutter_bloc: ^9.1.1
+  flash_im_core:
+    path: ../flash_im_core
+  flash_im_conversation:
+    path: ../flash_im_conversation
+  flash_shared:
+    path: ../flash_shared
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  bloc_test: ^10.0.0
+  flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
+
+flutter:

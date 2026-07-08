@@ -15,8 +15,9 @@ void main() {
   testWidgets('main shell shows password setup prompt and switches tabs', (
     tester,
   ) async {
-    final repository = _FakeSessionRepository();
-    final cubit = SessionCubit(repository: repository);
+    final sessionRepository = _FakeSessionRepository();
+    final conversationRepository = _FakeConversationRepository();
+    final cubit = SessionCubit(repository: sessionRepository);
     final wsClient = _FakeWsClient();
 
     await tester.pumpWidget(
@@ -24,13 +25,16 @@ void main() {
         providers: [
           RepositoryProvider<WsClient>.value(value: wsClient),
           RepositoryProvider<ConversationRepository>.value(
-            value: _FakeConversationRepository(),
+            value: conversationRepository,
           ),
         ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
           child: MaterialApp(
-            routes: {AppRoutes.login: (_) => const Scaffold(body: Text('登录页'))},
+            routes: {
+              AppRoutes.chat: (_) => const Scaffold(body: Text('聊天页')),
+              AppRoutes.login: (_) => const Scaffold(body: Text('登录页')),
+            },
             home: const MainShellPage(),
           ),
         ),
@@ -57,6 +61,16 @@ void main() {
     expect(find.text('橘橙'), findsOneWidget);
     expect(find.text('今天的接口联调先看会话列表。'), findsOneWidget);
     expect(find.text('消息页暂未开放'), findsNothing);
+    expect(find.text('3'), findsWidgets);
+
+    await tester.tap(find.text('橘橙'));
+    await tester.pumpAndSettle();
+    expect(conversationRepository.markReadIds, ['conversation-1']);
+    expect(find.text('聊天页'), findsOneWidget);
+
+    Navigator.of(tester.element(find.text('聊天页'))).pop();
+    await tester.pumpAndSettle();
+    expect(find.text('3'), findsNothing);
 
     await tester.tap(find.text('通讯录'));
     await tester.pumpAndSettle();
@@ -72,6 +86,8 @@ void main() {
 }
 
 class _FakeConversationRepository implements ConversationRepository {
+  final markReadIds = <String>[];
+
   @override
   Future<List<Conversation>> getList({int limit = 20, int offset = 0}) async {
     if (offset > 0) {
@@ -83,12 +99,31 @@ class _FakeConversationRepository implements ConversationRepository {
         type: 0,
         peerUserId: '10002',
         peerNickname: '橘橙',
-        unreadCount: 0,
+        unreadCount: 3,
         createdAt: DateTime(2026, 3, 29),
         lastMessageAt: DateTime(2026, 3, 29, 9, 12),
         lastMessagePreview: '今天的接口联调先看会话列表。',
       ),
     ];
+  }
+
+  @override
+  Future<Conversation> getById(String id) async {
+    return Conversation(
+      id: id,
+      type: 0,
+      peerUserId: '10002',
+      peerNickname: '橘橙',
+      unreadCount: 3,
+      createdAt: DateTime(2026, 3, 29),
+      lastMessageAt: DateTime(2026, 3, 29, 9, 12),
+      lastMessagePreview: '今天的接口联调先看会话列表。',
+    );
+  }
+
+  @override
+  Future<void> markRead(String id) async {
+    markReadIds.add(id);
   }
 }
 

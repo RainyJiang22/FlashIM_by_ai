@@ -5,7 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MessagesPlaceholderPage extends StatelessWidget {
-  const MessagesPlaceholderPage({super.key});
+  const MessagesPlaceholderPage({
+    super.key,
+    required this.conversationListCubit,
+    required this.onConversationTap,
+  });
+
+  final ConversationListCubit conversationListCubit;
+  final ValueChanged<Conversation> onConversationTap;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +41,12 @@ class MessagesPlaceholderPage extends StatelessWidget {
                     )
                   : UserAvatar(user: user, size: 48),
             ),
-            const Expanded(child: ConversationListPage()),
+            Expanded(
+              child: ConversationListPage(
+                cubit: conversationListCubit,
+                onConversationTap: onConversationTap,
+              ),
+            ),
           ],
         );
       },

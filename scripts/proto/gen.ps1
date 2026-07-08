@@ -20,8 +20,11 @@ if (-not (Get-Command protoc-gen-dart -ErrorAction SilentlyContinue)) {
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Resolve-Path (Join-Path $ScriptDir "../..")
-$ProtoFile = Join-Path $RepoRoot "proto/ws.proto"
 $ProtoDir = Join-Path $RepoRoot "proto"
+$ProtoFiles = @(
+  (Join-Path $RepoRoot "proto/ws.proto"),
+  (Join-Path $RepoRoot "proto/message.proto")
+)
 $OutDir = Join-Path $RepoRoot "client/modules/flash_im_core/lib/src/data/proto"
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -29,4 +32,4 @@ New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 & $Protoc `
   --proto_path=$ProtoDir `
   --dart_out=$OutDir `
-  $ProtoFile
+  $ProtoFiles

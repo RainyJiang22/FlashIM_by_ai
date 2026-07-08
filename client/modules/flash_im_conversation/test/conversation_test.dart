@@ -49,4 +49,19 @@ void main() {
       throwsA(isA<FormatException>()),
     );
   });
+
+  test('placeholder creates local skeleton conversation', () {
+    final time = DateTime(2026, 4, 2, 9);
+    final conversation = Conversation.placeholder(
+      id: 'c1',
+      lastMessagePreview: '新消息',
+      lastMessageAt: time,
+      unreadCount: 3,
+    );
+
+    expect(conversation.id, 'c1');
+    expect(conversation.displayPreview, '新消息');
+    expect(conversation.displayTime, time);
+    expect(conversation.unreadCount, 3);
+  });
 }

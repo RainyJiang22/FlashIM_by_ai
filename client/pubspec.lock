@@ -135,6 +135,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  flash_im_chat:
+    dependency: "direct main"
+    description:
+      path: "modules/flash_im_chat"
+      relative: true
+    source: path
+    version: "0.0.1"
   flash_im_conversation:
     dependency: "direct main"
     description:
@@ -153,6 +160,13 @@ packages:
     dependency: "direct main"
     description:
       path: "modules/flash_session"
+      relative: true
+    source: path
+    version: "0.0.1"
+  flash_shared:
+    dependency: "direct main"
+    description:
+      path: "modules/flash_shared"
       relative: true
     source: path
     version: "0.0.1"

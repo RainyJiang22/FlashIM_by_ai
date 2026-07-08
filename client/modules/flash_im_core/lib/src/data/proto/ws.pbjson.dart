@@ -23,6 +23,9 @@ const WsFrameType$json = {
     {'1': 'PONG', '2': 1},
     {'1': 'AUTH', '2': 2},
     {'1': 'AUTH_RESULT', '2': 3},
+    {'1': 'CHAT_MESSAGE', '2': 4},
+    {'1': 'MESSAGE_ACK', '2': 5},
+    {'1': 'CONVERSATION_UPDATE', '2': 6},
   ],
 };
 

@@ -1,4 +1,4 @@
-import 'package:flash_session/flash_session.dart';
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 
 import '../data/conversation.dart';
@@ -50,12 +50,21 @@ class ConversationTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                _formatConversationTime(conversation.displayTime),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFF9AA6B2),
-                  fontWeight: FontWeight.w600,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _formatConversationTime(conversation.displayTime),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF9AA6B2),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (conversation.unreadCount > 0) ...[
+                    const SizedBox(height: 8),
+                    _UnreadBadge(count: conversation.unreadCount),
+                  ],
+                ],
               ),
             ],
           ),
@@ -72,28 +81,40 @@ class _ConversationAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatar = conversation.peerAvatar;
-    if (avatar != null && avatar.startsWith('http')) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          avatar,
-          width: 48,
-          height: 48,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => IdenticonAvatar(
-            seed: conversation.avatarSeed,
-            size: 48,
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      );
-    }
-
-    return IdenticonAvatar(
+    final avatar = conversation.peerAvatar?.trim();
+    return AvatarWidget(
+      avatar: avatar != null && avatar.startsWith('http') ? avatar : null,
       seed: conversation.avatarSeed,
       size: 48,
       borderRadius: BorderRadius.circular(8),
+    );
+  }
+}
+
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: Color(0xFFE35D6A),
+        borderRadius: BorderRadius.all(Radius.circular(999)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        child: Text(
+          count > 99 ? '99+' : '$count',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            height: 1,
+          ),
+        ),
+      ),
     );
   }
 }

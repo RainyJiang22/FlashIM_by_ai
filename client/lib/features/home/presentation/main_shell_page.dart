@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
@@ -23,22 +24,27 @@ class _MainShellPageState extends State<MainShellPage> {
   int _currentIndex = 0;
   bool _isShowingPasswordPrompt = false;
   bool _isRefreshingProfile = false;
-
-  static const List<Widget> _pages = <Widget>[
-    MessagesPlaceholderPage(),
-    ContactsPlaceholderPage(),
-    MinePage(),
-  ];
+  late final ConversationListCubit _conversationListCubit;
 
   @override
   void initState() {
     super.initState();
+    _conversationListCubit = ConversationListCubit(
+      repository: context.read<ConversationRepository>(),
+      wsClient: context.read<WsClient>(),
+    )..loadConversations();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
       _syncSessionSideEffects(context.read<SessionCubit>().state);
     });
+  }
+
+  @override
+  void dispose() {
+    _conversationListCubit.close();
+    super.dispose();
   }
 
   void _syncSessionSideEffects(SessionState state) {
@@ -95,6 +101,35 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
+  Future<void> _openChat(Conversation conversation) async {
+    final session = context.read<SessionCubit>().state.session;
+    if (session == null) {
+      return;
+    }
+    await _conversationListCubit.markConversationRead(conversation.id);
+    if (!mounted) {
+      return;
+    }
+    await Navigator.of(context).pushNamed(
+      AppRoutes.chat,
+      arguments: ChatRouteArguments(
+        conversation: conversation.copyWith(unreadCount: 0),
+        currentUserId: '${session.accountId}',
+      ),
+    );
+  }
+
+  List<Widget> _buildPages() {
+    return [
+      MessagesPlaceholderPage(
+        conversationListCubit: _conversationListCubit,
+        onConversationTap: _openChat,
+      ),
+      const ContactsPlaceholderPage(),
+      const MinePage(),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<SessionCubit, SessionState>(
@@ -121,18 +156,29 @@ class _MainShellPageState extends State<MainShellPage> {
           child: Column(
             children: [
               WsStatusIndicator(client: context.read<WsClient>()),
-              Expanded(child: _pages[_currentIndex]),
+              Expanded(child: _buildPages()[_currentIndex]),
             ],
           ),
         ),
-        bottomNavigationBar: HomeNavigationBar(
-          currentIndex: _currentIndex,
-          onDestinationSelected: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-        ),
+        bottomNavigationBar:
+            BlocBuilder<ConversationListCubit, ConversationListState>(
+              bloc: _conversationListCubit,
+              builder: (context, state) {
+                final totalUnread = switch (state) {
+                  ConversationListLoaded(:final totalUnread) => totalUnread,
+                  _ => 0,
+                };
+                return HomeNavigationBar(
+                  currentIndex: _currentIndex,
+                  messageUnreadCount: totalUnread,
+                  onDestinationSelected: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                );
+              },
+            ),
       ),
     );
   }

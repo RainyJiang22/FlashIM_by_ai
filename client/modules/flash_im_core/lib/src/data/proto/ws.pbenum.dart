@@ -23,16 +23,25 @@ class WsFrameType extends $pb.ProtobufEnum {
       WsFrameType._(2, _omitEnumNames ? '' : 'AUTH');
   static const WsFrameType AUTH_RESULT =
       WsFrameType._(3, _omitEnumNames ? '' : 'AUTH_RESULT');
+  static const WsFrameType CHAT_MESSAGE =
+      WsFrameType._(4, _omitEnumNames ? '' : 'CHAT_MESSAGE');
+  static const WsFrameType MESSAGE_ACK =
+      WsFrameType._(5, _omitEnumNames ? '' : 'MESSAGE_ACK');
+  static const WsFrameType CONVERSATION_UPDATE =
+      WsFrameType._(6, _omitEnumNames ? '' : 'CONVERSATION_UPDATE');
 
   static const $core.List<WsFrameType> values = <WsFrameType>[
     PING,
     PONG,
     AUTH,
     AUTH_RESULT,
+    CHAT_MESSAGE,
+    MESSAGE_ACK,
+    CONVERSATION_UPDATE,
   ];
 
   static final $core.List<WsFrameType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 3);
+      $pb.ProtobufEnum.$_initByValueList(values, 6);
   static WsFrameType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

@@ -5,10 +5,12 @@ class HomeNavigationBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onDestinationSelected,
+    this.messageUnreadCount = 0,
   });
 
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
+  final int messageUnreadCount;
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +31,13 @@ class HomeNavigationBar extends StatelessWidget {
         unselectedFontSize: 13,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline, size: 30),
-            activeIcon: Icon(Icons.chat_bubble, size: 30),
+            icon: _messageIcon(Icons.chat_bubble_outline),
+            activeIcon: _messageIcon(Icons.chat_bubble),
             label: '消息',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.people_outline, size: 30),
             activeIcon: Icon(Icons.people, size: 30),
             label: '通讯录',
@@ -47,6 +49,16 @@ class HomeNavigationBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _messageIcon(IconData icon) {
+    if (messageUnreadCount <= 0) {
+      return Icon(icon, size: 30);
+    }
+    return Badge(
+      label: Text(messageUnreadCount > 99 ? '99+' : '$messageUnreadCount'),
+      child: Icon(icon, size: 30),
     );
   }
 }

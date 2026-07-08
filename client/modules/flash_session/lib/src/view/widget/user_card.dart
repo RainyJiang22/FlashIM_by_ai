@@ -55,6 +55,7 @@ class UserCard extends StatelessWidget {
               const SizedBox(width: 18),
               Expanded(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [

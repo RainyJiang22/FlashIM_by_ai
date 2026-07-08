@@ -1,27 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../data/conversation.dart';
 import '../data/conversation_repository.dart';
 import '../logic/conversation_list_cubit.dart';
 import '../logic/conversation_list_state.dart';
 import 'conversation_tile.dart';
 
 class ConversationListPage extends StatelessWidget {
-  const ConversationListPage({super.key});
+  const ConversationListPage({super.key, this.cubit, this.onConversationTap});
+
+  final ConversationListCubit? cubit;
+  final ValueChanged<Conversation>? onConversationTap;
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
+    final providedCubit = cubit;
+    final child = ConversationListView(onConversationTap: onConversationTap);
+    if (providedCubit != null) {
+      return BlocProvider<ConversationListCubit>.value(
+        value: providedCubit,
+        child: child,
+      );
+    }
+
+    return BlocProvider<ConversationListCubit>(
       create: (context) => ConversationListCubit(
         repository: context.read<ConversationRepository>(),
       )..loadConversations(),
-      child: const ConversationListView(),
+      child: child,
     );
   }
 }
 
 class ConversationListView extends StatelessWidget {
-  const ConversationListView({super.key});
+  const ConversationListView({super.key, this.onConversationTap});
+
+  final ValueChanged<Conversation>? onConversationTap;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +49,10 @@ class ConversationListView extends StatelessWidget {
           ConversationListLoaded(:final conversations)
               when conversations.isEmpty =>
             const _EmptyView(),
-          ConversationListLoaded() => _ConversationListBody(state: state),
+          ConversationListLoaded() => _ConversationListBody(
+            state: state,
+            onConversationTap: onConversationTap,
+          ),
         };
       },
     );
@@ -42,9 +60,10 @@ class ConversationListView extends StatelessWidget {
 }
 
 class _ConversationListBody extends StatelessWidget {
-  const _ConversationListBody({required this.state});
+  const _ConversationListBody({required this.state, this.onConversationTap});
 
   final ConversationListLoaded state;
+  final ValueChanged<Conversation>? onConversationTap;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +99,11 @@ class _ConversationListBody extends StatelessWidget {
                 error: state.loadMoreError,
               );
             }
-            return ConversationTile(conversation: conversations[index]);
+            final conversation = conversations[index];
+            return ConversationTile(
+              conversation: conversation,
+              onTap: () => onConversationTap?.call(conversation),
+            );
           },
         ),
       ),

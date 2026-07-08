@@ -102,7 +102,8 @@ class _MainShellPageState extends State<MainShellPage> {
   }
 
   Future<void> _openChat(Conversation conversation) async {
-    final session = context.read<SessionCubit>().state.session;
+    final sessionState = context.read<SessionCubit>().state;
+    final session = sessionState.session;
     if (session == null) {
       return;
     }
@@ -115,6 +116,8 @@ class _MainShellPageState extends State<MainShellPage> {
       arguments: ChatRouteArguments(
         conversation: conversation.copyWith(unreadCount: 0),
         currentUserId: '${session.accountId}',
+        currentUserName: sessionState.user?.nickname,
+        currentUserAvatar: sessionState.user?.avatar,
       ),
     );
   }

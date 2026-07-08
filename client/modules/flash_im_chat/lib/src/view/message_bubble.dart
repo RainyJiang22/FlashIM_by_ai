@@ -4,13 +4,27 @@ import 'package:flutter/material.dart';
 import '../data/message.dart';
 
 class MessageBubble extends StatelessWidget {
-  const MessageBubble({super.key, required this.message, required this.isMine});
+  const MessageBubble({
+    super.key,
+    required this.message,
+    required this.isMine,
+    this.currentUserAvatar,
+  });
 
   final Message message;
   final bool isMine;
+  final String? currentUserAvatar;
 
   @override
   Widget build(BuildContext context) {
+    final avatar = AvatarWidget(
+      avatar: isMine
+          ? (currentUserAvatar ?? message.senderAvatar)
+          : message.senderAvatar,
+      seed: message.senderId,
+      size: 36,
+      borderRadius: BorderRadius.circular(8),
+    );
     final bubble = DecoratedBox(
       decoration: BoxDecoration(
         color: isMine ? const Color(0xFF3B82F6) : const Color(0xFFF0F0F0),
@@ -42,15 +56,7 @@ class MessageBubble extends StatelessWidget {
             : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isMine) ...[
-            AvatarWidget(
-              avatar: message.senderAvatar,
-              seed: message.senderId,
-              size: 36,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            const SizedBox(width: 8),
-          ],
+          if (!isMine) ...[avatar, const SizedBox(width: 8)],
           Flexible(
             child: Column(
               crossAxisAlignment: isMine
@@ -80,6 +86,7 @@ class MessageBubble extends StatelessWidget {
               ],
             ),
           ),
+          if (isMine) ...[const SizedBox(width: 8), avatar],
         ],
       ),
     );

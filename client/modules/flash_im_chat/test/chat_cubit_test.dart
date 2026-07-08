@@ -49,6 +49,7 @@ void main() {
         wsClient: _FakeWsClient(),
         conversation: conversation,
         currentUserId: '1',
+        currentUserAvatar: 'identicon:me',
       );
     },
     seed: () => const ChatLoaded(messages: [], hasMore: false),
@@ -57,6 +58,7 @@ void main() {
     verify: (cubit) {
       final state = cubit.state as ChatLoaded;
       expect(state.messages.single.status, MessageStatus.sending);
+      expect(state.messages.single.senderAvatar, 'identicon:me');
     },
   );
 

@@ -4,33 +4,27 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="eat: 完成服务端消息收发闭环">
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat: 完成客户端聊天闭环与会话未读联动接入">
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/07_conversation_detail_unauthorized.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/08_conversation_read_unauthorized.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/09_conversation_messages_unauthorized.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/10_conversation_detail.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/11_conversation_mark_read.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/12_conversation_detail_after_read.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/13_conversation_messages_list.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/14_conversation_messages_pagination.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/docs/15_conversation_messages_invalid_query.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/lib/app/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/widgets/home_navigation_bar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/widgets/home_navigation_bar.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_cubit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_state.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_state.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/proto_compile_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/proto_compile_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_session/lib/src/view/widget/user_card.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_session/lib/src/view/widget/user_card.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/client/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/proto/gen.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/proto/gen.ps1" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/message_bubble.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/message_bubble.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/features/im/core/conversation/00_link.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/00_link.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/features/im/core/conversation/request/test_lnk.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/request/test_lnk.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/features/im/core/conversation/roles/link_test_writer.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/conversation/roles/link_test_writer.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/server/conversation_api_test_link.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/server/conversation_api_test_link.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -314,7 +308,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783494178054</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="feat: 完成客户端聊天闭环与会话未读联动接入">
+      <option name="closed" value="true" />
+      <created>1783497963817</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1783497963817</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -352,7 +354,8 @@
     <MESSAGE value="feat:实现 IM Core 客户端 WebSocket 连接管理、主应用接入、消息页用户/连接状态展示，并补充对应测试与任务文档" />
     <MESSAGE value="docs: 补齐 IM 会话接口测试链文档与可复跑脚本" />
     <MESSAGE value="eat: 完成服务端消息收发闭环" />
-    <option name="LAST_COMMIT_MESSAGE" value="eat: 完成服务端消息收发闭环" />
+    <MESSAGE value="feat: 完成客户端聊天闭环与会话未读联动接入" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: 完成客户端聊天闭环与会话未读联动接入" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

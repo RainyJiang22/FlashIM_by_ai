@@ -15,10 +15,14 @@ class ChatCubit extends Cubit<ChatState> {
     required WsClient wsClient,
     required Conversation conversation,
     required String currentUserId,
+    String? currentUserName,
+    String? currentUserAvatar,
   }) : _repository = repository,
        _wsClient = wsClient,
        _conversation = conversation,
        _currentUserId = currentUserId,
+       _currentUserName = currentUserName,
+       _currentUserAvatar = currentUserAvatar,
        super(const ChatInitial()) {
     _chatMessageSubscription = _wsClient.chatMessageStream.listen(
       _handleIncomingMessage,
@@ -33,6 +37,8 @@ class ChatCubit extends Cubit<ChatState> {
   final WsClient _wsClient;
   final Conversation _conversation;
   final String _currentUserId;
+  final String? _currentUserName;
+  final String? _currentUserAvatar;
   final Queue<String> _pendingLocalIds = Queue<String>();
   final Map<String, Timer> _ackTimers = {};
   StreamSubscription<ChatMessage>? _chatMessageSubscription;
@@ -98,7 +104,10 @@ class ChatCubit extends Cubit<ChatState> {
     final local = Message.local(
       conversationId: _conversation.id,
       senderId: _currentUserId,
-      senderName: '我',
+      senderName: _currentUserName?.trim().isNotEmpty == true
+          ? _currentUserName!.trim()
+          : '我',
+      senderAvatar: _currentUserAvatar,
       content: trimmed,
     );
     _pendingLocalIds.add(local.id);

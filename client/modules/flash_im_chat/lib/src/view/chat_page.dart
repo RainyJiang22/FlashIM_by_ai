@@ -16,10 +16,14 @@ class ChatPage extends StatelessWidget {
     super.key,
     required this.conversation,
     required this.currentUserId,
+    this.currentUserName,
+    this.currentUserAvatar,
   });
 
   final Conversation conversation;
   final String currentUserId;
+  final String? currentUserName;
+  final String? currentUserAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -29,10 +33,13 @@ class ChatPage extends StatelessWidget {
         wsClient: context.read<WsClient>(),
         conversation: conversation,
         currentUserId: currentUserId,
+        currentUserName: currentUserName,
+        currentUserAvatar: currentUserAvatar,
       )..loadMessages(),
       child: _ChatScaffold(
         conversation: conversation,
         currentUserId: currentUserId,
+        currentUserAvatar: currentUserAvatar,
       ),
     );
   }
@@ -42,10 +49,12 @@ class _ChatScaffold extends StatelessWidget {
   const _ChatScaffold({
     required this.conversation,
     required this.currentUserId,
+    this.currentUserAvatar,
   });
 
   final Conversation conversation;
   final String currentUserId;
+  final String? currentUserAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +66,12 @@ class _ChatScaffold extends StatelessWidget {
           color: Colors.white,
           child: Column(
             children: [
-              Expanded(child: _MessageList(currentUserId: currentUserId)),
+              Expanded(
+                child: _MessageList(
+                  currentUserId: currentUserId,
+                  currentUserAvatar: currentUserAvatar,
+                ),
+              ),
               ChatInput(onSend: context.read<ChatCubit>().sendText),
             ],
           ),
@@ -68,9 +82,10 @@ class _ChatScaffold extends StatelessWidget {
 }
 
 class _MessageList extends StatelessWidget {
-  const _MessageList({required this.currentUserId});
+  const _MessageList({required this.currentUserId, this.currentUserAvatar});
 
   final String currentUserId;
+  final String? currentUserAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +100,7 @@ class _MessageList extends StatelessWidget {
           ChatLoaded(:final messages) => _LoadedMessageList(
             messages: messages,
             currentUserId: currentUserId,
+            currentUserAvatar: currentUserAvatar,
           ),
         };
       },
@@ -96,10 +112,12 @@ class _LoadedMessageList extends StatelessWidget {
   const _LoadedMessageList({
     required this.messages,
     required this.currentUserId,
+    this.currentUserAvatar,
   });
 
   final List<Message> messages;
   final String currentUserId;
+  final String? currentUserAvatar;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +139,7 @@ class _LoadedMessageList extends StatelessWidget {
           return MessageBubble(
             message: message,
             isMine: message.senderId == currentUserId,
+            currentUserAvatar: currentUserAvatar,
           );
         },
       ),

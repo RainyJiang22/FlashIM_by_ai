@@ -13,8 +13,13 @@
 
 ## 当前模块边界
 
-- 正式接口：`GET /conversations`
+- 正式接口：
+  - `GET /conversations`
+  - `GET /conversations/{id}`
+  - `POST /conversations/{id}/read`
+  - `GET /conversations/{id}/messages`
 - 实现位置：`server/modules/im-conversation`
+- 历史消息实现位置：`server/modules/im-message`
 - 鉴权来源：`Authorization: Bearer <token>`
 - 登录前置：`POST /auth/sms`、`POST /auth/login`
 - 旧 mock 接口：`GET /conversation`，只用于 playground/mock，不进入正式接口链路

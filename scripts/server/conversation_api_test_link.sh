@@ -8,11 +8,13 @@ FIRST_LIMIT="${FIRST_LIMIT:-20}"
 FIRST_OFFSET="${FIRST_OFFSET:-0}"
 PAGE_LIMIT="${PAGE_LIMIT:-5}"
 PAGE_OFFSET="${PAGE_OFFSET:-5}"
+ZERO_CONVERSATION_ID="00000000-0000-0000-0000-000000000001"
 
 HTTP_BODY=""
 HTTP_STATUS=""
 TOKEN=""
 CODE=""
+CONVERSATION_ID=""
 
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -145,6 +147,12 @@ main() {
     -H "Authorization: Bearer $TOKEN"
   print_json "$HTTP_BODY"
   jq -e 'type == "array"' >/dev/null <<<"$HTTP_BODY"
+  CONVERSATION_ID="$(printf '%s' "$HTTP_BODY" | jq -r '.[0].id // empty')"
+  if [[ -z "$CONVERSATION_ID" ]]; then
+    echo "seeded conversation list is empty; run scripts/database/seed_im_conversations.sh first" >&2
+    exit 1
+  fi
+  echo "CONVERSATION_ID=$CONVERSATION_ID"
 
   local page_path
   page_path="/conversations?limit=${PAGE_LIMIT}&offset=${PAGE_OFFSET}"
@@ -165,6 +173,85 @@ main() {
     -H "Authorization: Bearer $TOKEN"
   print_json "$HTTP_BODY"
   jq -e '.message == "invalid limit"' >/dev/null <<<"$HTTP_BODY"
+
+  local detail_unauthorized_path
+  detail_unauthorized_path="/conversations/${ZERO_CONVERSATION_ID}"
+  print_step "07 GET ${detail_unauthorized_path} without token"
+  show_curl "GET" "$detail_unauthorized_path"
+  perform_request "401" "$BASE_URL$detail_unauthorized_path"
+  print_json "$HTTP_BODY"
+
+  local read_unauthorized_path
+  read_unauthorized_path="/conversations/${ZERO_CONVERSATION_ID}/read"
+  print_step "08 POST ${read_unauthorized_path} without token"
+  show_curl "POST" "$read_unauthorized_path"
+  perform_request "401" -X POST "$BASE_URL$read_unauthorized_path"
+  print_json "$HTTP_BODY"
+
+  local messages_unauthorized_path
+  messages_unauthorized_path="/conversations/${ZERO_CONVERSATION_ID}/messages?limit=10"
+  print_step "09 GET ${messages_unauthorized_path} without token"
+  show_curl "GET" "$messages_unauthorized_path"
+  perform_request "401" "$BASE_URL$messages_unauthorized_path"
+  print_json "$HTTP_BODY"
+
+  local detail_path
+  detail_path="/conversations/${CONVERSATION_ID}"
+  print_step "10 GET ${detail_path}"
+  show_curl "GET" "$detail_path" "" "$TOKEN"
+  perform_success_request \
+    "$BASE_URL$detail_path" \
+    -H "Authorization: Bearer $TOKEN"
+  print_json "$HTTP_BODY"
+  jq -e --arg id "$CONVERSATION_ID" '.id == $id and has("peer_nickname") and has("unread_count")' >/dev/null <<<"$HTTP_BODY"
+
+  local read_path
+  read_path="/conversations/${CONVERSATION_ID}/read"
+  print_step "11 POST ${read_path}"
+  show_curl "POST" "$read_path" "" "$TOKEN"
+  perform_success_request \
+    -X POST "$BASE_URL$read_path" \
+    -H "Authorization: Bearer $TOKEN"
+  print_json "$HTTP_BODY"
+  jq -e '.message == "conversation marked as read"' >/dev/null <<<"$HTTP_BODY"
+
+  print_step "12 GET ${detail_path} after read"
+  show_curl "GET" "$detail_path" "" "$TOKEN"
+  perform_success_request \
+    "$BASE_URL$detail_path" \
+    -H "Authorization: Bearer $TOKEN"
+  print_json "$HTTP_BODY"
+  jq -e --arg id "$CONVERSATION_ID" '.id == $id and .unread_count == 0' >/dev/null <<<"$HTTP_BODY"
+
+  local messages_path
+  messages_path="/conversations/${CONVERSATION_ID}/messages?limit=10"
+  print_step "13 GET ${messages_path}"
+  show_curl "GET" "$messages_path" "" "$TOKEN"
+  perform_success_request \
+    "$BASE_URL$messages_path" \
+    -H "Authorization: Bearer $TOKEN"
+  print_json "$HTTP_BODY"
+  jq -e 'type == "array"' >/dev/null <<<"$HTTP_BODY"
+
+  local messages_page_path
+  messages_page_path="/conversations/${CONVERSATION_ID}/messages?before_seq=999999&limit=5"
+  print_step "14 GET ${messages_page_path}"
+  show_curl "GET" "$messages_page_path" "" "$TOKEN"
+  perform_success_request \
+    "$BASE_URL$messages_page_path" \
+    -H "Authorization: Bearer $TOKEN"
+  print_json "$HTTP_BODY"
+  jq -e 'type == "array"' >/dev/null <<<"$HTTP_BODY"
+
+  local invalid_messages_path
+  invalid_messages_path="/conversations/${CONVERSATION_ID}/messages?before_seq=0&limit=5"
+  print_step "15 GET ${invalid_messages_path}"
+  show_curl "GET" "$invalid_messages_path" "" "$TOKEN"
+  perform_request "400" \
+    "$BASE_URL$invalid_messages_path" \
+    -H "Authorization: Bearer $TOKEN"
+  print_json "$HTTP_BODY"
+  jq -e '.message == "invalid before_seq"' >/dev/null <<<"$HTTP_BODY"
 
   print_step "Done"
   echo "Conversation API curl test link completed successfully."

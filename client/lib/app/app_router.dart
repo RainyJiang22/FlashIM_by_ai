@@ -22,10 +22,14 @@ class ChatRouteArguments {
   const ChatRouteArguments({
     required this.conversation,
     required this.currentUserId,
+    this.currentUserName,
+    this.currentUserAvatar,
   });
 
   final Conversation conversation;
   final String currentUserId;
+  final String? currentUserName;
+  final String? currentUserAvatar;
 }
 
 Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
@@ -91,6 +95,8 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
         builder: (_) => ChatPage(
           conversation: args.conversation,
           currentUserId: args.currentUserId,
+          currentUserName: args.currentUserName,
+          currentUserAvatar: args.currentUserAvatar,
         ),
         settings: settings,
       );

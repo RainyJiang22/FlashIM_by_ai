@@ -128,7 +128,7 @@ class ChatCubit extends Cubit<ChatState> {
       ),
     );
 
-    //4。超时标记失败
+    //4.超时标记失败
     _ackTimers[local.id] = Timer(_ackTimeout, () => _markFailed(local.id));
   }
 

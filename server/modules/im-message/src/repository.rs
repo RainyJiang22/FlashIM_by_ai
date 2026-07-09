@@ -27,23 +27,25 @@ pub fn find_before_sql() -> &'static str {
     "#
 }
 
-pub async fn insert_message(pool: &PgPool, message: NewMessage) -> AppResult<MessageRow> {
-    sqlx::query_as::<_, MessageRow>(
-        r#"
+pub fn insert_message_sql() -> &'static str {
+    r#"
         INSERT INTO messages (conversation_id, sender_id, seq, type, content, extra)
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id, conversation_id, sender_id, seq, type, content, extra, status, created_at
-        "#,
-    )
-    .bind(message.conversation_id)
-    .bind(message.sender_id)
-    .bind(message.seq)
-    .bind(message.r#type)
-    .bind(message.content)
-    .bind(message.extra)
-    .fetch_one(pool)
-    .await
-    .map_err(|_| AppError::internal_server_error("failed to insert message"))
+        "#
+}
+
+pub async fn insert_message(pool: &PgPool, message: NewMessage) -> AppResult<MessageRow> {
+    sqlx::query_as::<_, MessageRow>(insert_message_sql())
+        .bind(message.conversation_id)
+        .bind(message.sender_id)
+        .bind(message.seq)
+        .bind(message.r#type)
+        .bind(message.content)
+        .bind(message.extra)
+        .fetch_one(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to insert message"))
 }
 
 pub async fn find_before(
@@ -63,7 +65,7 @@ pub async fn find_before(
 
 #[cfg(test)]
 mod tests {
-    use super::find_before_sql;
+    use super::{find_before_sql, insert_message_sql};
 
     #[test]
     fn history_sql_uses_seq_pagination() {
@@ -72,5 +74,14 @@ mod tests {
         assert!(sql.contains("m.seq < $2"));
         assert!(sql.contains("ORDER BY m.seq DESC"));
         assert!(sql.contains("LIMIT $3"));
+    }
+
+    #[test]
+    fn insert_sql_writes_type_and_extra() {
+        let sql = insert_message_sql();
+
+        assert!(sql.contains("INSERT INTO messages"));
+        assert!(sql.contains("(conversation_id, sender_id, seq, type, content, extra)"));
+        assert!(sql.contains("VALUES ($1, $2, $3, $4, $5, $6)"));
     }
 }

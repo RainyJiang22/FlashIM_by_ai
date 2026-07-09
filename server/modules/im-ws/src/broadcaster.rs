@@ -159,6 +159,25 @@ mod tests {
     }
 
     #[test]
+    fn proto_message_keeps_extra_payload() {
+        let message = ChatMessage {
+            id: "00000000-0000-0000-0000-000000000001".to_string(),
+            conversation_id: "00000000-0000-0000-0000-000000000002".to_string(),
+            sender_id: 2,
+            seq: 1,
+            r#type: 1,
+            content: "https://example.com/a.jpg".to_string(),
+            extra: r#"{"thumbnail_url":"/uploads/thumb/a.webp"}"#.to_string(),
+            status: 0,
+            created_at: "2026-04-03T00:00:00Z".to_string(),
+            sender_name: "朱红".to_string(),
+            sender_avatar: "identicon:2".to_string(),
+        };
+
+        assert!(message.extra.contains("thumbnail_url"));
+    }
+
+    #[test]
     fn proto_update_keeps_total_unread_field() {
         let update = ConversationUpdate {
             conversation_id: "00000000-0000-0000-0000-000000000001".to_string(),

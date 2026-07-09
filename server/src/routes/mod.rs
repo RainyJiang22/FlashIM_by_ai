@@ -1,3 +1,4 @@
+use app_storage::router as build_storage_router;
 use axum::{Router, routing::get};
 use flash_auth::{SharedAuthStore, register_auth_routes};
 use flash_core::SharedContext;
@@ -16,6 +17,7 @@ pub fn build_router(state: SharedContext, auth_store: SharedAuthStore) -> Router
         .route("/conversation", get(conversation::conversations))
         .route("/ws", get(ws::websocket_handler))
         .route("/chat_room/ws", get(ws::chat_room_websocket_handler))
+        .merge(build_storage_router())
         .merge(build_user_router())
         .merge(build_im_ws_router())
         .merge(build_im_message_router())

@@ -2,6 +2,13 @@ syntax = "proto3";
 
 package im;
 
+enum MessageType {
+  TEXT = 0;
+  IMAGE = 1;
+  VIDEO = 2;
+  FILE = 3;
+}
+
 message ChatMessage {
   string id = 1;
   string conversation_id = 2;

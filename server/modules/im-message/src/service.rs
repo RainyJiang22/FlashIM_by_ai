@@ -99,8 +99,12 @@ where
             return Err(AppError::bad_request("message content is empty"));
         }
 
-        if input.msg_type != 0 {
-            return Err(AppError::bad_request("unsupported message type"));
+        match input.msg_type {
+            0 => {}
+            1 => validate_image_extra(&input.extra)?,
+            2 => validate_video_extra(&input.extra)?,
+            3 => validate_file_extra(&input.extra)?,
+            _ => return Err(AppError::bad_request("unsupported message type")),
         }
 
         let pool = context.postgres.pool();
@@ -126,7 +130,7 @@ where
         )
         .await?;
         let payload = MessagePayload::from(message);
-        let preview = build_preview(&payload.content);
+        let preview = build_preview(payload.msg_type, &payload.content);
 
         conversation_service
             .update_last_message(payload.conversation_id, &preview, payload.created_at)
@@ -207,13 +211,72 @@ pub fn normalize_history_query(query: MessageQuery) -> AppResult<(i64, i64)> {
     Ok((before_seq, limit.min(MAX_LIMIT)))
 }
 
-fn build_preview(content: &str) -> String {
-    content.chars().take(100).collect()
+fn build_preview(msg_type: i16, content: &str) -> String {
+    match msg_type {
+        1 => "[图片]".to_string(),
+        2 => "[视频]".to_string(),
+        3 => "[文件]".to_string(),
+        _ => content.chars().take(100).collect(),
+    }
+}
+
+fn validate_image_extra(extra: &Option<Value>) -> AppResult<()> {
+    let extra = extra
+        .as_ref()
+        .and_then(Value::as_object)
+        .ok_or(AppError::bad_request("invalid image extra"))?;
+    require_key(extra, "width", "invalid image extra")?;
+    require_key(extra, "height", "invalid image extra")?;
+    require_key(extra, "thumbnail_url", "invalid image extra")?;
+    Ok(())
+}
+
+fn validate_video_extra(extra: &Option<Value>) -> AppResult<()> {
+    let extra = extra
+        .as_ref()
+        .and_then(Value::as_object)
+        .ok_or(AppError::bad_request("invalid video extra"))?;
+    require_key(extra, "thumbnail_url", "invalid video extra")?;
+    require_key(extra, "duration_ms", "invalid video extra")?;
+    Ok(())
+}
+
+fn validate_file_extra(extra: &Option<Value>) -> AppResult<()> {
+    let extra = extra
+        .as_ref()
+        .and_then(Value::as_object)
+        .ok_or(AppError::bad_request("invalid file extra"))?;
+    require_key(extra, "file_name", "invalid file extra")?;
+    require_key(extra, "file_url", "invalid file extra")?;
+    require_key(extra, "file_type", "invalid file extra")?;
+    Ok(())
+}
+
+fn require_key(
+    object: &serde_json::Map<String, Value>,
+    key: &str,
+    message: &'static str,
+) -> AppResult<()> {
+    match object.get(key) {
+        Some(Value::Null) | None => Err(AppError::bad_request(message)),
+        Some(Value::String(value)) if value.trim().is_empty() => {
+            Err(AppError::bad_request(message))
+        }
+        Some(_) => Ok(()),
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{models::MessageQuery, service::normalize_history_query};
+    use serde_json::json;
+
+    use crate::{
+        models::MessageQuery,
+        service::{
+            build_preview, normalize_history_query, validate_file_extra, validate_image_extra,
+            validate_video_extra,
+        },
+    };
 
     #[test]
     fn history_query_defaults_and_clamps_limit() {
@@ -242,6 +305,48 @@ mod tests {
                 limit: Some(0),
             })
             .is_err()
+        );
+    }
+
+    #[test]
+    fn build_preview_uses_media_placeholders() {
+        assert_eq!(build_preview(1, "hello"), "[图片]");
+        assert_eq!(build_preview(2, "hello"), "[视频]");
+        assert_eq!(build_preview(3, "hello"), "[文件]");
+        assert_eq!(build_preview(0, "hello"), "hello");
+    }
+
+    #[test]
+    fn media_extra_validation_rejects_missing_fields() {
+        assert!(validate_image_extra(&Some(json!({"width": 1}))).is_err());
+        assert!(validate_video_extra(&Some(json!({"thumbnail_url": "x"}))).is_err());
+        assert!(validate_file_extra(&Some(json!({"file_name": "x"}))).is_err());
+    }
+
+    #[test]
+    fn media_extra_validation_accepts_expected_shapes() {
+        assert!(
+            validate_image_extra(&Some(json!({
+                "width": 1,
+                "height": 1,
+                "thumbnail_url": "/uploads/thumb/test.webp"
+            })))
+            .is_ok()
+        );
+        assert!(
+            validate_video_extra(&Some(json!({
+                "thumbnail_url": "/uploads/thumb/test.jpg",
+                "duration_ms": 1000
+            })))
+            .is_ok()
+        );
+        assert!(
+            validate_file_extra(&Some(json!({
+                "file_name": "a.pdf",
+                "file_url": "/uploads/file/a.pdf",
+                "file_type": "pdf"
+            })))
+            .is_ok()
         );
     }
 }

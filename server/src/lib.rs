@@ -5,9 +5,10 @@ pub mod services;
 use axum::Router;
 use flash_auth::SharedAuthStore;
 use flash_core::SharedContext;
+use tower_http::services::ServeDir;
 
 pub fn build_app(state: SharedContext, auth_store: SharedAuthStore) -> Router {
-    routes::build_router(state, auth_store)
+    routes::build_router(state, auth_store).nest_service("/uploads", ServeDir::new("uploads"))
 }
 
 #[cfg(test)]
@@ -22,7 +23,7 @@ mod tests {
         frame,
         proto::{AuthResult, ConversationUpdate, MessageAck, WsFrameType},
     };
-    use std::{net::SocketAddr, sync::Arc, time::Duration};
+    use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
     use tokio::{net::TcpListener, task::JoinHandle};
     use tokio_tungstenite::{connect_async, tungstenite::Message as TungsteniteMessage};
     use tower::ServiceExt;
@@ -35,6 +36,12 @@ mod tests {
     };
     use flash_core::AppContext;
     use flash_user::model::{MessageResponse, UserProfileResponse};
+
+    const TEST_PNG: &[u8] = &[
+        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6,
+        0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 248, 207, 192, 240,
+        31, 0, 5, 0, 1, 255, 137, 153, 61, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
+    ];
 
     fn build_test_app() -> (SharedContext, SharedAuthStore, Router) {
         let context = Arc::new(AppContext::new_for_tests("test-secret"));
@@ -257,6 +264,165 @@ mod tests {
         let response = app.oneshot(request).await.unwrap();
 
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn upload_image_route_returns_urls_and_static_files_are_accessible() {
+        let (_, _, app) = build_test_app();
+        let boundary = "----flash-im-boundary-image";
+        let body = multipart_body(
+            boundary,
+            &[multipart_file_part(
+                "file",
+                "test.png",
+                "image/png",
+                TEST_PNG,
+            )],
+        );
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/api/upload/image")
+            .header(
+                header::CONTENT_TYPE,
+                format!("multipart/form-data; boundary={boundary}"),
+            )
+            .body(Body::from(body))
+            .unwrap();
+        let response = app.clone().oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+
+        let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        let original_url = json["original_url"].as_str().unwrap();
+        let thumbnail_url = json["thumbnail_url"].as_str().unwrap();
+
+        for url in [original_url, thumbnail_url] {
+            let request = Request::builder()
+                .method("GET")
+                .uri(url)
+                .body(Body::empty())
+                .unwrap();
+            let response = app.clone().oneshot(request).await.unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+            cleanup_upload_url(url).await;
+        }
+    }
+
+    #[tokio::test]
+    async fn upload_image_route_rejects_unsupported_content_type() {
+        let (_, _, app) = build_test_app();
+        let boundary = "----flash-im-boundary-image-invalid-type";
+        let body = multipart_body(
+            boundary,
+            &[multipart_file_part(
+                "file",
+                "test.png",
+                "application/pdf",
+                TEST_PNG,
+            )],
+        );
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/api/upload/image")
+            .header(
+                header::CONTENT_TYPE,
+                format!("multipart/form-data; boundary={boundary}"),
+            )
+            .body(Body::from(body))
+            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn upload_image_route_rejects_invalid_image_bytes() {
+        let (_, _, app) = build_test_app();
+        let boundary = "----flash-im-boundary-image-invalid-bytes";
+        let body = multipart_body(
+            boundary,
+            &[multipart_file_part(
+                "file",
+                "test.png",
+                "image/png",
+                b"not-a-real-image",
+            )],
+        );
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/api/upload/image")
+            .header(
+                header::CONTENT_TYPE,
+                format!("multipart/form-data; boundary={boundary}"),
+            )
+            .body(Body::from(body))
+            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn upload_video_and_file_routes_return_expected_shapes() {
+        let (_, _, app) = build_test_app();
+
+        let boundary = "----flash-im-boundary-video";
+        let body = multipart_body(
+            boundary,
+            &[
+                multipart_file_part("video", "clip.mp4", "video/mp4", b"fake-video"),
+                multipart_file_part("thumbnail", "thumb.jpg", "image/jpeg", b"fake-thumb"),
+                multipart_text_part("duration_ms", "5000"),
+                multipart_text_part("width", "1280"),
+                multipart_text_part("height", "720"),
+            ],
+        );
+        let request = Request::builder()
+            .method("POST")
+            .uri("/api/upload/video")
+            .header(
+                header::CONTENT_TYPE,
+                format!("multipart/form-data; boundary={boundary}"),
+            )
+            .body(Body::from(body))
+            .unwrap();
+        let response = app.clone().oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        let video_url = json["video_url"].as_str().unwrap();
+        let thumb_url = json["thumbnail_url"].as_str().unwrap();
+        cleanup_upload_url(video_url).await;
+        cleanup_upload_url(thumb_url).await;
+
+        let boundary = "----flash-im-boundary-file";
+        let body = multipart_body(
+            boundary,
+            &[multipart_file_part(
+                "file",
+                "report.pdf",
+                "application/pdf",
+                b"fake-pdf",
+            )],
+        );
+        let request = Request::builder()
+            .method("POST")
+            .uri("/api/upload/file")
+            .header(
+                header::CONTENT_TYPE,
+                format!("multipart/form-data; boundary={boundary}"),
+            )
+            .body(Body::from(body))
+            .unwrap();
+        let response = app.clone().oneshot(request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        let file_url = json["file_url"].as_str().unwrap();
+        cleanup_upload_url(file_url).await;
     }
 
     #[test]
@@ -515,6 +681,93 @@ mod tests {
         assert!(user_chat.contains(&format!("\"user_id\":{}", user.account_id)));
 
         server_task.abort();
+    }
+
+    fn multipart_file_part<'a>(
+        name: &'a str,
+        filename: &'a str,
+        content_type: &'a str,
+        bytes: &'a [u8],
+    ) -> MultipartPart<'a> {
+        MultipartPart::File {
+            name,
+            filename,
+            content_type,
+            bytes,
+        }
+    }
+
+    fn multipart_text_part<'a>(name: &'a str, value: &'a str) -> MultipartPart<'a> {
+        MultipartPart::Text { name, value }
+    }
+
+    fn multipart_body(boundary: &str, parts: &[MultipartPart<'_>]) -> Vec<u8> {
+        let mut body = Vec::new();
+
+        for part in parts {
+            body.extend_from_slice(format!("--{boundary}\r\n").as_bytes());
+            match part {
+                MultipartPart::File {
+                    name,
+                    filename,
+                    content_type,
+                    bytes,
+                } => {
+                    body.extend_from_slice(
+                        format!(
+                            "Content-Disposition: form-data; name=\"{name}\"; filename=\"{filename}\"\r\n"
+                        )
+                        .as_bytes(),
+                    );
+                    body.extend_from_slice(
+                        format!("Content-Type: {content_type}\r\n\r\n").as_bytes(),
+                    );
+                    body.extend_from_slice(bytes);
+                    body.extend_from_slice(b"\r\n");
+                }
+                MultipartPart::Text { name, value } => {
+                    body.extend_from_slice(
+                        format!("Content-Disposition: form-data; name=\"{name}\"\r\n\r\n")
+                            .as_bytes(),
+                    );
+                    body.extend_from_slice(value.as_bytes());
+                    body.extend_from_slice(b"\r\n");
+                }
+            }
+        }
+
+        body.extend_from_slice(format!("--{boundary}--\r\n").as_bytes());
+        body
+    }
+
+    async fn cleanup_upload_url(url: &str) {
+        let local = PathBuf::from("uploads").join(url.trim_start_matches("/uploads/"));
+        let _ = tokio::fs::remove_file(&local).await;
+
+        let mut current = local.parent().map(PathBuf::from);
+        while let Some(path) = current {
+            if path == PathBuf::from("uploads") {
+                let _ = tokio::fs::remove_dir(&path).await;
+                break;
+            }
+            if tokio::fs::remove_dir(&path).await.is_err() {
+                break;
+            }
+            current = path.parent().map(PathBuf::from);
+        }
+    }
+
+    enum MultipartPart<'a> {
+        File {
+            name: &'a str,
+            filename: &'a str,
+            content_type: &'a str,
+            bytes: &'a [u8],
+        },
+        Text {
+            name: &'a str,
+            value: &'a str,
+        },
     }
 
     #[tokio::test]

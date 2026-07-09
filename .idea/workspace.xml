@@ -4,35 +4,26 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="docs:增加项目归档相关文档">
-      <change afterPath="$PROJECT_DIR$/client/lib/app/session_app_starter_controller.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_controller.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_state.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/presentation/app_starter_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_starter/test/app_starter_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/app/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/CHANGELOG.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/LICENSE" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/analysis_options.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/analysis_options.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/app_starter.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/flash_starter.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_branding.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_branding.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_options.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_options.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_routes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_routes.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_stage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_stage.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/app_starter_page.dart" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/widgets/starter_brand_panel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/presentation/widgets/starter_brand_panel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/widgets/starter_failure_panel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/presentation/widgets/starter_failure_panel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/test/app_starter_test.dart" beforeDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="refactor(starter):重构启动模块,改为宿主注入启动控制器，解除flash_starter对 flash_session 的直接依赖">
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/analysis.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/client/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/client/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/server/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/server/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/app-storage/Cargo.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/app-storage/src/api.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/app-storage/src/image.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/app-storage/src/lib.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/app-storage/src/service.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/tasks.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/message.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/message.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/routes/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/routes/mod.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,35 +57,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;SHELLCHECK.PATH&quot;: &quot;/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck&quot;,
-    &quot;Shell Script.start_backend.sh.executor&quot;: &quot;Run&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/core/v0.0.3/server&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "SHELLCHECK.PATH": "/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck",
+    "Shell Script.start_backend.sh.executor": "Run",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/core/v0.0.4_media/client",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "show.migrate.to.gradle.popup": "false"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/client" />
+      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/server" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.3/server" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.3/client" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.2/client" />
-      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.2/server" />
-      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.1/client" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/docs/features/archiver" />
@@ -334,7 +325,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783567200987</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="refactor(starter):重构启动模块,改为宿主注入启动控制器，解除flash_starter对 flash_session 的直接依赖">
+      <option name="closed" value="true" />
+      <created>1783577441321</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1783577441321</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -374,7 +373,8 @@
     <MESSAGE value="eat: 完成服务端消息收发闭环" />
     <MESSAGE value="feat: 完成客户端聊天闭环与会话未读联动接入" />
     <MESSAGE value="docs:增加项目归档相关文档" />
-    <option name="LAST_COMMIT_MESSAGE" value="docs:增加项目归档相关文档" />
+    <MESSAGE value="refactor(starter):重构启动模块,改为宿主注入启动控制器，解除flash_starter对 flash_session 的直接依赖" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactor(starter):重构启动模块,改为宿主注入启动控制器，解除flash_starter对 flash_session 的直接依赖" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

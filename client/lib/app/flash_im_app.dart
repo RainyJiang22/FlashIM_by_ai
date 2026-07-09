@@ -203,6 +203,8 @@ class _FlashImAppState extends State<FlashImApp> {
       ),
     );
 
+
+   ///宿主不关心业务逻辑本身，它只负责创建对象、接线、注入和分发路由。
     return FutureBuilder<LocalAppConfig>(
       future: _configFuture,
       builder: (context, snapshot) {
@@ -272,6 +274,8 @@ class _FlashImAppState extends State<FlashImApp> {
               tokenProvider: () => sessionCubit.state.session?.token,
             ));
 
+
+        ///宿主负责把接口对接起来
         return MultiRepositoryProvider(
           providers: [
             RepositoryProvider<AuthRepository>.value(value: authRepository),

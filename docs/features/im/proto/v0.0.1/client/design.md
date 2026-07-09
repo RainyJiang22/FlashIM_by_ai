@@ -1,6 +1,6 @@
 ---
 module: im-proto
-version: v0.0.1
+version: v0.0.2
 date: 2026-03-28
 tags: [protobuf, websocket, 协议, flutter, dart]
 ---

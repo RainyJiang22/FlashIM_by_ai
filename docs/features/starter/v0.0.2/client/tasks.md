@@ -332,7 +332,7 @@ dependencies:
   flash_auth:
     path: modules/flash_auth
   app_starter:
-    path: modules/app_starter
+    path: modules/starter
 ```
 
 ### 6.2 保持既有依赖稳定 `✅`
@@ -352,7 +352,7 @@ dependencies:
 关键代码片段：
 
 ```dart
-import 'package:app_starter/app_starter.dart';
+import 'package:starter/starter.dart';
 
 case AppRoutes.startup:
   return MaterialPageRoute<void>(
@@ -505,7 +505,7 @@ await tester.pumpWidget(
 ### 12.1 package 依赖安装 `✅`
 
 ```bash
-cd client/modules/app_starter && flutter pub get
+cd client/modules/starter && flutter pub get
 ```
 
 ### 12.2 宿主依赖安装 `✅`
@@ -517,20 +517,20 @@ cd client && flutter pub get
 ### 12.3 格式化 `✅`
 
 ```bash
-cd client/modules/app_starter && dart format lib test
+cd client/modules/starter && dart format lib test
 cd client && dart format lib test
 ```
 
 ### 12.4 分析 `✅`
 
 ```bash
-cd client/modules/app_starter && flutter analyze
+cd client/modules/starter && flutter analyze
 cd client && flutter analyze
 ```
 
 ### 12.5 测试 `✅`
 
 ```bash
-cd client/modules/app_starter && flutter test
+cd client/modules/starter && flutter test
 cd client && flutter test
 ```

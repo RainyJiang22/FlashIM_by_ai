@@ -1,6 +1,6 @@
 ---
 module: session
-version: v0.0.2
+version: v0.0.3
 side: client
 date: 2026-03-26
 tags: [会话, 用户编辑, 签名, 密码修改, flash_session, 模块化]

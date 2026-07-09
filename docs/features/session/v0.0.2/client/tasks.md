@@ -874,7 +874,7 @@ _MineActionRow(
 ```bash
 cd client && flutter pub get
 cd client/modules/flash_session && flutter test
-cd client/modules/app_starter && flutter test
+cd client/modules/starter && flutter test
 cd client && flutter test test/widget_test.dart test/features/auth/cubit/app_session_cubit_test.dart test/features/auth/data/auth_repository_test.dart test/features/auth/presentation/login_page_test.dart test/features/main_shell/presentation/main_shell_page_test.dart test/features/startup/presentation/startup_page_test.dart test/features/mine/presentation/mine_page_test.dart
 cd client && flutter analyze lib test
 ```

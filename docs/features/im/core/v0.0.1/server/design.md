@@ -1,6 +1,6 @@
 ---
 module: im-core
-version: v0.0.1
+version: v0.0.2
 date: 2026-03-28
 tags: [websocket, protobuf, 连接管理, 心跳, 认证, rust]
 ---

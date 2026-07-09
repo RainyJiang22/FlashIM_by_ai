@@ -1,6 +1,6 @@
 ---
 module: session
-version: v0.0.2
+version: v0.0.3
 side: server
 date: 2026-03-24
 tags: [用户, 会话, profile, 信息编辑, flash-user]
@@ -8,7 +8,7 @@ tags: [用户, 会话, profile, 信息编辑, flash-user]
 
 # session v0.0.2 — 服务端设计报告
 
-> 关联设计：[session v0.0.1 客户端](../../v0.0.1/client/design.md) | [auth v0.0.2 服务端](../../../auth/v0.0.2/server/design.md)
+> 关联设计：[session v0.0.1 客户端](../../v0.0.1/client/design.md) | [auth v0.0.2 服务端](../../../auth/v0.0.3/server/design.md)
 
 ## 1. 目标
 

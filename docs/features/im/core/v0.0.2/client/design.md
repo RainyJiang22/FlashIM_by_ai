@@ -1,6 +1,6 @@
 ---
 module: im-core
-version: v0.0.2
+version: v0.0.3
 date: 2026-03-29
 tags: [会话列表, conversation, flutter]
 ---

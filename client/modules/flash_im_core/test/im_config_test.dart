@@ -14,7 +14,7 @@ void main() {
     });
 
     test('builds wss url from https api base url', () {
-      final config = ImConfig.fromApiBaseUrl('https://api.example.com/v1');
+      final config = ImConfig.fromApiBaseUrl('https://api.example.com/v0.0.2');
 
       expect(config.wsUrl, 'wss://api.example.com/ws/im');
     });

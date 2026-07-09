@@ -4,7 +4,7 @@ packages:
   app_starter:
     dependency: "direct main"
     description:
-      path: "modules/app_starter"
+      path: "modules/starter"
       relative: true
     source: path
     version: "0.0.1"

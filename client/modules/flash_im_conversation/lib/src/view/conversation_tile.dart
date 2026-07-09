@@ -81,9 +81,8 @@ class _ConversationAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatar = conversation.peerAvatar?.trim();
     return AvatarWidget(
-      avatar: avatar != null && avatar.startsWith('http') ? avatar : null,
+      avatar: conversation.peerAvatar?.trim(),
       seed: conversation.avatarSeed,
       size: 48,
       borderRadius: BorderRadius.circular(8),

@@ -1,11 +1,16 @@
-import 'package:app_starter/app_starter.dart';
+import 'dart:async';
+
 import 'package:flash_auth/flash_auth.dart';
+import 'package:flash_im_conversation/flash_im_conversation.dart';
+import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
+import 'package:flash_starter/flash_starter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flash_im/app/app_router.dart';
+import 'package:flash_im/app/session_app_starter_controller.dart';
 
 void main() {
   testWidgets('startup page routes to login page', (tester) async {
@@ -14,13 +19,19 @@ void main() {
     final cubit = SessionCubit(repository: sessionRepository);
 
     await tester.pumpWidget(
-      RepositoryProvider<AuthRepository>.value(
-        value: authRepository,
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<AuthRepository>.value(value: authRepository),
+          RepositoryProvider<ConversationRepository>.value(
+            value: _FakeConversationRepository(),
+          ),
+          RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+        ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
-            home: _buildStarterPage(),
+            home: _buildStarterPage(cubit),
           ),
         ),
       ),
@@ -44,13 +55,19 @@ void main() {
     final cubit = SessionCubit(repository: sessionRepository);
 
     await tester.pumpWidget(
-      RepositoryProvider<AuthRepository>.value(
-        value: authRepository,
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<AuthRepository>.value(value: authRepository),
+          RepositoryProvider<ConversationRepository>.value(
+            value: _FakeConversationRepository(),
+          ),
+          RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+        ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
-            home: _buildStarterPage(),
+            home: _buildStarterPage(cubit),
           ),
         ),
       ),
@@ -68,13 +85,19 @@ void main() {
     final cubit = SessionCubit(repository: sessionRepository);
 
     await tester.pumpWidget(
-      RepositoryProvider<AuthRepository>.value(
-        value: authRepository,
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<AuthRepository>.value(value: authRepository),
+          RepositoryProvider<ConversationRepository>.value(
+            value: _FakeConversationRepository(),
+          ),
+          RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+        ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
           child: MaterialApp(
             onGenerateRoute: onGenerateAppRoute,
-            home: _buildStarterPage(),
+            home: _buildStarterPage(cubit),
           ),
         ),
       ),
@@ -95,9 +118,10 @@ void main() {
   });
 }
 
-AppStarterPage _buildStarterPage() {
+AppStarterPage _buildStarterPage(SessionCubit sessionCubit) {
   return AppStarterPage(
     options: AppStarterOptions(
+      controller: SessionAppStarterController(sessionCubit),
       routes: const AppStarterRoutes(
         loginRouteName: AppRoutes.login,
         homeRouteName: AppRoutes.home,
@@ -183,6 +207,79 @@ class _FakeSessionRepository implements SessionRepository {
     String? avatar,
   }) async {
     return await fetchProfile();
+  }
+}
+
+class _FakeConversationRepository implements ConversationRepository {
+  @override
+  Future<Conversation> getById(String id) async {
+    return Conversation(
+      id: id,
+      type: 0,
+      peerUserId: '10002',
+      peerNickname: '橘橙',
+      unreadCount: 0,
+      createdAt: DateTime(2026, 3, 29),
+      lastMessageAt: DateTime(2026, 3, 29, 9, 12),
+      lastMessagePreview: '今天的接口联调先看会话列表。',
+    );
+  }
+
+  @override
+  Future<List<Conversation>> getList({int limit = 20, int offset = 0}) async {
+    if (offset > 0) {
+      return const <Conversation>[];
+    }
+    return [
+      Conversation(
+        id: 'conversation-1',
+        type: 0,
+        peerUserId: '10002',
+        peerNickname: '橘橙',
+        unreadCount: 0,
+        createdAt: DateTime(2026, 3, 29),
+        lastMessageAt: DateTime(2026, 3, 29, 9, 12),
+        lastMessagePreview: '今天的接口联调先看会话列表。',
+      ),
+    ];
+  }
+
+  @override
+  Future<void> markRead(String id) async {}
+}
+
+class _FakeWsClient extends WsClient {
+  _FakeWsClient()
+    : super(
+        config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+        tokenProvider: () => null,
+      );
+
+  final StreamController<WsConnectionState> _stateController =
+      StreamController<WsConnectionState>.broadcast();
+  WsConnectionState _state = WsConnectionState.disconnected;
+
+  @override
+  WsConnectionState get state => _state;
+
+  @override
+  Stream<WsConnectionState> get stateStream => _stateController.stream;
+
+  @override
+  Future<void> connect() async {
+    _state = WsConnectionState.authenticated;
+    _stateController.add(_state);
+  }
+
+  @override
+  Future<void> disconnect() async {
+    _state = WsConnectionState.disconnected;
+    _stateController.add(_state);
+  }
+
+  @override
+  Future<void> dispose() async {
+    await _stateController.close();
   }
 }
 

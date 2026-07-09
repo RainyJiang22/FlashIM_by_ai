@@ -4,44 +4,35 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat: 完成客户端聊天闭环与会话未读联动接入">
-      <change afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/auth/v0.0.2/client/tasks.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/auth/v0.0.3/client/design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/auth/v0.0.3/server/design.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.3/analysis.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/research/project/message_delivery_client_four_scenes_comic.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/research/project/message_delivery_client_four_scenes_comic.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/research/project/message_delivery_client_four_scenes_philosophy.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="docs:增加项目归档相关文档">
+      <change afterPath="$PROJECT_DIR$/client/lib/app/session_app_starter_controller.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_controller.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_state.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/presentation/app_starter_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_starter/test/app_starter_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/lib/app/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/app_starter/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/test/app_starter_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/app_starter/test/app_starter_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/im_config_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/im_config_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/CHANGELOG.md" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/CHANGELOG.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/analysis_options.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/analysis_options.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/app_starter.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/flash_starter.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_branding.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_branding.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_options.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_options.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_routes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_routes.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/domain/app_starter_stage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/domain/app_starter_stage.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/app_starter_page.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/widgets/starter_brand_panel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/presentation/widgets/starter_brand_panel.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/lib/src/presentation/widgets/starter_failure_panel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/lib/src/presentation/widgets/starter_failure_panel.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_starter/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/app_starter/test/app_starter_test.dart" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/app-auth-shell/v1/client/design.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/app-auth-shell/v1/client/tasks.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/app-startup/v1/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/starter/v0.0.1/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/app-startup/v1/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/starter/v0.0.1/client/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/app_starter/v0.1.0/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/app_starter/v0.1.0/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/auth/v0.0.1/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/auth/v0.0.1/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/auth/v0.0.1/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/auth/v0.0.1/client/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/auth/v0.0.1/server/design.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/auth/v0.0.1/server/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/auth/v0.0.2/server/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/auth/v0.0.2/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/auth/v0.0.2/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/auth/v0.0.2/server/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/auth/v0.0.2/server/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/core/v0.0.1/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.1/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/core/v0.0.1/server/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.1/server/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/core/v0.0.2/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.2/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/core/v0.0.2/server/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.2/server/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/server/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/proto/v0.0.1/server/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/session/v0.0.2/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/session/v0.0.2/client/design.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/session/v0.0.2/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/session/v0.0.2/client/tasks.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/session/v0.0.2/server/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/session/v0.0.2/server/design.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/design.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/design.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/starter/v0.0.2/client/tasks.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -335,7 +326,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783497963817</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="docs:增加项目归档相关文档">
+      <option name="closed" value="true" />
+      <created>1783567200987</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1783567200987</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -374,7 +373,8 @@
     <MESSAGE value="docs: 补齐 IM 会话接口测试链文档与可复跑脚本" />
     <MESSAGE value="eat: 完成服务端消息收发闭环" />
     <MESSAGE value="feat: 完成客户端聊天闭环与会话未读联动接入" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: 完成客户端聊天闭环与会话未读联动接入" />
+    <MESSAGE value="docs:增加项目归档相关文档" />
+    <option name="LAST_COMMIT_MESSAGE" value="docs:增加项目归档相关文档" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

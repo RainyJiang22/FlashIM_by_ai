@@ -1,4 +1,4 @@
-import 'package:app_starter/app_starter.dart';
+import 'package:flash_starter/flash_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
@@ -36,8 +36,9 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
   switch (settings.name) {
     case AppRoutes.startup:
       return MaterialPageRoute<void>(
-        builder: (_) => AppStarterPage(
+        builder: (context) => AppStarterPage(
           options: AppStarterOptions(
+            controller: context.read<AppStarterController>(),
             routes: const AppStarterRoutes(
               loginRouteName: AppRoutes.login,
               homeRouteName: AppRoutes.home,

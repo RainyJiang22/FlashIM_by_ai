@@ -101,6 +101,7 @@ class ChatCubit extends Cubit<ChatState> {
       return;
     }
 
+    //1.创建临时消息，立刻上屏，内存状态通道
     final local = Message.local(
       conversationId: _conversation.id,
       senderId: _currentUserId,
@@ -110,10 +111,14 @@ class ChatCubit extends Cubit<ChatState> {
       senderAvatar: _currentUserAvatar,
       content: trimmed,
     );
+
+    //2记录pending，等进行ack匹配
     _pendingLocalIds.add(local.id);
     emit(
       current.copyWith(messages: _sortMessages([...current.messages, local])),
     );
+
+    //3.通过WebSocket发出去
     _wsClient.sendChatMessage(
       SendMessageRequest(
         conversationId: _conversation.id,
@@ -122,6 +127,8 @@ class ChatCubit extends Cubit<ChatState> {
         clientId: local.id,
       ),
     );
+
+    //4。超时标记失败
     _ackTimers[local.id] = Timer(_ackTimeout, () => _markFailed(local.id));
   }
 

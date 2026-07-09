@@ -126,10 +126,6 @@ extension ConversationDisplay on Conversation {
   DateTime get displayTime => lastMessageAt ?? createdAt;
 
   String get avatarSeed {
-    final avatar = peerAvatar?.trim();
-    if (avatar != null && avatar.isNotEmpty) {
-      return avatar;
-    }
     final userId = peerUserId?.trim();
     if (userId != null && userId.isNotEmpty) {
       return userId;

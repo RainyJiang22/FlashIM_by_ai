@@ -4,6 +4,7 @@ import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_session/flash_session.dart';
+import 'package:flash_starter/flash_starter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,6 +12,7 @@ import '../core/config/app_config.dart';
 import '../core/config/local_config_store.dart';
 import '../core/network/dio_factory.dart';
 import 'app_router.dart';
+import 'session_app_starter_controller.dart';
 
 class FlashImApp extends StatefulWidget {
   const FlashImApp({
@@ -21,6 +23,7 @@ class FlashImApp extends StatefulWidget {
     this.conversationRepository,
     this.messageRepository,
     this.sessionCubit,
+    this.appStarterController,
     this.wsClient,
   });
 
@@ -30,6 +33,7 @@ class FlashImApp extends StatefulWidget {
   final ConversationRepository? conversationRepository;
   final MessageRepository? messageRepository;
   final SessionCubit? sessionCubit;
+  final AppStarterController? appStarterController;
   final WsClient? wsClient;
 
   @override
@@ -43,6 +47,7 @@ class _FlashImAppState extends State<FlashImApp> {
   ConversationRepository? _defaultConversationRepository;
   MessageRepository? _defaultMessageRepository;
   SessionCubit? _defaultSessionCubit;
+  AppStarterController? _defaultAppStarterController;
   WsClient? _defaultWsClient;
 
   @override
@@ -239,6 +244,11 @@ class _FlashImAppState extends State<FlashImApp> {
             (_defaultSessionCubit ??= SessionCubit(
               repository: sessionRepository,
             ));
+        final appStarterController =
+            widget.appStarterController ??
+            (_defaultAppStarterController ??= SessionAppStarterController(
+              sessionCubit,
+            ));
         final conversationRepository =
             widget.conversationRepository ??
             (_defaultConversationRepository ??= DioConversationRepository(
@@ -273,6 +283,9 @@ class _FlashImAppState extends State<FlashImApp> {
             ),
             RepositoryProvider<MessageRepository>.value(
               value: messageRepository,
+            ),
+            RepositoryProvider<AppStarterController>.value(
+              value: appStarterController,
             ),
             RepositoryProvider<WsClient>.value(value: wsClient),
           ],

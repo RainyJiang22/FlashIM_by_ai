@@ -1,33 +1,52 @@
 ---
 module: starter
 version: v0.0.2
-date: 2026-06-15
-tags: [启动, 闪屏, 初始化, package, client, flutter, auth]
+date: 2026-07-09
+tags: [启动, 模块边界, flash_starter, flash_session, 状态注入, client, flutter]
 ---
 
-# app_starter 模块 — Client 设计报告
+# flash_starter 模块 — Client 设计报告
 
 ## 1. 目标
 
-- 将当前正式应用的启动页能力抽成独立本地 package，落到 `client/modules/app_starter`
-- 启动时展示品牌形象（Logo + 应用名 + 简短文案）
-- 集中承载正式产品的启动流程：恢复登录态、分流登录页/主页、失败重试
-- 让宿主 app 通过配置接入 `app_starter`，而不是直接依赖宿主 `features/startup`
-- 与 `flash_auth` 形成清晰边界：`app_starter` 只负责启动，不负责认证数据实现
+- 将 `flash_starter` 从 `flash_session` 直接依赖中解耦，改为由宿主 App 注入启动状态与动作。
+- 保留现有启动体验：品牌展示、恢复中状态、已登录进首页、未登录延迟进登录页、失败重试。
+- 让 `flash_starter` 成为纯启动壳 package，只关心启动状态协议、UI 和路由分流。
+- 由宿主 `client/lib/app` 负责把 `SessionCubit` 适配成 `flash_starter` 可消费的启动控制器。
+- 更新 package 测试与宿主测试，证明解耦后启动链路行为不变。
 
 ---
 
 ## 2. 现状分析
 
-- 当前正式产品已经脱离 playground，但启动逻辑仍然写在宿主应用目录 `client/lib/features/startup/`
-- 当前真实生效的启动流程不是 `StartupCoordinator`，而是 `StartupPage` 直接调用 `AppSessionCubit.restoreSession()`，再根据认证状态跳转 `/login` 或 `/home`
-- 当前 `startup` 目录里还保留了一套旧抽象：`StartupCoordinator / AppBootstrapSnapshot / LaunchDestination`，但这套已经不属于正式运行主链路
-- 当前启动页还直接依赖宿主应用里的：
-  - `AppRoutes`
-  - `assets/branding/flash_im_logo_alpha.png`
-  - 启动文案和延迟常量
-- 当前认证模块已经独立为 `client/modules/flash_auth`，如果启动模块继续留在宿主 `lib/features` 中，模块边界会不对称
-- 所以 `app_starter v0.1.0` 的目标不是发明一套新启动架构，而是把当前真实可运行的启动链路模块化、去宿主耦合、形成独立 package
+- 当前真实 package 是 `client/modules/flash_starter`，宿主通过 `flash_starter: path: modules/flash_starter` 接入。
+- `flash_starter` 当前在 `pubspec.yaml` 中依赖 `flash_session`，并在 `AppStarterPage` 中直接 import `package:flash_session/flash_session.dart`。
+- `AppStarterPage` 当前直接读取 `SessionCubit`：
+  - 首帧后调用 `SessionCubit.restoreSession()`。
+  - 监听 `SessionState.status`。
+  - 根据 `SessionStatus.authenticated / unauthenticated / failure` 跳转或展示失败态。
+- 这条链路能工作，但模块边界不干净：启动壳被绑定到具体会话模块，后续如果替换会话实现、复用启动壳或调整认证状态源，都必须改 `flash_starter`。
+- 宿主 App 本来已经创建并持有 `SessionCubit`，也已经负责路由、品牌资源、Repository 和 WebSocket token 注入；因此启动状态适配放在宿主层更符合依赖方向。
+
+当前问题不是启动行为错误，而是依赖方向偏重：
+
+```mermaid
+flowchart TD
+    Starter[flash_starter] --> Session[flash_session]
+    App[client/lib/app] --> Starter
+    App --> Session
+```
+
+目标依赖方向：
+
+```mermaid
+flowchart TD
+    App[client/lib/app] --> Starter[flash_starter]
+    App --> Session[flash_session]
+    App --> Adapter[AppStarterController adapter]
+    Adapter --> Session
+    Starter --> Contract[starter-owned contract]
+```
 
 ---
 
@@ -35,66 +54,116 @@ tags: [启动, 闪屏, 初始化, package, client, flutter, auth]
 
 ### 数据模型
 
-启动阶段状态：
+`flash_starter` 内部保留 UI 展示阶段：
 
-- `AppStarterIdle` / `AppStarterLoading` / `AppStarterReady` / `AppStarterFailed`
-- 当前实现不需要复杂事件总线，只需要页面内部维护阶段状态，并监听 `flash_auth` 的 `AppSessionCubit`
+- `AppStarterStage.idle`
+- `AppStarterStage.loading`
+- `AppStarterStage.ready`
+- `AppStarterStage.failed`
 
-启动配置：
-
-- `AppStarterRoutes` — 宿主传入登录页路由和主页路由
-- `AppStarterBranding` — 宿主传入 Logo、标题、副标题文案
-- `AppStarterOptions` — 聚合启动页所需配置：品牌、路由、未登录等待时长、失败文案
-
-建议模型：
-
-- `AppStarterRoutes(loginRouteName, homeRouteName)`
-- `AppStarterBranding(logo, title, idleSubtitle, loadingSubtitle)`
-- `AppStarterOptions(routes, branding, unauthenticatedDelay, failureMessage, retryLabel)`
-
-### 接口契约
-
-`app_starter` 不直接持有认证仓库，不读取 token，不自己实现缓存恢复。它只依赖 `flash_auth` 暴露出来的会话状态：
-
-- `AppSessionCubit.restoreSession()`
-- `AppSessionState.status`
-- `AppSessionState.errorMessage`
-- `AuthStatus.initial / restoring / authenticated / unauthenticated / failure`
-
-对外页面接口建议为：
+新增启动状态协议，由 `flash_starter` 自己定义，不引用 `flash_session`：
 
 ```dart
-class AppStarterPage extends StatefulWidget {
-  const AppStarterPage({
-    super.key,
-    required this.options,
+enum AppStarterStatus {
+  initial,
+  restoring,
+  authenticated,
+  unauthenticated,
+  failure,
+}
+
+class AppStarterState {
+  const AppStarterState({
+    required this.status,
+    this.errorMessage,
   });
 
-  final AppStarterOptions options;
+  final AppStarterStatus status;
+  final String? errorMessage;
 }
 ```
 
-宿主应用负责：
+新增启动控制器协议：
 
-- 提供 `BlocProvider<AppSessionCubit>`
-- 传入 `AppStarterOptions`
-- 注册 `/login` 和 `/home` 路由
+```dart
+abstract interface class AppStarterController {
+  AppStarterState get state;
+  Stream<AppStarterState> get stream;
+  Future<void> restore();
+}
+```
 
-### 模块边界
+`AppStarterOptions` 保留品牌、路由、延迟和失败文案，并增加控制器输入：
 
-- `app_starter` 知道“认证状态”
-- `app_starter` 不知道“认证实现细节”
-- `flash_auth` 负责恢复会话
-- 宿主 app 负责组装路由和品牌配置
+```dart
+class AppStarterOptions {
+  const AppStarterOptions({
+    required this.routes,
+    required this.branding,
+    required this.controller,
+    this.unauthenticatedDelay = const Duration(seconds: 3),
+    this.failureMessage = '启动失败，请重试',
+    this.retryLabel = '重试',
+  });
 
-### 关键设计选择
+  final AppStarterRoutes routes;
+  final AppStarterBranding branding;
+  final AppStarterController controller;
+  final Duration unauthenticatedDelay;
+  final String failureMessage;
+  final String retryLabel;
+}
+```
+
+关键设计选择：
 
 | 决策 | 理由 |
 |------|------|
-| `app_starter` 直接依赖 `flash_auth` 的 `AppSessionCubit` | 当前正式产品已经以它为真实启动状态源，复用最稳 |
-| 路由名由宿主传入 | package 不再反向 import `AppRoutes` |
-| 品牌资源由宿主传入 | package 不和 `Flash IM` 资源路径硬绑定 |
-| v0.1.0 只迁移“真实生效链路” | 不把已经脱离主链路的旧 `StartupCoordinator` 体系继续带进新模块 |
+| `flash_starter` 自定义 `AppStarterStatus/AppStarterState` | 避免 package 依赖 `flash_session` 的状态类型 |
+| `AppStarterController` 由宿主实现或适配 | 启动壳只依赖稳定协议，具体会话恢复属于宿主编排 |
+| `AppStarterPage` 不再使用 `BlocListener<SessionCubit, SessionState>` | 去掉对 `flutter_bloc` 和 `flash_session` 的双重实现耦合 |
+| 路由名与品牌资源继续由宿主传入 | 保留当前已完成的宿主解耦能力 |
+
+### 接口契约
+
+`flash_starter` 对外暴露：
+
+- `AppStarterPage`
+- `AppStarterOptions`
+- `AppStarterRoutes`
+- `AppStarterBranding`
+- `AppStarterStage`
+- `AppStarterStatus`
+- `AppStarterState`
+- `AppStarterController`
+
+`flash_starter` 不再暴露或依赖：
+
+- `SessionCubit`
+- `SessionState`
+- `SessionStatus`
+- `SessionRepository`
+- `flash_session.dart`
+
+宿主 App 负责提供适配器，把现有会话状态映射到启动状态：
+
+```dart
+class SessionAppStarterController implements AppStarterController {
+  SessionAppStarterController(this._sessionCubit);
+
+  final SessionCubit _sessionCubit;
+}
+```
+
+状态映射：
+
+| `SessionStatus` | `AppStarterStatus` |
+|------|------|
+| `initial` | `initial` |
+| `restoring` | `restoring` |
+| `authenticated` | `authenticated` |
+| `unauthenticated` | `unauthenticated` |
+| `failure` | `failure` |
 
 ---
 
@@ -104,72 +173,53 @@ class AppStarterPage extends StatefulWidget {
 
 ```mermaid
 flowchart TD
-    A[App 启动] --> B[AppStarterPage]
-    B --> B1[展示品牌 Logo + 标题]
-    B1 --> B2[调用 AppSessionCubit.restoreSession]
-    B2 --> C{认证状态}
-    C -->|authenticated| D[跳转 /home]
-    C -->|unauthenticated| E[等待一段时间后跳转 /login]
-    C -->|failure| F[显示错误提示 + 重试按钮]
-    F -->|点击重试| B2
+    A[FlashImApp 创建 SessionCubit] --> B[创建 SessionAppStarterController]
+    B --> C[AppRouter 构建 AppStarterPage]
+    C --> D[AppStarterPage 首帧后调用 controller.restore]
+    D --> E{controller 状态}
+    E -->|restoring| F[显示恢复中文案]
+    E -->|authenticated| G[替换跳转 /home]
+    E -->|unauthenticated| H[延迟后替换跳转 /login]
+    E -->|failure| I[显示错误与重试按钮]
+    I -->|重试| D
 ```
 
 ### 启动时序
 
 ```mermaid
 sequenceDiagram
-    participant Host as Host App
+    participant App as FlashImApp
+    participant Session as SessionCubit
+    participant Adapter as SessionAppStarterController
     participant Starter as AppStarterPage
-    participant Session as AppSessionCubit
     participant Router as Navigator
 
-    Host->>Starter: build(options)
-    Starter->>Session: restoreSession()
-    Session-->>Starter: restoring
-    Starter->>Starter: 显示 loading 文案
+    App->>Session: create/provide SessionCubit
+    App->>Adapter: SessionAppStarterController(sessionCubit)
+    App->>Starter: AppStarterOptions(controller, routes, branding)
+    Starter->>Adapter: restore()
+    Adapter->>Session: restoreSession()
+    Session-->>Adapter: SessionState changes
+    Adapter-->>Starter: AppStarterState changes
 
-    alt 已恢复出本地会话
-        Session-->>Starter: authenticated
+    alt authenticated
         Starter->>Router: pushNamedAndRemoveUntil(/home)
-    else 没有本地会话
-        Session-->>Starter: unauthenticated
-        Starter->>Starter: 启动延迟计时
+    else unauthenticated
+        Starter->>Starter: wait unauthenticatedDelay
         Starter->>Router: pushNamedAndRemoveUntil(/login)
-    else 恢复失败
-        Session-->>Starter: failure
-        Starter->>Starter: 展示失败态
+    else failure
+        Starter->>Starter: show failure panel
     end
 ```
 
 ### 关键规则
 
-- 启动页首帧后再触发 `restoreSession()`，避免在 build 期间直接拉起状态变化
-- 未登录时仍保留当前产品已有的延迟跳转行为
-- 已登录时直接进入主页，不额外等待
-- 跳转使用替换式导航，不允许用户返回启动页
-- 页面销毁时必须取消未登录延迟 timer，避免误跳转
-- 重试只重新触发 `restoreSession()`，不额外引入第二套恢复逻辑
-
-### UI 线框
-
-```text
-┌─────────────────────────────┐
-│                             │
-│                             │
-│         [logo widget]       │
-│           Flash IM          │
-│        轻量即时通讯          │
-│                             │
-│       正在恢复登录状态       │
-│                             │
-│   失败时展示错误 + 重试按钮   │
-│                             │
-└─────────────────────────────┘
-```
-
-- 居中品牌主体
-- 正常情况下只显示启动内容
-- 失败时在底部展示错误信息与重试按钮
+- `flash_starter` 不读取 `BuildContext.read<SessionCubit>()`。
+- `flash_starter` 不 import `flutter_bloc`，除非未来有 starter 自己的 Cubit；本期不需要。
+- `AppStarterPage` 首帧后调用 `controller.restore()`，保持当前避免 build 期间触发状态变化的行为。
+- `AppStarterPage` 订阅 `controller.stream`，并在 `dispose()` 中取消订阅和未登录延迟 timer。
+- 已登录跳转 `/home`、未登录延迟跳 `/login`、失败重试的用户体验必须保持不变。
+- 适配器在宿主层集中处理 `SessionStatus -> AppStarterStatus`，后续替换会话模块时只改适配器。
 
 ---
 
@@ -180,16 +230,18 @@ sequenceDiagram
 ```text
 client/
 ├── modules/
-│   ├── flash_auth/
-│   └── app_starter/
+│   └── flash_starter/
+│       ├── pubspec.yaml                         # 移除 flash_session 依赖
 │       ├── lib/
-│       │   ├── app_starter.dart
+│       │   ├── flash_starter.dart               # 导出 starter 协议与页面
 │       │   └── src/
 │       │       ├── domain/
 │       │       │   ├── app_starter_branding.dart
+│       │       │   ├── app_starter_controller.dart
 │       │       │   ├── app_starter_options.dart
 │       │       │   ├── app_starter_routes.dart
-│       │       │   └── app_starter_stage.dart
+│       │       │   ├── app_starter_stage.dart
+│       │       │   └── app_starter_state.dart
 │       │       └── presentation/
 │       │           ├── app_starter_page.dart
 │       │           └── widgets/
@@ -197,41 +249,44 @@ client/
 │       │               └── starter_failure_panel.dart
 │       └── test/
 │           └── app_starter_test.dart
-├── lib/
-│   ├── app/
-│   │   ├── app_router.dart
-│   │   └── flash_im_app.dart
-│   ├── features/
-│   │   ├── home/
-│   │   └── mine/
-│   └── core/
-│       ├── config/
-│       └── network/
+└── lib/
+    └── app/
+        ├── app_router.dart                      # 传入 AppStarterOptions.controller
+        ├── flash_im_app.dart                    # 创建并注入 starter controller
+        └── session_app_starter_controller.dart  # 新增 SessionCubit 适配器
 ```
 
 ### 职责划分
 
-- `flash_auth` — 负责恢复会话、认证状态流转
-- `app_starter` — 负责启动页 UI、失败态、延迟跳转、启动流程驱动
-- `app_router.dart` — 负责注册 `/startup /login /home`
-- `flash_im_app.dart` — 负责把品牌配置、路由名和 `AppSessionCubit` 组装给 `app_starter`
+- `flash_starter`：启动页 UI、启动状态协议、状态订阅、路由分流、失败重试。
+- `flash_session`：会话缓存、资料接口、`SessionCubit` 和全局会话状态。
+- `client/lib/app/session_app_starter_controller.dart`：把 `SessionCubit` 适配成 `AppStarterController`。
+- `client/lib/app/flash_im_app.dart`：创建 App 级依赖，保证 `SessionCubit` 与 starter controller 生命周期一致。
+- `client/lib/app/app_router.dart`：构建 `AppStarterPage` 并传入品牌、路由与 controller。
 
 依赖方向：
 
-- `flash_im app -> app_starter`
-- `flash_im app -> flash_auth`
-- `app_starter -> flash_auth`
-- `flash_auth` 不反向依赖 `app_starter`
+- `flash_starter` 不依赖 `flash_session`。
+- `flash_session` 不依赖 `flash_starter`。
+- 宿主 `client/lib/app` 同时依赖二者，并负责适配。
 
 ### 技术决策
 
 | 决策 | 方案 | 理由 |
 |------|------|------|
-| 模块形态 | 本地 path package | 与 `flash_auth` 保持一致，便于持续模块化 |
-| 启动状态源 | `AppSessionCubit` | 复用当前真实生效链路 |
-| 路由接入 | 宿主传 route name | 降低 package 对宿主 app 的直接耦合 |
-| 品牌接入 | 宿主传 `Widget + 文案` | 保留换皮能力，避免 package 硬编码品牌资源 |
-| 失败态处理 | 保留在 starter package 内 | 启动体验应完整归属于启动模块 |
+| 控制反转方式 | `AppStarterController` 注入 | 去掉 starter 对具体 session 实现的编译期依赖 |
+| 状态监听方式 | `StreamSubscription<AppStarterState>` | package 内不需要引入 Bloc 语义 |
+| 适配器位置 | `client/lib/app/session_app_starter_controller.dart` | 适配属于宿主编排，不属于 starter 或 session |
+| 路由配置 | 保持 `AppStarterRoutes` | 当前能力已满足 package 不反向依赖宿主路由 |
+| 品牌配置 | 保持 `AppStarterBranding` | 当前能力已满足资源不硬编码 |
+
+依赖变化：
+
+| 依赖 | 用途 | 本期变化 |
+|------|------|------|
+| `flash_session` | 会话恢复与状态 | 从 `flash_starter` 移除，保留在宿主 App |
+| `flutter_bloc` | `SessionCubit` Provider 与宿主状态管理 | 从 `flash_starter` 移除，宿主继续保留 |
+| `flutter` | UI | `flash_starter` 保留 |
 
 ---
 
@@ -239,9 +294,9 @@ client/
 
 | 功能 | 理由 |
 |------|------|
-| 将 `LocalConfigStore` 一并迁入 `app_starter` | 当前配置读取属于宿主基础设施，不是 v0.1.0 的最小目标 |
-| 将旧 `StartupCoordinator / AppBootstrapSnapshot / LaunchDestination` 继续做强兼容 | 当前正式产品主链路已不依赖它们，继续保留只会制造双轨结构 |
-| 远端配置拉取 / 热更新 / 版本检查 | 启动模块本期只处理本地恢复与页面分流 |
-| 启动动画、引导页、首次安装流程 | 这属于后续体验增强，不是本模块独立化的首要目标 |
-| 完全脱离 `flash_auth` 再抽一层 session protocol | 现阶段收益低，会让启动链路多出一层无意义抽象 |
-
+| 重写 `SessionCubit` 或 `flash_session` 状态模型 | 本期只做 starter 边界解耦，不改会话业务 |
+| 改登录、资料、密码、IM token 注入流程 | 这些属于认证/会话/IM 模块，不能混入 starter v0.0.2 |
+| 引入新的状态管理库或路由库 | 现有 `Navigator` 和简单 stream 订阅足够 |
+| 将 `AppStarterController` 下沉到 `flash_session` | 会重新制造 session 对 starter 的反向依赖 |
+| 改启动 UI 视觉、动画、引导页、版本检查 | 本期目标是模块边界，不做体验扩展 |
+| 服务端 API 或链路测试脚本 | 本功能是 client-only 架构调整，没有后端 API 变更 |

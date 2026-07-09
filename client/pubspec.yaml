@@ -42,8 +42,8 @@ dependencies:
     path: modules/flash_im_chat
   flash_shared:
     path: modules/flash_shared
-  app_starter:
-    path: modules/app_starter
+  flash_starter:
+    path: modules/flash_starter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

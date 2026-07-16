@@ -35,4 +35,66 @@ void main() {
     expect(message.senderId, '2');
     expect(message.content, 'hello');
   });
+
+  test('Message.fromJson parses image type and JSON extra', () {
+    final message = Message.fromJson({
+      'id': 'image-1',
+      'conversation_id': 'c1',
+      'sender_id': 2,
+      'msg_type': 1,
+      'content': '/uploads/original/a.jpg',
+      'extra': '{"width":640,"height":480,"thumbnail_url":"/thumb.jpg"}',
+    });
+
+    expect(message.type, MessageType.image);
+    expect(message.isImage, isTrue);
+    expect(message.extra?['width'], 640);
+  });
+
+  test('videoExtra and fileExtra expose formatted metadata', () {
+    final video = Message.fromJson({
+      'id': 'video-1',
+      'conversation_id': 'c1',
+      'sender_id': 1,
+      'msg_type': 2,
+      'content': '/tmp/thumb.jpg',
+      'extra': {
+        'thumbnail_url': '/thumb.jpg',
+        'duration_ms': 83000,
+        'width': 1280,
+        'height': 720,
+        'file_size': 2048,
+      },
+    });
+    final file = Message.fromJson({
+      'id': 'file-1',
+      'conversation_id': 'c1',
+      'sender_id': 1,
+      'msg_type': 3,
+      'content': '/uploads/file/a.pdf',
+      'extra': {
+        'file_name': 'a.pdf',
+        'file_url': '/uploads/file/a.pdf',
+        'file_type': 'pdf',
+        'file_size': 1572864,
+      },
+    });
+
+    expect(video.videoExtra?.formattedDuration, '1:23');
+    expect(file.fileExtra?.formattedSize, '1.5 MB');
+    expect(Message.mapToProtoType(MessageType.file), 3);
+  });
+
+  test('Message.local keeps selected media type', () {
+    final local = Message.local(
+      conversationId: 'c1',
+      senderId: '1',
+      senderName: '我',
+      content: '/tmp/photo.jpg',
+      type: MessageType.image,
+    );
+
+    expect(local.type, MessageType.image);
+    expect(local.status, MessageStatus.sending);
+  });
 }

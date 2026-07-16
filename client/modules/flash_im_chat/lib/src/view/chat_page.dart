@@ -6,10 +6,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/message.dart';
 import '../data/message_repository.dart';
+import '../data/video_thumbnail_service.dart';
 import '../logic/chat_cubit.dart';
 import '../logic/chat_state.dart';
+import 'bubble/message_bubble.dart';
 import 'chat_input.dart';
-import 'message_bubble.dart';
+import 'file_preview_page.dart';
+import 'image_preview_page.dart';
+import 'video_player_page.dart';
 
 class ChatPage extends StatelessWidget {
   const ChatPage({
@@ -18,23 +22,32 @@ class ChatPage extends StatelessWidget {
     required this.currentUserId,
     this.currentUserName,
     this.currentUserAvatar,
+    this.videoThumbnailService,
   });
 
   final Conversation conversation;
   final String currentUserId;
   final String? currentUserName;
   final String? currentUserAvatar;
+  final VideoThumbnailService? videoThumbnailService;
 
   @override
   Widget build(BuildContext context) {
+    final repository = context.read<MessageRepository>();
+    final resolver = repository is DioMessageRepository
+        ? repository.resolveMediaUrl
+        : (String value) => value;
     return BlocProvider(
       create: (context) => ChatCubit(
-        repository: context.read<MessageRepository>(),
+        repository: repository,
         wsClient: context.read<WsClient>(),
         conversation: conversation,
         currentUserId: currentUserId,
         currentUserName: currentUserName,
         currentUserAvatar: currentUserAvatar,
+        videoThumbnailService:
+            videoThumbnailService ?? NativeVideoThumbnailService(),
+        mediaUrlResolver: resolver,
       )..loadMessages(),
       child: _ChatScaffold(
         conversation: conversation,
@@ -72,7 +85,12 @@ class _ChatScaffold extends StatelessWidget {
                   currentUserAvatar: currentUserAvatar,
                 ),
               ),
-              ChatInput(onSend: context.read<ChatCubit>().sendText),
+              ChatInput(
+                onSend: context.read<ChatCubit>().sendText,
+                onSendImage: context.read<ChatCubit>().sendImageFromFile,
+                onSendVideo: context.read<ChatCubit>().sendVideoFromFile,
+                onSendFile: context.read<ChatCubit>().sendFileFromPicker,
+              ),
             ],
           ),
         ),
@@ -83,26 +101,30 @@ class _ChatScaffold extends StatelessWidget {
 
 class _MessageList extends StatelessWidget {
   const _MessageList({required this.currentUserId, this.currentUserAvatar});
-
   final String currentUserId;
   final String? currentUserAvatar;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ChatCubit, ChatState>(
-      builder: (context, state) {
-        return switch (state) {
-          ChatInitial() || ChatLoading() => const _MessageSkeleton(),
-          ChatError(:final message) => Center(child: Text(message)),
-          ChatLoaded(:final messages) when messages.isEmpty => const Center(
-            child: Text('还没有消息'),
-          ),
-          ChatLoaded(:final messages) => _LoadedMessageList(
+      builder: (context, state) => switch (state) {
+        ChatInitial() || ChatLoading() => const _MessageSkeleton(),
+        ChatError(:final message) => Center(child: Text(message)),
+        ChatLoaded(:final messages) when messages.isEmpty => const Center(
+          child: Text('还没有消息'),
+        ),
+        ChatLoaded(
+          :final messages,
+          :final fileDownloads,
+          :final uploadProgress,
+        ) =>
+          _LoadedMessageList(
             messages: messages,
             currentUserId: currentUserId,
             currentUserAvatar: currentUserAvatar,
+            fileDownloads: fileDownloads,
+            uploadProgress: uploadProgress,
           ),
-        };
       },
     );
   }
@@ -112,12 +134,16 @@ class _LoadedMessageList extends StatelessWidget {
   const _LoadedMessageList({
     required this.messages,
     required this.currentUserId,
+    required this.fileDownloads,
     this.currentUserAvatar,
+    this.uploadProgress,
   });
 
   final List<Message> messages;
   final String currentUserId;
   final String? currentUserAvatar;
+  final Map<String, FileDownloadInfo> fileDownloads;
+  final double? uploadProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -140,15 +166,53 @@ class _LoadedMessageList extends StatelessWidget {
             message: message,
             isMine: message.senderId == currentUserId,
             currentUserAvatar: currentUserAvatar,
+            downloadInfo: fileDownloads[message.id],
+            uploadProgress: message.status == MessageStatus.sending
+                ? uploadProgress
+                : null,
+            onOpenImage: () => _openImage(context, message),
+            onOpenVideo: () => _openVideo(context, message),
+            onOpenFile: () => _openFile(context, message),
           );
         },
       ),
     );
+    return messages.length <= 15
+        ? Align(alignment: Alignment.topCenter, child: list)
+        : list;
+  }
 
-    if (messages.length <= 15) {
-      return Align(alignment: Alignment.topCenter, child: list);
-    }
-    return list;
+  void _openImage(BuildContext context, Message message) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ImagePreviewPage(imageUrl: message.content),
+      ),
+    );
+  }
+
+  void _openVideo(BuildContext context, Message message) {
+    final local = '${message.extra?['local_video_path'] ?? ''}';
+    final remote = '${message.extra?['video_url'] ?? ''}';
+    final source = local.isNotEmpty
+        ? local
+        : (remote.isNotEmpty ? remote : message.content);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VideoPlayerPage(videoUrl: source),
+      ),
+    );
+  }
+
+  void _openFile(BuildContext context, Message message) {
+    final cubit = context.read<ChatCubit>();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider.value(
+          value: cubit,
+          child: FilePreviewPage(message: message),
+        ),
+      ),
+    );
   }
 }
 

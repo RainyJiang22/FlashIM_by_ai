@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -104,6 +105,24 @@ class WsClient {
   void sendChatMessage(SendMessageRequest request) {
     sendFrame(
       WsFrame(type: WsFrameType.CHAT_MESSAGE, payload: request.writeToBuffer()),
+    );
+  }
+
+  void sendMessage({
+    required String conversationId,
+    required String content,
+    required int type,
+    List<int>? extra,
+    String? clientId,
+  }) {
+    sendChatMessage(
+      SendMessageRequest(
+        conversationId: conversationId,
+        type: type,
+        content: content,
+        extra: extra == null ? '' : utf8.decode(extra),
+        clientId: clientId ?? '',
+      ),
     );
   }
 

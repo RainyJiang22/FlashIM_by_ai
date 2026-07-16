@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flash_im_chat/flash_im_chat.dart';
@@ -33,6 +34,7 @@ void main() {
       wsClient: _FakeWsClient(),
       conversation: conversation,
       currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
     ),
     act: (cubit) => cubit.loadMessages(),
     expect: () => [
@@ -50,6 +52,7 @@ void main() {
         conversation: conversation,
         currentUserId: '1',
         currentUserAvatar: 'identicon:me',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
       );
     },
     seed: () => const ChatLoaded(messages: [], hasMore: false),
@@ -72,6 +75,7 @@ void main() {
         wsClient: ackWsClient,
         conversation: conversation,
         currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
       );
     },
     seed: () => const ChatLoaded(messages: [], hasMore: false),
@@ -98,6 +102,7 @@ void main() {
         wsClient: incomingWsClient,
         conversation: conversation,
         currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
       );
     },
     seed: () => ChatLoaded(messages: [history], hasMore: false),
@@ -130,6 +135,7 @@ void main() {
         wsClient: ignoredWsClient,
         conversation: conversation,
         currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
       );
     },
     seed: () => ChatLoaded(messages: [history], hasMore: false),
@@ -140,6 +146,111 @@ void main() {
     },
     expect: () => const <ChatState>[],
   );
+
+  test('image upload sends media request and ACK marks it sent', () async {
+    final wsClient = _FakeWsClient();
+    final repository = _MediaMessageRepository();
+    final cubit = ChatCubit(
+      repository: repository,
+      wsClient: wsClient,
+      conversation: conversation,
+      currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
+    );
+    addTearDown(cubit.close);
+    addTearDown(wsClient.dispose);
+    await cubit.loadMessages();
+
+    await cubit.sendImageFromFile('/tmp/photo.jpg');
+
+    final sending = cubit.state as ChatLoaded;
+    expect(sending.messages.single.type, MessageType.image);
+    expect(sending.messages.single.extra?['width'], 640);
+    expect(sending.uploadProgress, isNull);
+    expect(wsClient.sentRequests.single.type, 1);
+    expect(wsClient.sentRequests.single.content, endsWith('/photo.jpg'));
+
+    wsClient.emitAck(MessageAck(messageId: 'server-image', seq: 9));
+    final sent = cubit.state as ChatLoaded;
+    expect(sent.messages.single.id, 'server-image');
+    expect(sent.messages.single.status, MessageStatus.sent);
+  });
+
+  test('video upload uses extracted metadata', () async {
+    final temp = await Directory.systemTemp.createTemp('flash_im_video_test');
+    addTearDown(() => temp.delete(recursive: true));
+    final video = File('${temp.path}/clip.mp4')..writeAsBytesSync([1, 2, 3]);
+    final thumbnail = File('${temp.path}/thumb.jpg')..writeAsBytesSync([4]);
+    final wsClient = _FakeWsClient();
+    final repository = _MediaMessageRepository();
+    final cubit = ChatCubit(
+      repository: repository,
+      wsClient: wsClient,
+      conversation: conversation,
+      currentUserId: '1',
+      videoThumbnailService: _FakeVideoThumbnailService(
+        thumbnailPath: thumbnail.path,
+      ),
+    );
+    addTearDown(cubit.close);
+    addTearDown(wsClient.dispose);
+    await cubit.loadMessages();
+
+    await cubit.sendVideoFromFile(video.path);
+
+    expect(repository.uploadedDurationMs, 1000);
+    expect(wsClient.sentRequests.single.type, 2);
+    expect((cubit.state as ChatLoaded).messages.single.videoExtra?.width, 320);
+  });
+
+  test('file download emits downloading then done', () async {
+    final temp = await Directory.systemTemp.createTemp('flash_im_file_test');
+    addTearDown(() => temp.delete(recursive: true));
+    final wsClient = _FakeWsClient();
+    final cubit = ChatCubit(
+      repository: _MediaMessageRepository(),
+      wsClient: wsClient,
+      conversation: conversation,
+      currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
+      downloadDirectoryProvider: () async => temp,
+    );
+    addTearDown(cubit.close);
+    addTearDown(wsClient.dispose);
+    await cubit.loadMessages();
+
+    await cubit.downloadFile('m-file', '/uploads/file/a.pdf', 'a.pdf');
+
+    final info = (cubit.state as ChatLoaded).fileDownloads['m-file'];
+    expect(info?.status, FileDownloadStatus.done);
+    expect(info?.progress, 1);
+    expect(info?.localPath, contains('a.pdf'));
+  });
+
+  test('file download failure is exposed in ChatState', () async {
+    final temp = await Directory.systemTemp.createTemp(
+      'flash_im_file_error_test',
+    );
+    addTearDown(() => temp.delete(recursive: true));
+    final wsClient = _FakeWsClient();
+    final cubit = ChatCubit(
+      repository: _MediaMessageRepository(failDownload: true),
+      wsClient: wsClient,
+      conversation: conversation,
+      currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
+      downloadDirectoryProvider: () async => temp,
+    );
+    addTearDown(cubit.close);
+    addTearDown(wsClient.dispose);
+    await cubit.loadMessages();
+
+    await cubit.downloadFile('m-file', '/uploads/file/a.pdf', 'a.pdf');
+
+    final info = (cubit.state as ChatLoaded).fileDownloads['m-file'];
+    expect(info?.status, FileDownloadStatus.error);
+    expect(info?.error, contains('download failed'));
+  });
 }
 
 class _FakeMessageRepository implements MessageRepository {
@@ -155,6 +266,126 @@ class _FakeMessageRepository implements MessageRepository {
   }) async {
     return messages;
   }
+
+  @override
+  Future<ImageUploadResult> uploadImage(
+    String filePath, {
+    void Function(int sent, int total)? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<VideoUploadResult> uploadVideo(
+    String videoPath,
+    String thumbPath,
+    int durationMs, {
+    int? width,
+    int? height,
+    void Function(int sent, int total)? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<FileUploadResult> uploadFile(
+    String filePath, {
+    void Function(int sent, int total)? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<String> downloadFile(
+    String url,
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  }) => throw UnimplementedError();
+}
+
+class _FakeVideoThumbnailService implements VideoThumbnailService {
+  const _FakeVideoThumbnailService({this.thumbnailPath = '/tmp/thumb.jpg'});
+
+  final String thumbnailPath;
+
+  @override
+  Future<VideoThumbnailInfo> extract(String videoPath) async =>
+      VideoThumbnailInfo(
+        thumbnailPath: thumbnailPath,
+        durationMs: 1000,
+        width: 320,
+        height: 180,
+      );
+}
+
+class _MediaMessageRepository implements MessageRepository {
+  _MediaMessageRepository({this.failDownload = false});
+
+  final bool failDownload;
+  int? uploadedDurationMs;
+
+  @override
+  Future<List<Message>> getMessages({
+    required String conversationId,
+    int? beforeSeq,
+    int limit = 50,
+  }) async => const [];
+
+  @override
+  Future<ImageUploadResult> uploadImage(
+    String filePath, {
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    onProgress?.call(1, 2);
+    onProgress?.call(2, 2);
+    return const ImageUploadResult(
+      originalUrl: 'http://127.0.0.1:9600/uploads/photo.jpg',
+      thumbnailUrl: 'http://127.0.0.1:9600/uploads/thumb.webp',
+      width: 640,
+      height: 480,
+      size: 2,
+      format: 'jpg',
+    );
+  }
+
+  @override
+  Future<VideoUploadResult> uploadVideo(
+    String videoPath,
+    String thumbPath,
+    int durationMs, {
+    int? width,
+    int? height,
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    uploadedDurationMs = durationMs;
+    return const VideoUploadResult(
+      videoUrl: 'http://127.0.0.1:9600/uploads/video.mp4',
+      thumbnailUrl: 'http://127.0.0.1:9600/uploads/thumb.jpg',
+      durationMs: 1000,
+      width: 320,
+      height: 180,
+      fileSize: 3,
+    );
+  }
+
+  @override
+  Future<FileUploadResult> uploadFile(
+    String filePath, {
+    void Function(int sent, int total)? onProgress,
+  }) async => const FileUploadResult(
+    fileUrl: 'http://127.0.0.1:9600/uploads/a.pdf',
+    fileName: 'a.pdf',
+    fileSize: 3,
+    fileType: 'pdf',
+  );
+
+  @override
+  Future<String> downloadFile(
+    String url,
+    String savePath, {
+    void Function(int received, int total)? onProgress,
+  }) async {
+    if (failDownload) {
+      throw StateError('download failed');
+    }
+    onProgress?.call(1, 2);
+    onProgress?.call(2, 2);
+    return savePath;
+  }
 }
 
 class _FakeWsClient extends WsClient {
@@ -168,6 +399,7 @@ class _FakeWsClient extends WsClient {
 
   final StreamController<ChatMessage> _chatMessages;
   final StreamController<MessageAck> _messageAcks;
+  final List<SendMessageRequest> sentRequests = [];
 
   @override
   Stream<ChatMessage> get chatMessageStream => _chatMessages.stream;
@@ -176,7 +408,9 @@ class _FakeWsClient extends WsClient {
   Stream<MessageAck> get messageAckStream => _messageAcks.stream;
 
   @override
-  void sendChatMessage(SendMessageRequest request) {}
+  void sendChatMessage(SendMessageRequest request) {
+    sentRequests.add(request);
+  }
 
   void emitMessage(ChatMessage message) {
     _chatMessages.add(message);

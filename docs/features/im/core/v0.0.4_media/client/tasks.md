@@ -20,31 +20,31 @@
 
 ## 执行顺序
 
-1. ⬜ 任务 1 — 配置 `flash_im_chat` 依赖（无依赖）
-2. ⬜ 任务 2 — 扩展消息模型 `message.dart`（依赖任务 1）
-3. ⬜ 任务 3 — 扩展聊天状态 `chat_state.dart`（依赖任务 2）
-4. ⬜ 任务 4 — 扩展仓储 `message_repository.dart`（依赖任务 2）
-5. ⬜ 任务 5 — 新增视频元数据提取服务 `video_thumbnail_service.dart`（依赖任务 1）
-6. ⬜ 任务 6 — 扩展 `WsClient` 媒体发送入口（依赖任务 2）
-7. ⬜ 任务 7 — 改造 `ChatCubit` 媒体发送/接收/下载编排（依赖任务 3、4、5、6）
-8. ⬜ 任务 8 — 改造 `ChatInput` 附件入口与功能面板（依赖任务 7）
-9. ⬜ 任务 9 — 改造 `ChatPage` 组装媒体能力（依赖任务 7、8）
-10. ⬜ 任务 10 — 拆分消息气泡组件（依赖任务 2、7、9）
-11. ⬜ 任务 11 — 新增三类预览页（依赖任务 7、10）
-12. ⬜ 任务 12 — 更新模块导出 `flash_im_chat.dart`（依赖任务 9、10、11）
-13. ⬜ 任务 13 — Android 清流量配置（依赖任务 1）
-14. ⬜ 任务 14 — 补齐单测与组件测试（依赖任务 2、4、7、10、11）
-15. ⬜ 最后 — 编译验证 + 手工验收路径
+1. ✅ 任务 1 — 配置 `flash_im_chat` 依赖（无依赖）
+2. ✅ 任务 2 — 扩展消息模型 `message.dart`（依赖任务 1）
+3. ✅ 任务 3 — 扩展聊天状态 `chat_state.dart`（依赖任务 2）
+4. ✅ 任务 4 — 扩展仓储 `message_repository.dart`（依赖任务 2）
+5. ✅ 任务 5 — 新增视频元数据提取服务 `video_thumbnail_service.dart`（依赖任务 1）
+6. ✅ 任务 6 — 扩展 `WsClient` 媒体发送入口（依赖任务 2）
+7. ✅ 任务 7 — 改造 `ChatCubit` 媒体发送/接收/下载编排（依赖任务 3、4、5、6）
+8. ✅ 任务 8 — 改造 `ChatInput` 附件入口与功能面板（依赖任务 7）
+9. ✅ 任务 9 — 改造 `ChatPage` 组装媒体能力（依赖任务 7、8）
+10. ✅ 任务 10 — 拆分消息气泡组件（依赖任务 2、7、9）
+11. ✅ 任务 11 — 新增三类预览页（依赖任务 7、10）
+12. ✅ 任务 12 — 更新模块导出 `flash_im_chat.dart`（依赖任务 9、10、11）
+13. ✅ 任务 13 — Android 清流量配置（依赖任务 1）
+14. ✅ 任务 14 — 补齐单测与组件测试（依赖任务 2、4、7、10、11）
+15. 🟨 最后 — 自动验证已完成，待真机手工验收
 
 ---
 
-## 任务 1：`client/modules/flash_im_chat/pubspec.yaml` — 新增媒体依赖 `⬜ 待处理`
+## 任务 1：`client/modules/flash_im_chat/pubspec.yaml` — 新增媒体依赖 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/pubspec.yaml`
 
 改动类型：配置修改
 
-### 1.1 增加依赖声明 `⬜`
+### 1.1 增加依赖声明 `✅`
 
 在 `dependencies:` 下追加：
 
@@ -63,13 +63,13 @@ path_provider: ^2.1.5
 
 ---
 
-## 任务 2：`client/modules/flash_im_chat/lib/src/data/message.dart` — 扩展富媒体消息模型 `⬜ 待处理`
+## 任务 2：`client/modules/flash_im_chat/lib/src/data/message.dart` — 扩展富媒体消息模型 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/lib/src/data/message.dart`
 
 改动类型：修改文件
 
-### 2.1 新增消息类型与扩展数据类 `⬜`
+### 2.1 新增消息类型与扩展数据类 `✅`
 
 补充类型骨架：
 
@@ -96,7 +96,7 @@ class FileExtra extends Equatable {
 }
 ```
 
-### 2.2 扩展 `Message` 字段与工厂方法 `⬜`
+### 2.2 扩展 `Message` 字段与工厂方法 `✅`
 
 在 `Message` 中增加：
 
@@ -114,7 +114,7 @@ final Map<String, dynamic>? extra;
 - `copyWith(...)`
 - `props`
 
-### 2.3 增加便捷 getter 与 proto/type 映射 `⬜`
+### 2.3 增加便捷 getter 与 proto/type 映射 `✅`
 
 补骨架：
 
@@ -137,13 +137,13 @@ static int mapToProtoType(MessageType type) { ... }
 
 ---
 
-## 任务 3：`client/modules/flash_im_chat/lib/src/logic/chat_state.dart` — 扩展上传与文件下载状态 `⬜ 待处理`
+## 任务 3：`client/modules/flash_im_chat/lib/src/logic/chat_state.dart` — 扩展上传与文件下载状态 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/lib/src/logic/chat_state.dart`
 
 改动类型：修改文件
 
-### 3.1 新增下载状态数据类 `⬜`
+### 3.1 新增下载状态数据类 `✅`
 
 增加：
 
@@ -160,7 +160,7 @@ class FileDownloadInfo extends Equatable {
 }
 ```
 
-### 3.2 扩展 `ChatLoaded` 字段与 `copyWith` `⬜`
+### 3.2 扩展 `ChatLoaded` 字段与 `copyWith` `✅`
 
 新增字段：
 
@@ -177,13 +177,13 @@ final Map<String, FileDownloadInfo> fileDownloads;
 
 ---
 
-## 任务 4：`client/modules/flash_im_chat/lib/src/data/message_repository.dart` — 新增上传/下载能力 `⬜ 待处理`
+## 任务 4：`client/modules/flash_im_chat/lib/src/data/message_repository.dart` — 新增上传/下载能力 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/lib/src/data/message_repository.dart`
 
 改动类型：修改文件
 
-### 4.1 扩展仓储接口 `⬜`
+### 4.1 扩展仓储接口 `✅`
 
 在 `abstract interface class MessageRepository` 中补充：
 
@@ -214,7 +214,7 @@ Future<String> downloadFile(
 });
 ```
 
-### 4.2 增加上传结果模型与 JSON 解析 `⬜`
+### 4.2 增加上传结果模型与 JSON 解析 `✅`
 
 可放在同文件内的轻量模型：
 
@@ -230,7 +230,7 @@ class FileUploadResult { ... }
 - 视频：`videoUrl / thumbnailUrl / durationMs / width / height / fileSize`
 - 文件：`fileUrl / fileName / fileSize / fileType`
 
-### 4.3 在 `DioMessageRepository` 中实现 multipart 上传与下载 `⬜`
+### 4.3 在 `DioMessageRepository` 中实现 multipart 上传与下载 `✅`
 
 关键骨架：
 
@@ -259,13 +259,13 @@ await _dio.download(
 
 ---
 
-## 任务 5：`client/modules/flash_im_chat/lib/src/data/video_thumbnail_service.dart` — 新增视频元数据提取服务 `⬜ 待处理`
+## 任务 5：`client/modules/flash_im_chat/lib/src/data/video_thumbnail_service.dart` — 新增视频元数据提取服务 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/lib/src/data/video_thumbnail_service.dart`
 
 改动类型：新建文件
 
-### 5.1 定义结果对象与服务接口 `⬜`
+### 5.1 定义结果对象与服务接口 `✅`
 
 ```dart
 class VideoThumbnailInfo {
@@ -282,7 +282,7 @@ abstract interface class VideoThumbnailService {
 }
 ```
 
-### 5.2 提供基于插件的默认实现 `⬜`
+### 5.2 提供基于插件的默认实现 `✅`
 
 关键步骤：
 
@@ -307,13 +307,13 @@ class NativeVideoThumbnailService implements VideoThumbnailService {
 
 ---
 
-## 任务 6：`client/modules/flash_im_core/lib/src/logic/ws_client.dart` — 扩展媒体发送入口 `⬜ 待处理`
+## 任务 6：`client/modules/flash_im_core/lib/src/logic/ws_client.dart` — 扩展媒体发送入口 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/lib/src/logic/ws_client.dart`
 
 改动类型：修改文件
 
-### 6.1 新增媒体友好的发送包装方法 `⬜`
+### 6.1 新增媒体友好的发送包装方法 `✅`
 
 在不破坏现有 `sendChatMessage(SendMessageRequest request)` 的前提下，增加包装：
 
@@ -344,13 +344,13 @@ void sendMessage({
 
 ---
 
-## 任务 7：`client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart` — 编排媒体发送/接收/下载状态 `⬜ 待处理`
+## 任务 7：`client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart` — 编排媒体发送/接收/下载状态 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart`
 
 改动类型：修改文件
 
-### 7.1 注入新依赖并扩展构造器 `⬜`
+### 7.1 注入新依赖并扩展构造器 `✅`
 
 新增字段：
 
@@ -364,7 +364,7 @@ final VideoThumbnailService _videoThumbnailService;
 required VideoThumbnailService videoThumbnailService,
 ```
 
-### 7.2 新增媒体发送入口 `⬜`
+### 7.2 新增媒体发送入口 `✅`
 
 增加方法签名：
 
@@ -376,7 +376,7 @@ Future<void> downloadFile(String messageId, String fileUrl, String fileName);
 FileDownloadInfo? getDownloadInfo(String messageId);
 ```
 
-### 7.3 媒体发送状态机骨架 `⬜`
+### 7.3 媒体发送状态机骨架 `✅`
 
 以图片为例写骨架步骤：
 
@@ -392,7 +392,7 @@ FileDownloadInfo? getDownloadInfo(String messageId);
 
 视频流程额外接 `videoThumbnailService.extract(filePath)`；文件流程用文件名占位。
 
-### 7.4 扩展 ACK 与实时接收处理 `⬜`
+### 7.4 扩展 ACK 与实时接收处理 `✅`
 
 修改：
 
@@ -409,7 +409,7 @@ final extra = message.extra.isEmpty
     : jsonDecode(message.extra) as Map<String, dynamic>;
 ```
 
-### 7.5 扩展文件下载状态更新 `⬜`
+### 7.5 扩展文件下载状态更新 `✅`
 
 `downloadFile(...)` 需要：
 
@@ -420,13 +420,13 @@ final extra = message.extra.isEmpty
 
 ---
 
-## 任务 8：`client/modules/flash_im_chat/lib/src/view/chat_input.dart` — 附件按钮与功能面板 `⬜ 待处理`
+## 任务 8：`client/modules/flash_im_chat/lib/src/view/chat_input.dart` — 附件按钮与功能面板 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/lib/src/view/chat_input.dart`
 
 改动类型：修改文件
 
-### 8.1 扩展组件回调签名 `⬜`
+### 8.1 扩展组件回调签名 `✅`
 
 把组件接口扩为：
 
@@ -437,7 +437,7 @@ final ValueChanged<String> onSendVideo;
 final ValueChanged<String> onSendFile;
 ```
 
-### 8.2 新增 “+” 按钮与底部功能面板 `⬜`
+### 8.2 新增 “+” 按钮与底部功能面板 `✅`
 
 关键结构骨架：
 
@@ -467,7 +467,7 @@ Column(
 )
 ```
 
-### 8.3 接入 picker 并回调到 Cubit `⬜`
+### 8.3 接入 picker 并回调到 Cubit `✅`
 
 动作映射：
 
@@ -479,13 +479,13 @@ Column(
 
 ---
 
-## 任务 9：`client/modules/flash_im_chat/lib/src/view/chat_page.dart` — 组装媒体能力与新回调 `⬜ 待处理`
+## 任务 9：`client/modules/flash_im_chat/lib/src/view/chat_page.dart` — 组装媒体能力与新回调 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/lib/src/view/chat_page.dart`
 
 改动类型：修改文件
 
-### 9.1 构造 `ChatCubit` 时注入 `VideoThumbnailService` `⬜`
+### 9.1 构造 `ChatCubit` 时注入 `VideoThumbnailService` `✅`
 
 骨架：
 
@@ -501,7 +501,7 @@ create: (context) => ChatCubit(
 )..loadMessages(),
 ```
 
-### 9.2 把媒体回调传给 `ChatInput` 与 `MessageBubble` `⬜`
+### 9.2 把媒体回调传给 `ChatInput` 与 `MessageBubble` `✅`
 
 ```dart
 ChatInput(
@@ -521,7 +521,7 @@ ChatInput(
 
 ---
 
-## 任务 10：消息气泡拆分 — 文本/图片/视频/文件 `⬜ 待处理`
+## 任务 10：消息气泡拆分 — 文本/图片/视频/文件 `✅ 已完成`
 
 文件：
 
@@ -533,11 +533,11 @@ ChatInput(
 
 改动类型：1 个修改 + 4 个新建（紧耦合任务）
 
-### 10.1 新建 `text_bubble.dart`，迁移现有文本气泡结构 `⬜`
+### 10.1 新建 `text_bubble.dart`，迁移现有文本气泡结构 `✅`
 
 保留当前文本气泡的圆角、头像、状态图标风格，不改变文本消息视觉。
 
-### 10.2 改造 `message_bubble.dart` 为外壳 + 分发入口 `⬜`
+### 10.2 改造 `message_bubble.dart` 为外壳 + 分发入口 `✅`
 
 分发骨架：
 
@@ -554,7 +554,7 @@ switch (message.type) {
 }
 ```
 
-### 10.3 新建 `image_bubble.dart` `⬜`
+### 10.3 新建 `image_bubble.dart` `✅`
 
 关键结构：
 
@@ -576,7 +576,7 @@ GestureDetector(
 2. `extra.thumbnail_url`
 3. `content` 中服务端 URL
 
-### 10.4 新建 `video_bubble.dart` `⬜`
+### 10.4 新建 `video_bubble.dart` `✅`
 
 需要展示：
 
@@ -585,7 +585,7 @@ GestureDetector(
 - 时长文案
 - sending/failed 状态
 
-### 10.5 新建 `file_bubble.dart` `⬜`
+### 10.5 新建 `file_bubble.dart` `✅`
 
 需要展示：
 
@@ -596,7 +596,7 @@ GestureDetector(
 
 ---
 
-## 任务 11：预览页组 — 图片 / 视频 / 文件 `⬜ 待处理`
+## 任务 11：预览页组 — 图片 / 视频 / 文件 `✅ 已完成`
 
 文件：
 
@@ -606,7 +606,7 @@ GestureDetector(
 
 改动类型：新建文件
 
-### 11.1 新建 `image_preview_page.dart` `⬜`
+### 11.1 新建 `image_preview_page.dart` `✅`
 
 骨架：
 
@@ -621,7 +621,7 @@ Scaffold(
 )
 ```
 
-### 11.2 新建 `video_player_page.dart` `⬜`
+### 11.2 新建 `video_player_page.dart` `✅`
 
 骨架：
 
@@ -633,7 +633,7 @@ class VideoPlayerPage extends StatefulWidget { ... }
 // simple play / pause overlay
 ```
 
-### 11.3 新建 `file_preview_page.dart` `⬜`
+### 11.3 新建 `file_preview_page.dart` `✅`
 
 骨架：
 
@@ -652,13 +652,13 @@ BlocBuilder<ChatCubit, ChatState>(
 
 ---
 
-## 任务 12：`client/modules/flash_im_chat/lib/flash_im_chat.dart` — 更新模块导出 `⬜ 待处理`
+## 任务 12：`client/modules/flash_im_chat/lib/flash_im_chat.dart` — 更新模块导出 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/lib/flash_im_chat.dart`
 
 改动类型：修改文件
 
-### 12.1 导出新模型与页面 `⬜`
+### 12.1 导出新模型与页面 `✅`
 
 补充导出：
 
@@ -677,13 +677,13 @@ export 'src/logic/chat_state.dart'
 
 ---
 
-## 任务 13：`client/android/app/src/main/AndroidManifest.xml` — 允许明文视频访问 `⬜ 待处理`
+## 任务 13：`client/android/app/src/main/AndroidManifest.xml` — 允许明文视频访问 `✅ 已完成`
 
 文件：`/Users/rainyjiang/AndroidStudioProjects/flash_im/client/android/app/src/main/AndroidManifest.xml`
 
 改动类型：配置修改
 
-### 13.1 在 `<application>` 上增加 cleartext 开关 `⬜`
+### 13.1 在 `<application>` 上增加 cleartext 开关 `✅`
 
 ```xml
 <application
@@ -700,7 +700,7 @@ export 'src/logic/chat_state.dart'
 
 ---
 
-## 任务 14：客户端测试补齐 `⬜ 待处理`
+## 任务 14：客户端测试补齐 `✅ 已完成`
 
 文件：
 
@@ -713,7 +713,7 @@ export 'src/logic/chat_state.dart'
 
 改动类型：修改文件
 
-### 14.1 `message_test.dart` — 覆盖类型映射与 extra 解析 `⬜`
+### 14.1 `message_test.dart` — 覆盖类型映射与 extra 解析 `✅`
 
 至少补：
 
@@ -721,7 +721,7 @@ export 'src/logic/chat_state.dart'
 - `videoExtra` / `fileExtra` getter
 - `local` 消息类型创建
 
-### 14.2 `message_repository_test.dart` — 覆盖上传/下载 API shape `⬜`
+### 14.2 `message_repository_test.dart` — 覆盖上传/下载 API shape `✅`
 
 至少补：
 
@@ -730,7 +730,7 @@ export 'src/logic/chat_state.dart'
 - `uploadFile` 解析响应
 - `downloadFile` 调用下载参数
 
-### 14.3 `chat_cubit_test.dart` — 覆盖媒体发送与文件下载状态 `⬜`
+### 14.3 `chat_cubit_test.dart` — 覆盖媒体发送与文件下载状态 `✅`
 
 至少补：
 
@@ -738,7 +738,7 @@ export 'src/logic/chat_state.dart'
 - 视频缩略图提取后上传
 - 文件下载状态 `idle -> downloading -> done/error`
 
-### 14.4 `message_bubble_test.dart` / `chat_page_test.dart` — 覆盖 UI 分发与功能面板 `⬜`
+### 14.4 `message_bubble_test.dart` / `chat_page_test.dart` — 覆盖 UI 分发与功能面板 `✅`
 
 至少补：
 
@@ -746,7 +746,7 @@ export 'src/logic/chat_state.dart'
 - `+` 按钮展开功能面板
 - 文件气泡展示下载状态
 
-### 14.5 `ws_client_test.dart` — 覆盖媒体发送包装方法 `⬜`
+### 14.5 `ws_client_test.dart` — 覆盖媒体发送包装方法 `✅`
 
 至少补：
 
@@ -754,7 +754,7 @@ export 'src/logic/chat_state.dart'
 
 ---
 
-## 最后：编译验证 + 测试路径 `⬜ 待处理`
+## 最后：编译验证 + 测试路径 `🟨 自动验证已完成，待真机验收`
 
 按顺序执行：
 
@@ -786,3 +786,14 @@ flutter analyze lib test
 6. 回到会话列表，确认 preview 为 `[图片] / [视频] / [文件]`
 7. 退出聊天页再进入，确认历史消息仍可正确渲染
 
+### 自动验证结果（2026-07-15）
+
+- `client/modules/flash_im_chat`: `flutter pub get` ✅
+- `client/modules/flash_im_chat`: `flutter analyze` ✅，零问题
+- `client/modules/flash_im_chat`: `flutter test` ✅，24 个测试全部通过
+- `client/modules/flash_im_core`: `flutter analyze` ✅，零问题
+- `client/modules/flash_im_core`: `flutter test` ✅，11 个测试全部通过
+- `client`: `flutter analyze lib test` ✅，零问题
+- `git diff --check` ✅
+
+未自动标记手工验收完成：图片/视频选择、相机、文件下载、双端实时收发以及会话预览仍需在真机和已启动服务端环境中按上方 7 条路径确认。

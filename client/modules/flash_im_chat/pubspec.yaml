@@ -13,6 +13,11 @@ dependencies:
   dio: ^5.9.0
   equatable: ^2.0.7
   flutter_bloc: ^9.1.1
+  image_picker: ^1.1.2
+  file_picker: ^8.1.7
+  video_player: ^2.9.2
+  fc_native_video_thumbnail: ^2.1.1
+  path_provider: ^2.1.5
   flash_im_core:
     path: ../flash_im_core
   flash_im_conversation:

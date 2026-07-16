@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flash_im_core/flash_im_core.dart';
@@ -143,6 +144,35 @@ void main() {
     await ackSub.cancel();
     await updateSub.cancel();
     await messageSub.cancel();
+    await client.dispose();
+  });
+
+  test('sendMessage wraps media fields in SendMessageRequest', () async {
+    final channel = _FakeWebSocketChannel();
+    final client = WsClient(
+      config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+      tokenProvider: () => 'jwt-token',
+      channelFactory: (_) => channel,
+    );
+
+    await client.connect();
+    client.sendMessage(
+      conversationId: 'c1',
+      content: '/uploads/image/a.jpg',
+      type: 1,
+      extra: utf8.encode('{"width":320}'),
+      clientId: 'local:1',
+    );
+
+    final frame = channel.sentFrames.last;
+    expect(frame.type, WsFrameType.CHAT_MESSAGE);
+    final request = SendMessageRequest.fromBuffer(frame.payload);
+    expect(request.conversationId, 'c1');
+    expect(request.type, 1);
+    expect(request.content, '/uploads/image/a.jpg');
+    expect(request.extra, '{"width":320}');
+    expect(request.clientId, 'local:1');
+
     await client.dispose();
   });
 }

@@ -1,6 +1,10 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+
+const _cameraAvailabilityChannel = MethodChannel('flash_im/camera');
 
 class ChatInput extends StatefulWidget {
   const ChatInput({
@@ -10,6 +14,7 @@ class ChatInput extends StatefulWidget {
     required this.onSendVideo,
     required this.onSendFile,
     this.imagePicker,
+    this.cameraAvailabilityChecker,
   });
 
   final ValueChanged<String> onSend;
@@ -17,6 +22,7 @@ class ChatInput extends StatefulWidget {
   final ValueChanged<String> onSendVideo;
   final ValueChanged<String> onSendFile;
   final ImagePicker? imagePicker;
+  final Future<bool> Function()? cameraAvailabilityChecker;
 
   @override
   State<ChatInput> createState() => _ChatInputState();
@@ -150,7 +156,51 @@ class _ChatInputState extends State<ChatInput> {
   }
 
   Future<void> _pickPhoto() => _pickImage(ImageSource.gallery);
-  Future<void> _takePhoto() => _pickImage(ImageSource.camera);
+
+  Future<void> _takePhoto() async {
+    if (await _isCameraUnavailable()) {
+      _showToast('当前设备没有可用相机');
+      _closePanel();
+      return;
+    }
+
+    XFile? file;
+    try {
+      file = await _imagePicker.pickImage(source: ImageSource.camera);
+    } on PlatformException catch (error) {
+      final message = switch (error.code) {
+        'camera_access_denied' || 'camera_access_restricted' => '请开启相机权限后重试',
+        'no_available_camera' => '当前设备没有可用相机',
+        _ => '相机暂时无法使用',
+      };
+      _showToast(message);
+      _closePanel();
+      return;
+    } catch (_) {
+      _showToast('相机暂时无法使用');
+      _closePanel();
+      return;
+    }
+
+    if (file != null) {
+      widget.onSendImage(file.path);
+    }
+    _closePanel();
+  }
+
+  Future<bool> _isCameraUnavailable() async {
+    final checker = widget.cameraAvailabilityChecker;
+    if (checker != null) return !await checker();
+    if (defaultTargetPlatform != TargetPlatform.iOS) return false;
+    try {
+      return await _cameraAvailabilityChannel.invokeMethod<bool>(
+            'isCameraAvailable',
+          ) ==
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     final file = await _imagePicker.pickImage(source: source);
@@ -179,6 +229,20 @@ class _ChatInputState extends State<ChatInput> {
 
   void _closePanel() {
     if (mounted) setState(() => _panelVisible = false);
+  }
+
+  void _showToast(String message) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   void _send() {

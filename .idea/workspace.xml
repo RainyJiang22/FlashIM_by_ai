@@ -4,51 +4,20 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(message): 完成支持图片、视频、文件消息的服务端上传与富媒体消息链路实现">
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/build/native_assets/macos/objective_c.dylib" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/video_thumbnail_service.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/file_bubble.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/image_bubble.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/text_bubble.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/video_bubble.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/file_preview_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/image_preview_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/video_player_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(message):客户端完成支持图片、视频、文件消息">
+      <change afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_input_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/assets/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/assets/sky_engine.zip" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/assets/test.mp4" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/assets/test.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/assets/test_meta.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/assets/test_thumb.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/proto/message_pb2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/proto/ws_pb2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/send_message.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test/test_upload.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/client/android/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Podfile" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Podfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Podfile.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Podfile.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/ios/Runner.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/client/ios/Runner.xcodeproj/project.pbxproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/linux/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/client/linux/flutter/generated_plugin_registrant.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/linux/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/client/linux/flutter/generated_plugins.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/client/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/build/native_assets/macos/native_assets.json" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/build/native_assets/macos/native_assets.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/build/unit_test_assets/NOTICES.Z" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/build/unit_test_assets/NOTICES.Z" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/build/unit_test_assets/NativeAssetsManifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/build/unit_test_assets/NativeAssetsManifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/flash_im_chat.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/flash_im_chat.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_state.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_state.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_input.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_input.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/message_bubble.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/message_bubble.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/pubspec.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_repository_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/client/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/client/windows/flutter/generated_plugins.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/client/tasks.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/client/tasks.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,35 +51,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;SHELLCHECK.PATH&quot;: &quot;/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck&quot;,
-    &quot;Shell Script.start_backend.sh.executor&quot;: &quot;Run&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/core/v0.0.4_media/client&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "SHELLCHECK.PATH": "/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck",
+    "Shell Script.start_backend.sh.executor": "Run",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/core/v0.0.4_media/test",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "show.migrate.to.gradle.popup": "false"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/client" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/server" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.3/server" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.3/client" />
-      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.2/client" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/docs/features/archiver" />
@@ -366,7 +335,15 @@
       <option name="project" value="LOCAL" />
       <updated>1783582276551</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="feat(message):客户端完成支持图片、视频、文件消息">
+      <option name="closed" value="true" />
+      <created>1784167686214</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1784167686214</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -383,7 +360,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="feature:init project" />
     <MESSAGE value="feature:rust入门安装文档spec" />
     <MESSAGE value="feat(server): add initial axum version endpoint" />
     <MESSAGE value="feat(server): add mock conversation endpoint" />
@@ -408,7 +384,8 @@
     <MESSAGE value="docs:增加项目归档相关文档" />
     <MESSAGE value="refactor(starter):重构启动模块,改为宿主注入启动控制器，解除flash_starter对 flash_session 的直接依赖" />
     <MESSAGE value="feat(message): 完成支持图片、视频、文件消息的服务端上传与富媒体消息链路实现" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(message): 完成支持图片、视频、文件消息的服务端上传与富媒体消息链路实现" />
+    <MESSAGE value="feat(message):客户端完成支持图片、视频、文件消息" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(message):客户端完成支持图片、视频、文件消息" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -11,6 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let proto_files = [
         repo_root.join("proto/ws.proto"),
         repo_root.join("proto/message.proto"),
+        repo_root.join("proto/friend.proto"),
     ];
 
     for proto_file in &proto_files {

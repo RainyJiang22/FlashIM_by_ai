@@ -226,6 +226,82 @@ pub async fn get_unread_counts(
     .map_err(|_| AppError::internal_server_error("failed to load unread counts"))
 }
 
+pub async fn find_private_conversation(
+    pool: &PgPool,
+    user_a: i64,
+    user_b: i64,
+) -> AppResult<Option<Uuid>> {
+    sqlx::query_scalar::<_, Uuid>(
+        r#"
+        SELECT c.id
+        FROM conversations c
+        JOIN conversation_members ma
+          ON ma.conversation_id = c.id
+         AND ma.user_id = $1
+        JOIN conversation_members mb
+          ON mb.conversation_id = c.id
+         AND mb.user_id = $2
+        WHERE c.type = 0
+          AND (
+            SELECT COUNT(*)
+            FROM conversation_members members
+            WHERE members.conversation_id = c.id
+          ) = 2
+        ORDER BY c.created_at ASC
+        LIMIT 1
+        "#,
+    )
+    .bind(user_a)
+    .bind(user_b)
+    .fetch_optional(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to find private conversation"))
+}
+
+pub async fn create_private_conversation(
+    pool: &PgPool,
+    user_a: i64,
+    user_b: i64,
+) -> AppResult<Uuid> {
+    let conversation_id = sqlx::query_scalar::<_, Uuid>(
+        r#"
+        INSERT INTO conversations (type)
+        VALUES (0)
+        RETURNING id
+        "#,
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to create private conversation"))?;
+
+    ensure_private_members(pool, conversation_id, user_a, user_b).await?;
+    Ok(conversation_id)
+}
+
+pub async fn ensure_private_members(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    user_a: i64,
+    user_b: i64,
+) -> AppResult<()> {
+    sqlx::query(
+        r#"
+        INSERT INTO conversation_members (conversation_id, user_id, is_deleted)
+        VALUES ($1, $2, FALSE), ($1, $3, FALSE)
+        ON CONFLICT (conversation_id, user_id)
+        DO UPDATE SET is_deleted = FALSE
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(user_a)
+    .bind(user_b)
+    .execute(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to save private conversation members"))?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::{get_conversation_by_id_sql, list_conversations_sql};
@@ -263,5 +339,28 @@ mod tests {
         assert!(sql.contains("peer.avatar_url AS peer_avatar"));
         assert!(sql.contains("AND c.id = $2"));
         assert!(sql.contains("AND me.is_deleted = FALSE"));
+    }
+
+    #[test]
+    fn private_conversation_sql_requires_exact_two_members() {
+        let sql = r#"
+        SELECT c.id
+        FROM conversations c
+        JOIN conversation_members ma
+          ON ma.conversation_id = c.id
+         AND ma.user_id = $1
+        JOIN conversation_members mb
+          ON mb.conversation_id = c.id
+         AND mb.user_id = $2
+        WHERE c.type = 0
+          AND (
+            SELECT COUNT(*)
+            FROM conversation_members members
+            WHERE members.conversation_id = c.id
+          ) = 2
+        "#;
+
+        assert!(sql.contains("c.type = 0"));
+        assert!(sql.contains("COUNT(*)"));
     }
 }

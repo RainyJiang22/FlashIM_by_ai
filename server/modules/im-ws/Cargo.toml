@@ -9,6 +9,7 @@ async-trait = "0.1.89"
 axum = { version = "0.8.9", features = ["ws"] }
 flash_core = { path = "../flash_core" }
 futures-util = "0.3.31"
+im-friend = { path = "../im-friend" }
 im-message = { path = "../im-message" }
 prost = "0.14"
 serde_json = "1.0.145"

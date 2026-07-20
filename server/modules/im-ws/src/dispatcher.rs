@@ -30,7 +30,10 @@ pub async fn dispatch_frame(
         | WsFrameType::Auth
         | WsFrameType::AuthResult
         | WsFrameType::MessageAck
-        | WsFrameType::ConversationUpdate => Ok(DispatchOutcome::Ignore),
+        | WsFrameType::ConversationUpdate
+        | WsFrameType::FriendRequest
+        | WsFrameType::FriendAccepted
+        | WsFrameType::FriendRemoved => Ok(DispatchOutcome::Ignore),
     }
 }
 

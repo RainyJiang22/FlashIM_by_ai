@@ -3,7 +3,8 @@ use std::{error::Error, fmt};
 use prost::Message as ProstMessage;
 
 use crate::proto::{
-    AuthRequest, AuthResult, ChatMessage, ConversationUpdate, MessageAck, WsFrame, WsFrameType,
+    AuthRequest, AuthResult, ChatMessage, ConversationUpdate, FriendAcceptedEvent,
+    FriendRemovedEvent, FriendRequestEvent, MessageAck, WsFrame, WsFrameType,
 };
 
 #[derive(Debug)]
@@ -85,4 +86,16 @@ pub fn message_ack_frame(ack: MessageAck) -> Vec<u8> {
 
 pub fn conversation_update_frame(update: ConversationUpdate) -> Vec<u8> {
     encode_frame(WsFrameType::ConversationUpdate, update.encode_to_vec())
+}
+
+pub fn friend_request_frame(event: FriendRequestEvent) -> Vec<u8> {
+    encode_frame(WsFrameType::FriendRequest, event.encode_to_vec())
+}
+
+pub fn friend_accepted_frame(event: FriendAcceptedEvent) -> Vec<u8> {
+    encode_frame(WsFrameType::FriendAccepted, event.encode_to_vec())
+}
+
+pub fn friend_removed_frame(event: FriendRemovedEvent) -> Vec<u8> {
+    encode_frame(WsFrameType::FriendRemoved, event.encode_to_vec())
 }

@@ -10,6 +10,9 @@ enum WsFrameType {
   CHAT_MESSAGE = 4;
   MESSAGE_ACK = 5;
   CONVERSATION_UPDATE = 6;
+  FRIEND_REQUEST = 7;
+  FRIEND_ACCEPTED = 8;
+  FRIEND_REMOVED = 9;
 }
 
 message WsFrame {

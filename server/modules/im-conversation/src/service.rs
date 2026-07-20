@@ -125,6 +125,25 @@ impl<'a> ConversationMessageService<'a> {
     pub async fn get_total_unread_by_user(&self, user_id: i64) -> AppResult<i32> {
         crate::repository::get_total_unread_by_user(self.context.postgres.pool(), user_id).await
     }
+
+    pub async fn create_or_get_private(&self, user_a: i64, user_b: i64) -> AppResult<Uuid> {
+        if user_a == user_b {
+            return Err(AppError::bad_request(
+                "invalid private conversation members",
+            ));
+        }
+
+        let pool = self.context.postgres.pool();
+        if let Some(conversation_id) =
+            crate::repository::find_private_conversation(pool, user_a, user_b).await?
+        {
+            crate::repository::ensure_private_members(pool, conversation_id, user_a, user_b)
+                .await?;
+            return Ok(conversation_id);
+        }
+
+        crate::repository::create_private_conversation(pool, user_a, user_b).await
+    }
 }
 
 #[cfg(test)]

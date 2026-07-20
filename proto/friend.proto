@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package im;
+
+message FriendUser {
+  int64 account_id = 1;
+  string nickname = 2;
+  string avatar = 3;
+  string signature = 4;
+  string flash_id = 5;
+}
+
+message FriendRequestEvent {
+  string request_id = 1;
+  FriendUser from_user = 2;
+  string message = 3;
+  string created_at = 4;
+}
+
+message FriendAcceptedEvent {
+  string request_id = 1;
+  FriendUser friend = 2;
+  string conversation_id = 3;
+  string accepted_at = 4;
+}
+
+message FriendRemovedEvent {
+  FriendUser friend = 1;
+  string removed_at = 2;
+}

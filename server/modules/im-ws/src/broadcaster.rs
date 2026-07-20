@@ -1,5 +1,9 @@
 use async_trait::async_trait;
 use flash_core::{AppError, AppResult};
+use im_friend::broadcast::{
+    FriendAcceptedPayload, FriendBroadcaster, FriendRemovedPayload, FriendRequestPayload,
+    FriendUserPayload,
+};
 use im_message::{
     broadcast::MessageBroadcaster,
     service::{ConversationUpdate as DomainConversationUpdate, MessagePayload},
@@ -7,8 +11,14 @@ use im_message::{
 use sqlx::PgPool;
 
 use crate::{
-    frame::{chat_message_frame, conversation_update_frame},
-    proto::{ChatMessage, ConversationUpdate},
+    frame::{
+        chat_message_frame, conversation_update_frame, friend_accepted_frame, friend_removed_frame,
+        friend_request_frame,
+    },
+    proto::{
+        ChatMessage, ConversationUpdate, FriendAcceptedEvent, FriendRemovedEvent,
+        FriendRequestEvent, FriendUser,
+    },
     state::WsState,
 };
 
@@ -54,6 +64,58 @@ impl MessageBroadcaster for WsBroadcaster {
             self.state.send_to_user(user_id, frame);
         }
 
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl FriendBroadcaster for WsBroadcaster {
+    async fn broadcast_friend_request(
+        &self,
+        to_user_id: i64,
+        event: FriendRequestPayload,
+    ) -> AppResult<()> {
+        self.state.send_to_user(
+            to_user_id,
+            friend_request_frame(FriendRequestEvent {
+                request_id: event.request_id.to_string(),
+                from_user: Some(to_proto_friend_user(event.from_user)),
+                message: event.message,
+                created_at: event.created_at.to_rfc3339(),
+            }),
+        );
+        Ok(())
+    }
+
+    async fn broadcast_friend_accepted(
+        &self,
+        to_user_id: i64,
+        event: FriendAcceptedPayload,
+    ) -> AppResult<()> {
+        self.state.send_to_user(
+            to_user_id,
+            friend_accepted_frame(FriendAcceptedEvent {
+                request_id: event.request_id.to_string(),
+                friend: Some(to_proto_friend_user(event.friend)),
+                conversation_id: event.conversation_id.to_string(),
+                accepted_at: event.accepted_at.to_rfc3339(),
+            }),
+        );
+        Ok(())
+    }
+
+    async fn broadcast_friend_removed(
+        &self,
+        to_user_id: i64,
+        event: FriendRemovedPayload,
+    ) -> AppResult<()> {
+        self.state.send_to_user(
+            to_user_id,
+            friend_removed_frame(FriendRemovedEvent {
+                friend: Some(to_proto_friend_user(event.friend)),
+                removed_at: event.removed_at.to_rfc3339(),
+            }),
+        );
         Ok(())
     }
 }
@@ -132,6 +194,16 @@ async fn to_proto_update(
         unread_count: update.unread_count,
         total_unread,
     })
+}
+
+fn to_proto_friend_user(user: FriendUserPayload) -> FriendUser {
+    FriendUser {
+        account_id: user.account_id,
+        nickname: user.nickname,
+        avatar: user.avatar,
+        signature: user.signature,
+        flash_id: user.flash_id.unwrap_or_default(),
+    }
 }
 
 #[cfg(test)]

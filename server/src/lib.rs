@@ -21,7 +21,9 @@ mod tests {
     use futures_util::{SinkExt, StreamExt};
     use im_ws::{
         frame,
-        proto::{AuthResult, ConversationUpdate, MessageAck, WsFrameType},
+        proto::{
+            AuthResult, ConversationUpdate, FriendRequestEvent, FriendUser, MessageAck, WsFrameType,
+        },
     };
     use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
     use tokio::{net::TcpListener, task::JoinHandle};
@@ -267,6 +269,35 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn friend_routes_require_authentication() {
+        let (_, _, app) = build_test_app();
+
+        let requests = [
+            Request::builder()
+                .method("GET")
+                .uri("/api/friends")
+                .body(Body::empty())
+                .unwrap(),
+            Request::builder()
+                .method("POST")
+                .uri("/api/friends/requests")
+                .header(header::CONTENT_TYPE, "application/json")
+                .body(Body::from(r#"{"to_user_id":10002}"#))
+                .unwrap(),
+            Request::builder()
+                .method("GET")
+                .uri("/api/users/search?q=13800138000")
+                .body(Body::empty())
+                .unwrap(),
+        ];
+
+        for request in requests {
+            let response = app.clone().oneshot(request).await.unwrap();
+            assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+        }
+    }
+
+    #[tokio::test]
     async fn upload_image_route_returns_urls_and_static_files_are_accessible() {
         let (_, _, app) = build_test_app();
         let boundary = "----flash-im-boundary-image";
@@ -446,6 +477,27 @@ mod tests {
         let update_frame = frame::conversation_update_frame(update);
         let (frame_type, payload) = frame::decode_frame(&update_frame).unwrap();
         assert_eq!(frame_type, WsFrameType::ConversationUpdate);
+        assert!(!payload.is_empty());
+    }
+
+    #[test]
+    fn friend_frame_types_round_trip() {
+        let event = FriendRequestEvent {
+            request_id: "00000000-0000-0000-0000-000000000001".to_string(),
+            from_user: Some(FriendUser {
+                account_id: 10001,
+                nickname: "小雨".to_string(),
+                avatar: "identicon:10001".to_string(),
+                signature: String::new(),
+                flash_id: "flash_10001".to_string(),
+            }),
+            message: "我是小雨".to_string(),
+            created_at: "2026-07-20T09:00:00Z".to_string(),
+        };
+        let request_frame = frame::friend_request_frame(event);
+        let (frame_type, payload) = frame::decode_frame(&request_frame).unwrap();
+
+        assert_eq!(frame_type, WsFrameType::FriendRequest);
         assert!(!payload.is_empty());
     }
 

@@ -27,6 +27,13 @@ impl AppError {
         }
     }
 
+    pub const fn forbidden(message: &'static str) -> Self {
+        Self {
+            status: StatusCode::FORBIDDEN,
+            message,
+        }
+    }
+
     pub const fn not_found(message: &'static str) -> Self {
         Self {
             status: StatusCode::NOT_FOUND,

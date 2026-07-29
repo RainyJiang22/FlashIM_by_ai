@@ -147,6 +147,61 @@ void main() {
     await client.dispose();
   });
 
+  test('dispatches typed friend frames to streams', () async {
+    final channel = _FakeWebSocketChannel();
+    final client = WsClient(
+      config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+      tokenProvider: () => 'jwt-token',
+      channelFactory: (_) => channel,
+    );
+    final requests = <FriendRequestEvent>[];
+    final accepted = <FriendAcceptedEvent>[];
+    final removed = <FriendRemovedEvent>[];
+    final requestSub = client.friendRequestStream.listen(requests.add);
+    final acceptedSub = client.friendAcceptedStream.listen(accepted.add);
+    final removedSub = client.friendRemovedStream.listen(removed.add);
+
+    await client.connect();
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.FRIEND_REQUEST,
+        payload: FriendRequestEvent(
+          requestId: 'r1',
+          fromUser: FriendUser(nickname: '小雨'),
+          message: '你好',
+        ).writeToBuffer(),
+      ),
+    );
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.FRIEND_ACCEPTED,
+        payload: FriendAcceptedEvent(
+          requestId: 'r1',
+          friend: FriendUser(nickname: '小雨'),
+          conversationId: 'c1',
+        ).writeToBuffer(),
+      ),
+    );
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.FRIEND_REMOVED,
+        payload: FriendRemovedEvent(
+          friend: FriendUser(nickname: '小雨'),
+        ).writeToBuffer(),
+      ),
+    );
+    await _flushMicrotasks();
+
+    expect(requests.single.requestId, 'r1');
+    expect(accepted.single.conversationId, 'c1');
+    expect(removed.single.friend.nickname, '小雨');
+
+    await requestSub.cancel();
+    await acceptedSub.cancel();
+    await removedSub.cancel();
+    await client.dispose();
+  });
+
   test('sendMessage wraps media fields in SendMessageRequest', () async {
     final channel = _FakeWebSocketChannel();
     final client = WsClient(

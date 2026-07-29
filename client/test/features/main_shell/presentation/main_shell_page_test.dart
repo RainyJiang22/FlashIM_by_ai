@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im/app/app_router.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
-import 'package:flash_im_core/flash_im_core.dart';
+import 'package:flash_im_core/flash_im_core.dart' hide FriendUser;
+import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +27,9 @@ void main() {
           RepositoryProvider<WsClient>.value(value: wsClient),
           RepositoryProvider<ConversationRepository>.value(
             value: conversationRepository,
+          ),
+          RepositoryProvider<FriendRepository>.value(
+            value: _FakeFriendRepository(),
           ),
         ],
         child: BlocProvider<SessionCubit>.value(
@@ -74,7 +78,9 @@ void main() {
 
     await tester.tap(find.text('通讯录'));
     await tester.pumpAndSettle();
-    expect(find.text('通讯录页暂未开放'), findsOneWidget);
+    expect(find.text('新的朋友'), findsOneWidget);
+    expect(find.text('小雨'), findsOneWidget);
+    expect(find.text('通讯录页暂未开放'), findsNothing);
 
     await cubit.logout();
     await tester.pumpAndSettle();
@@ -83,6 +89,47 @@ void main() {
 
     await cubit.close();
   });
+}
+
+class _FakeFriendRepository implements FriendRepository {
+  @override
+  Future<List<FriendUser>> getFriends() async => const [
+    FriendUser(
+      accountId: 10003,
+      nickname: '小雨',
+      avatar: 'identicon:10003',
+      signature: '',
+      relationStatus: 'friend',
+    ),
+  ];
+
+  @override
+  Future<List<FriendRequest>> getReceivedRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  }) async => const [];
+
+  @override
+  Future<FriendAcceptResult> acceptRequest(String requestId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<FriendUser> getUser(int accountId) => throw UnimplementedError();
+
+  @override
+  Future<void> rejectRequest(String requestId) => throw UnimplementedError();
+
+  @override
+  Future<void> removeFriend(int accountId) => throw UnimplementedError();
+
+  @override
+  Future<List<FriendUser>> searchUsers(String query, {int limit = 30}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> sendRequest({required int toUserId, required String message}) =>
+      throw UnimplementedError();
 }
 
 class _FakeConversationRepository implements ConversationRepository {

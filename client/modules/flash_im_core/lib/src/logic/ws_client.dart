@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../data/im_config.dart';
+import '../data/proto/friend.pb.dart';
 import '../data/proto/message.pb.dart';
 import '../data/proto/ws.pb.dart';
 
@@ -37,6 +38,12 @@ class WsClient {
   final _messageAckController = StreamController<MessageAck>.broadcast();
   final _conversationUpdateController =
       StreamController<ConversationUpdate>.broadcast();
+  final _friendRequestController =
+      StreamController<FriendRequestEvent>.broadcast();
+  final _friendAcceptedController =
+      StreamController<FriendAcceptedEvent>.broadcast();
+  final _friendRemovedController =
+      StreamController<FriendRemovedEvent>.broadcast();
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _channelSubscription;
@@ -54,6 +61,12 @@ class WsClient {
   Stream<MessageAck> get messageAckStream => _messageAckController.stream;
   Stream<ConversationUpdate> get conversationUpdateStream =>
       _conversationUpdateController.stream;
+  Stream<FriendRequestEvent> get friendRequestStream =>
+      _friendRequestController.stream;
+  Stream<FriendAcceptedEvent> get friendAcceptedStream =>
+      _friendAcceptedController.stream;
+  Stream<FriendRemovedEvent> get friendRemovedStream =>
+      _friendRemovedController.stream;
   WsConnectionState get state => _state;
 
   Future<void> connect() async {
@@ -145,6 +158,9 @@ class WsClient {
     await _chatMessageController.close();
     await _messageAckController.close();
     await _conversationUpdateController.close();
+    await _friendRequestController.close();
+    await _friendAcceptedController.close();
+    await _friendRemovedController.close();
   }
 
   void _handleMessage(dynamic message) {
@@ -169,6 +185,21 @@ class WsClient {
       case WsFrameType.CONVERSATION_UPDATE:
         _conversationUpdateController.add(
           ConversationUpdate.fromBuffer(frame.payload),
+        );
+        _frameController.add(frame);
+      case WsFrameType.FRIEND_REQUEST:
+        _friendRequestController.add(
+          FriendRequestEvent.fromBuffer(frame.payload),
+        );
+        _frameController.add(frame);
+      case WsFrameType.FRIEND_ACCEPTED:
+        _friendAcceptedController.add(
+          FriendAcceptedEvent.fromBuffer(frame.payload),
+        );
+        _frameController.add(frame);
+      case WsFrameType.FRIEND_REMOVED:
+        _friendRemovedController.add(
+          FriendRemovedEvent.fromBuffer(frame.payload),
         );
         _frameController.add(frame);
       case WsFrameType.PING:

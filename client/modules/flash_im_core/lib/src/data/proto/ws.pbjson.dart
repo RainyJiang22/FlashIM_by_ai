@@ -26,13 +26,18 @@ const WsFrameType$json = {
     {'1': 'CHAT_MESSAGE', '2': 4},
     {'1': 'MESSAGE_ACK', '2': 5},
     {'1': 'CONVERSATION_UPDATE', '2': 6},
+    {'1': 'FRIEND_REQUEST', '2': 7},
+    {'1': 'FRIEND_ACCEPTED', '2': 8},
+    {'1': 'FRIEND_REMOVED', '2': 9},
   ],
 };
 
 /// Descriptor for `WsFrameType`. Decode as a `google.protobuf.EnumDescriptorProto`.
 final $typed_data.Uint8List wsFrameTypeDescriptor = $convert.base64Decode(
     'CgtXc0ZyYW1lVHlwZRIICgRQSU5HEAASCAoEUE9ORxABEggKBEFVVEgQAhIPCgtBVVRIX1JFU1'
-    'VMVBAD');
+    'VMVBADEhAKDENIQVRfTUVTU0FHRRAEEg8KC01FU1NBR0VfQUNLEAUSFwoTQ09OVkVSU0FUSU9O'
+    'X1VQREFURRAGEhIKDkZSSUVORF9SRVFVRVNUEAcSEwoPRlJJRU5EX0FDQ0VQVEVEEAgSEgoORl'
+    'JJRU5EX1JFTU9WRUQQCQ==');
 
 @$core.Deprecated('Use wsFrameDescriptor instead')
 const WsFrame$json = {

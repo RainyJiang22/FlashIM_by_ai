@@ -6,11 +6,13 @@ class HomeNavigationBar extends StatelessWidget {
     required this.currentIndex,
     required this.onDestinationSelected,
     this.messageUnreadCount = 0,
+    this.contactRequestCount = 0,
   });
 
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
   final int messageUnreadCount;
+  final int contactRequestCount;
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +39,9 @@ class HomeNavigationBar extends StatelessWidget {
             activeIcon: _messageIcon(Icons.chat_bubble),
             label: '消息',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline, size: 30),
-            activeIcon: Icon(Icons.people, size: 30),
+          BottomNavigationBarItem(
+            icon: _contactIcon(Icons.people_outline),
+            activeIcon: _contactIcon(Icons.people),
             label: '通讯录',
           ),
           BottomNavigationBarItem(
@@ -58,6 +60,16 @@ class HomeNavigationBar extends StatelessWidget {
     }
     return Badge(
       label: Text(messageUnreadCount > 99 ? '99+' : '$messageUnreadCount'),
+      child: Icon(icon, size: 30),
+    );
+  }
+
+  Widget _contactIcon(IconData icon) {
+    if (contactRequestCount <= 0) {
+      return Icon(icon, size: 30);
+    }
+    return Badge(
+      label: Text(contactRequestCount > 99 ? '99+' : '$contactRequestCount'),
       child: Icon(icon, size: 30),
     );
   }

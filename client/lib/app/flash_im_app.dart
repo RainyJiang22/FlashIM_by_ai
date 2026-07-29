@@ -3,6 +3,7 @@ import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
+import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flash_starter/flash_starter.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class FlashImApp extends StatefulWidget {
     this.sessionRepository,
     this.conversationRepository,
     this.messageRepository,
+    this.friendRepository,
     this.sessionCubit,
     this.appStarterController,
     this.wsClient,
@@ -32,6 +34,7 @@ class FlashImApp extends StatefulWidget {
   final SessionRepository? sessionRepository;
   final ConversationRepository? conversationRepository;
   final MessageRepository? messageRepository;
+  final FriendRepository? friendRepository;
   final SessionCubit? sessionCubit;
   final AppStarterController? appStarterController;
   final WsClient? wsClient;
@@ -46,6 +49,7 @@ class _FlashImAppState extends State<FlashImApp> {
   SessionRepository? _defaultSessionRepository;
   ConversationRepository? _defaultConversationRepository;
   MessageRepository? _defaultMessageRepository;
+  FriendRepository? _defaultFriendRepository;
   SessionCubit? _defaultSessionCubit;
   AppStarterController? _defaultAppStarterController;
   WsClient? _defaultWsClient;
@@ -203,8 +207,7 @@ class _FlashImAppState extends State<FlashImApp> {
       ),
     );
 
-
-   ///宿主不关心业务逻辑本身，它只负责创建对象、接线、注入和分发路由。
+    ///宿主不关心业务逻辑本身，它只负责创建对象、接线、注入和分发路由。
     return FutureBuilder<LocalAppConfig>(
       future: _configFuture,
       builder: (context, snapshot) {
@@ -267,13 +270,20 @@ class _FlashImAppState extends State<FlashImApp> {
                 sessionCubit: sessionCubit,
               ),
             ));
+        final friendRepository =
+            widget.friendRepository ??
+            (_defaultFriendRepository ??= DioFriendRepository(
+              dio: _createAuthenticatedDio(
+                baseUrl: config.apiBaseUrl,
+                sessionCubit: sessionCubit,
+              ),
+            ));
         final wsClient =
             widget.wsClient ??
             (_defaultWsClient ??= WsClient(
               config: ImConfig.fromApiBaseUrl(config.apiBaseUrl),
               tokenProvider: () => sessionCubit.state.session?.token,
             ));
-
 
         ///宿主负责把接口对接起来
         return MultiRepositoryProvider(
@@ -288,6 +298,7 @@ class _FlashImAppState extends State<FlashImApp> {
             RepositoryProvider<MessageRepository>.value(
               value: messageRepository,
             ),
+            RepositoryProvider<FriendRepository>.value(value: friendRepository),
             RepositoryProvider<AppStarterController>.value(
               value: appStarterController,
             ),

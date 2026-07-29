@@ -1,6 +1,12 @@
 library;
 
 export 'src/data/im_config.dart' show ImConfig;
+export 'src/data/proto/friend.pb.dart'
+    show
+        FriendAcceptedEvent,
+        FriendRemovedEvent,
+        FriendRequestEvent,
+        FriendUser;
 export 'src/data/proto/message.pb.dart'
     show ChatMessage, ConversationUpdate, MessageAck, SendMessageRequest;
 export 'src/data/proto/ws.pb.dart' show WsFrame, WsFrameType;

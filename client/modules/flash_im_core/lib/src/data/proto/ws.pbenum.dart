@@ -29,6 +29,12 @@ class WsFrameType extends $pb.ProtobufEnum {
       WsFrameType._(5, _omitEnumNames ? '' : 'MESSAGE_ACK');
   static const WsFrameType CONVERSATION_UPDATE =
       WsFrameType._(6, _omitEnumNames ? '' : 'CONVERSATION_UPDATE');
+  static const WsFrameType FRIEND_REQUEST =
+      WsFrameType._(7, _omitEnumNames ? '' : 'FRIEND_REQUEST');
+  static const WsFrameType FRIEND_ACCEPTED =
+      WsFrameType._(8, _omitEnumNames ? '' : 'FRIEND_ACCEPTED');
+  static const WsFrameType FRIEND_REMOVED =
+      WsFrameType._(9, _omitEnumNames ? '' : 'FRIEND_REMOVED');
 
   static const $core.List<WsFrameType> values = <WsFrameType>[
     PING,
@@ -38,10 +44,13 @@ class WsFrameType extends $pb.ProtobufEnum {
     CHAT_MESSAGE,
     MESSAGE_ACK,
     CONVERSATION_UPDATE,
+    FRIEND_REQUEST,
+    FRIEND_ACCEPTED,
+    FRIEND_REMOVED,
   ];
 
   static final $core.List<WsFrameType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 6);
+      $pb.ProtobufEnum.$_initByValueList(values, 9);
   static WsFrameType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

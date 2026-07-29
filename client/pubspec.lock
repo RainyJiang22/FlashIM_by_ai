@@ -229,6 +229,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  flash_im_friend:
+    dependency: "direct main"
+    description:
+      path: "modules/flash_im_friend"
+      relative: true
+    source: path
+    version: "0.0.1"
   flash_session:
     dependency: "direct main"
     description:

@@ -23,7 +23,8 @@ $RepoRoot = Resolve-Path (Join-Path $ScriptDir "../..")
 $ProtoDir = Join-Path $RepoRoot "proto"
 $ProtoFiles = @(
   (Join-Path $RepoRoot "proto/ws.proto"),
-  (Join-Path $RepoRoot "proto/message.proto")
+  (Join-Path $RepoRoot "proto/message.proto"),
+  (Join-Path $RepoRoot "proto/friend.proto")
 )
 $OutDir = Join-Path $RepoRoot "client/modules/flash_im_core/lib/src/data/proto"
 

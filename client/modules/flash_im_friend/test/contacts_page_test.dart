@@ -8,6 +8,7 @@ void main() {
     tester,
   ) async {
     final cubit = FriendCubit(repository: _ContactsRepository());
+    FriendUser? messagedUser;
     await cubit.load();
 
     await tester.pumpWidget(
@@ -15,7 +16,7 @@ void main() {
         home: Scaffold(
           body: BlocProvider<FriendCubit>.value(
             value: cubit,
-            child: ContactsPage(onMessageFriend: (_) {}),
+            child: ContactsPage(onMessageFriend: (user) => messagedUser = user),
           ),
         ),
       ),
@@ -29,6 +30,33 @@ void main() {
     expect(find.text('群聊'), findsNothing);
     expect(find.text('公众号'), findsNothing);
 
+    final screenWidth = tester.getSize(find.byType(Scaffold).first).width;
+    final titleCenter = tester.getCenter(find.text('通讯录'));
+    final searchCenter = tester.getCenter(find.byTooltip('搜索好友'));
+    final addCenter = tester.getCenter(find.byTooltip('添加朋友'));
+    expect(titleCenter.dx, closeTo(screenWidth / 2, 0.5));
+    expect(searchCenter.dx, greaterThan(screenWidth - 100));
+    expect(addCenter.dx, greaterThan(searchCenter.dx));
+
+    await tester.tap(find.text('阿青'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('闪讯号：flash_1'), findsOneWidget);
+    expect(find.text('账号'), findsOneWidget);
+    expect(find.text('个性签名'), findsOneWidget);
+    expect(find.text('今天也要保持联系'), findsWidgets);
+    expect(find.text('发消息'), findsOneWidget);
+    expect(find.text('朋友圈'), findsNothing);
+    expect(find.text('朋友权限'), findsNothing);
+    expect(find.text('音视频通话'), findsNothing);
+
+    await tester.tap(find.text('发消息'));
+    expect(messagedUser?.accountId, 1);
+
+    await tester.tap(find.byTooltip('更多'));
+    await tester.pumpAndSettle();
+    expect(find.text('删除好友'), findsOneWidget);
+
     await cubit.close();
   });
 }
@@ -40,7 +68,8 @@ class _ContactsRepository implements FriendRepository {
       accountId: 1,
       nickname: '阿青',
       avatar: '',
-      signature: '',
+      signature: '今天也要保持联系',
+      flashId: 'flash_1',
       relationStatus: 'friend',
     ),
   ];

@@ -25,77 +25,45 @@ class FriendProfilePage extends StatelessWidget {
         final current = _currentUser(state, user);
         final processing = state.processingUserIds.contains(current.accountId);
         return Scaffold(
-          appBar: AppBar(title: const Text('详细资料')),
+          backgroundColor: const Color(0xFFEDEDED),
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            title: const SizedBox.shrink(),
+            actions: current.isFriend
+                ? [
+                    PopupMenuButton<_ProfileMenuAction>(
+                      tooltip: '更多',
+                      icon: const Icon(Icons.more_horiz, size: 30),
+                      onSelected: (action) {
+                        if (action == _ProfileMenuAction.deleteFriend) {
+                          _deleteFriend(context, current);
+                        }
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem<_ProfileMenuAction>(
+                          value: _ProfileMenuAction.deleteFriend,
+                          child: Text(
+                            '删除好友',
+                            style: TextStyle(color: Color(0xFFE35D6A)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 4),
+                  ]
+                : null,
+          ),
           body: ListView(
             children: [
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(22),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AvatarWidget(
-                      avatar: current.avatar,
-                      seed: '${current.accountId}',
-                      size: 72,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            current.displayName,
-                            style: const TextStyle(
-                              color: Color(0xFF111111),
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '闪讯号：${current.flashId ?? 'flash_${current.accountId}'}',
-                            style: const TextStyle(color: Color(0xFF7A7A7A)),
-                          ),
-                          if (current.signature.trim().isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              current.signature,
-                              style: const TextStyle(color: Color(0xFF7A7A7A)),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              _ProfileHeader(user: current),
+              const SizedBox(height: 10),
+              _ProfileDetails(user: current),
+              const SizedBox(height: 10),
+              _ProfileActionSection(
+                user: current,
+                processing: processing,
+                onMessageFriend: onMessageFriend,
               ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: _PrimaryAction(
-                  user: current,
-                  processing: processing,
-                  onMessageFriend: onMessageFriend,
-                ),
-              ),
-              if (current.isFriend) ...[
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                      foregroundColor: const Color(0xFFE35D6A),
-                    ),
-                    onPressed: processing
-                        ? null
-                        : () => _deleteFriend(context, current),
-                    child: const Text('删除好友'),
-                  ),
-                ),
-              ],
             ],
           ),
         );
@@ -134,8 +102,147 @@ class FriendProfilePage extends StatelessWidget {
   }
 }
 
-class _PrimaryAction extends StatelessWidget {
-  const _PrimaryAction({
+enum _ProfileMenuAction { deleteFriend }
+
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({required this.user});
+
+  final FriendUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 34, 24, 34),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AvatarWidget(
+              avatar: user.avatar,
+              seed: '${user.accountId}',
+              size: 88,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF111111),
+                        fontSize: 27,
+                        height: 1.15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      '闪讯号：${user.flashId ?? 'flash_${user.accountId}'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF777777),
+                        fontSize: 16,
+                        height: 1.3,
+                      ),
+                    ),
+                    if (user.signature.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        user.signature.trim(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF777777),
+                          fontSize: 16,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileDetails extends StatelessWidget {
+  const _ProfileDetails({required this.user});
+
+  final FriendUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.white,
+      child: Column(
+        children: [
+          _DetailRow(label: '账号', value: '${user.accountId}'),
+          const Divider(height: 1, indent: 24),
+          _DetailRow(
+            label: '个性签名',
+            value: user.signature.trim().isEmpty ? '暂无' : user.signature.trim(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 88,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF222222),
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: Color(0xFF777777),
+                fontSize: 16,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileActionSection extends StatelessWidget {
+  const _ProfileActionSection({
     required this.user,
     required this.processing,
     required this.onMessageFriend,
@@ -147,16 +254,43 @@ class _PrimaryAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton.icon(
-      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-      onPressed: processing ? null : () => _handle(context),
-      icon: processing
-          ? const SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(user.isFriend ? Icons.chat_bubble_outline : Icons.person_add),
-      label: Text(_label),
+    return Material(
+      color: Colors.white,
+      child: InkWell(
+        onTap: processing ? null : () => _handle(context),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 74),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (processing)
+                const SizedBox.square(
+                  dimension: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.2),
+                )
+              else
+                Icon(
+                  user.isFriend
+                      ? Icons.chat_bubble_outline
+                      : Icons.person_add_alt_1_outlined,
+                  color: const Color(0xFF536F9F),
+                  size: 29,
+                ),
+              const SizedBox(width: 12),
+              Text(
+                _label,
+                style: TextStyle(
+                  color: user.isPendingSent
+                      ? const Color(0xFF999999)
+                      : const Color(0xFF536F9F),
+                  fontSize: 19,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

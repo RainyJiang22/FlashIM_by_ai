@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(friend): 好友系统服务端实现">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -396,7 +396,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart</url>
-          <line>27</line>
+          <line>28</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

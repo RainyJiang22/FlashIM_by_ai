@@ -251,3 +251,32 @@ cd client/modules/flash_im_friend && flutter test
 | `git diff --check` | 通过，无空白错误 |
 
 未执行 Gradle/Android、Xcode/iOS 构建；本次为 Flutter 客户端范围。API 链路测试阶段不新增文件：服务端好友链路脚本与生成文档已存在于 `docs/features/im/friend/api/friend/`，本次未修改服务端契约。
+
+## 补充任务 11：好友资料页微信式布局 `✅ 已完成`
+
+文件：
+
+- `client/modules/flash_im_friend/lib/src/view/friend_profile_page.dart`
+- `client/modules/flash_im_friend/test/contacts_page_test.dart`
+
+完成内容：
+
+- 放大头像与主资料区，使用白色内容块和灰色分组背景。
+- 账号与个性签名改为资料分组行，发消息/添加好友改为居中操作行。
+- 删除好友移动到右上角更多菜单，保留二次确认和原业务回调。
+- 未增加朋友圈、朋友权限、音视频通话等未实现入口。
+
+验证结果：
+
+| 命令 | 结果 |
+| --- | --- |
+| `flutter analyze --no-pub lib/src/view/friend_profile_page.dart test/contacts_page_test.dart` | 通过，No issues found |
+| `flutter test --no-pub test/contacts_page_test.dart` | 通过，1 test passed |
+
+## 补充任务 12：通讯录标题与右侧操作布局 `✅ 已完成`
+
+- `_ContactsHeader` 使用 `double.infinity` 占满可用宽度，移除固定屏宽值。
+- 标题保持相对整屏居中，搜索与添加按钮固定在右侧。
+- Widget 测试增加标题中心点及两个右侧按钮位置断言。
+
+验证：`flutter analyze --no-pub lib/src/view/contacts_page.dart test/contacts_page_test.dart` 与 `flutter test --no-pub test/contacts_page_test.dart` 均通过。

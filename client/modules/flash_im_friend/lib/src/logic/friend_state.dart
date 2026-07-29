@@ -7,6 +7,7 @@ class FriendState extends Equatable {
   const FriendState({
     this.friends = const [],
     this.receivedRequests = const [],
+    this.sentRequests = const [],
     this.searchResults = const [],
     this.isLoading = false,
     this.isSearching = false,
@@ -18,6 +19,7 @@ class FriendState extends Equatable {
 
   final List<FriendUser> friends;
   final List<FriendRequest> receivedRequests;
+  final List<FriendRequest> sentRequests;
   final List<FriendUser> searchResults;
   final bool isLoading;
   final bool isSearching;
@@ -26,12 +28,20 @@ class FriendState extends Equatable {
   final String? errorMessage;
   final String? actionMessage;
 
-  int get pendingRequestCount => receivedRequests.length;
+  List<FriendRequest> get requestHistory {
+    final requests = [...receivedRequests, ...sentRequests]
+      ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
+    return requests;
+  }
+
+  int get pendingRequestCount =>
+      receivedRequests.where((request) => request.isPending).length;
   bool get hasLoaded => !isLoading && errorMessage == null;
 
   FriendState copyWith({
     List<FriendUser>? friends,
     List<FriendRequest>? receivedRequests,
+    List<FriendRequest>? sentRequests,
     List<FriendUser>? searchResults,
     bool? isLoading,
     bool? isSearching,
@@ -43,6 +53,7 @@ class FriendState extends Equatable {
     return FriendState(
       friends: friends ?? this.friends,
       receivedRequests: receivedRequests ?? this.receivedRequests,
+      sentRequests: sentRequests ?? this.sentRequests,
       searchResults: searchResults ?? this.searchResults,
       isLoading: isLoading ?? this.isLoading,
       isSearching: isSearching ?? this.isSearching,
@@ -61,6 +72,7 @@ class FriendState extends Equatable {
   List<Object?> get props => [
     friends,
     receivedRequests,
+    sentRequests,
     searchResults,
     isLoading,
     isSearching,

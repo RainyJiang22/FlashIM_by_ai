@@ -34,5 +34,25 @@ void main() {
     expect(request.fromUser.displayName, '小雨');
     expect(request.message, '我是小雨');
     expect(request.createdAt.isUtc, isTrue);
+    expect(request.isReceived, isTrue);
+  });
+
+  test('FriendRequest parses sent history with the target user', () {
+    final request = FriendRequest.fromSentJson(const <String, dynamic>{
+      'id': 'r2',
+      'to_user': <String, dynamic>{
+        'account_id': 1003,
+        'nickname': '阿青',
+        'avatar': '',
+        'signature': '',
+      },
+      'message': '我是小雨',
+      'status': 'accepted',
+      'created_at': '2026-07-29T07:00:00Z',
+    });
+
+    expect(request.otherUser.displayName, '阿青');
+    expect(request.direction, FriendRequestDirection.sent);
+    expect(request.isPending, isFalse);
   });
 }

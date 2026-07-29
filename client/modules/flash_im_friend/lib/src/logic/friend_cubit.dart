@@ -42,12 +42,14 @@ class FriendCubit extends Cubit<FriendState> {
     try {
       final values = await Future.wait<Object>([
         _repository.getFriends(),
-        _repository.getReceivedRequests(),
+        _repository.getReceivedRequests(status: 'all'),
+        _repository.getSentRequests(status: 'all'),
       ]);
       emit(
         state.copyWith(
           friends: values[0] as List<FriendUser>,
           receivedRequests: values[1] as List<FriendRequest>,
+          sentRequests: values[2] as List<FriendRequest>,
           isLoading: false,
           errorMessage: null,
         ),
@@ -107,9 +109,11 @@ class FriendCubit extends Cubit<FriendState> {
         toUserId: user.accountId,
         message: message.trim(),
       );
+      final sentRequests = await _reloadSentRequestsOrKeepCurrent();
       _replaceUserRelation(user.accountId, 'pending_sent');
       emit(
         state.copyWith(
+          sentRequests: sentRequests,
           processingUserIds: {...state.processingUserIds}
             ..remove(user.accountId),
           actionMessage: '好友申请已发送',
@@ -141,9 +145,16 @@ class FriendCubit extends Cubit<FriendState> {
             state.friends,
             result.friend.copyWith(relationStatus: 'friend'),
           ),
-          receivedRequests: state.receivedRequests
-              .where((item) => item.id != request.id)
-              .toList(growable: false),
+          receivedRequests: _markRequestsForUserAccepted(
+            state.receivedRequests,
+            requestId: request.id,
+            accountId: result.friend.accountId,
+          ),
+          sentRequests: _markRequestsForUserAccepted(
+            state.sentRequests,
+            requestId: request.id,
+            accountId: result.friend.accountId,
+          ),
           processingRequestIds: {...state.processingRequestIds}
             ..remove(request.id),
           actionMessage: '已添加 ${result.friend.displayName}',
@@ -165,9 +176,11 @@ class FriendCubit extends Cubit<FriendState> {
       await _repository.rejectRequest(request.id);
       emit(
         state.copyWith(
-          receivedRequests: state.receivedRequests
-              .where((item) => item.id != request.id)
-              .toList(growable: false),
+          receivedRequests: _replaceRequestStatus(
+            state.receivedRequests,
+            request.id,
+            'rejected',
+          ),
           processingRequestIds: {...state.processingRequestIds}
             ..remove(request.id),
           actionMessage: '已拒绝好友申请',
@@ -260,6 +273,14 @@ class FriendCubit extends Cubit<FriendState> {
     );
   }
 
+  Future<List<FriendRequest>> _reloadSentRequestsOrKeepCurrent() async {
+    try {
+      return await _repository.getSentRequests(status: 'all');
+    } catch (_) {
+      return state.sentRequests;
+    }
+  }
+
   void _handleFriendRequest(im_core.FriendRequestEvent event) {
     if (!event.hasFromUser() || event.requestId.isEmpty) {
       return;
@@ -290,11 +311,16 @@ class FriendCubit extends Cubit<FriendState> {
     emit(
       state.copyWith(
         friends: _upsertFriend(state.friends, friend),
-        receivedRequests: event.requestId.isEmpty
-            ? state.receivedRequests
-            : state.receivedRequests
-                  .where((item) => item.id != event.requestId)
-                  .toList(growable: false),
+        receivedRequests: _markRequestsForUserAccepted(
+          state.receivedRequests,
+          requestId: event.requestId,
+          accountId: friend.accountId,
+        ),
+        sentRequests: _markRequestsForUserAccepted(
+          state.sentRequests,
+          requestId: event.requestId,
+          accountId: friend.accountId,
+        ),
       ),
     );
   }
@@ -347,6 +373,36 @@ List<FriendUser> _upsertFriend(List<FriendUser> current, FriendUser friend) {
     friends.add(friend);
   }
   return friends;
+}
+
+List<FriendRequest> _replaceRequestStatus(
+  List<FriendRequest> current,
+  String requestId,
+  String status,
+) {
+  return current
+      .map(
+        (request) => request.id == requestId
+            ? request.copyWith(status: status)
+            : request,
+      )
+      .toList(growable: false);
+}
+
+List<FriendRequest> _markRequestsForUserAccepted(
+  List<FriendRequest> current, {
+  required String requestId,
+  required int accountId,
+}) {
+  return current
+      .map(
+        (request) =>
+            (requestId.isNotEmpty && request.id == requestId) ||
+                (request.isPending && request.otherUser.accountId == accountId)
+            ? request.copyWith(status: 'accepted')
+            : request,
+      )
+      .toList(growable: false);
 }
 
 String _readErrorMessage(Object error, String fallback) {

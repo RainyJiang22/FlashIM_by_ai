@@ -12,6 +12,12 @@ abstract interface class FriendRepository {
     int offset = 0,
   });
 
+  Future<List<FriendRequest>> getSentRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  });
+
   Future<List<FriendUser>> searchUsers(String query, {int limit = 30});
 
   Future<FriendUser> getUser(int accountId);
@@ -52,8 +58,29 @@ class DioFriendRepository implements FriendRepository {
     );
     return _parseList(
       response.data,
-      FriendRequest.fromJson,
+      FriendRequest.fromReceivedJson,
       'Friend request list',
+    );
+  }
+
+  @override
+  Future<List<FriendRequest>> getSentRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final response = await _dio.get<dynamic>(
+      '/api/friends/requests/sent',
+      queryParameters: <String, dynamic>{
+        'status': status,
+        'limit': limit,
+        'offset': offset,
+      },
+    );
+    return _parseList(
+      response.data,
+      FriendRequest.fromSentJson,
+      'Sent friend request list',
     );
   }
 

@@ -13,22 +13,26 @@ void main() {
     await cubit.close();
   });
 
-  test('accept moves request into friend list', () async {
-    final repository = _FakeFriendRepository();
-    final cubit = FriendCubit(repository: repository);
-    await cubit.load();
-    final request = cubit.state.receivedRequests.single;
+  test(
+    'accept keeps request history and moves user into friend list',
+    () async {
+      final repository = _FakeFriendRepository();
+      final cubit = FriendCubit(repository: repository);
+      await cubit.load();
+      final request = cubit.state.receivedRequests.single;
 
-    final result = await cubit.acceptRequest(request);
+      final result = await cubit.acceptRequest(request);
 
-    expect(result?.conversationId, 'conversation-1');
-    expect(cubit.state.receivedRequests, isEmpty);
-    expect(
-      cubit.state.friends.any((user) => user.accountId == 2 && user.isFriend),
-      isTrue,
-    );
-    await cubit.close();
-  });
+      expect(result?.conversationId, 'conversation-1');
+      expect(cubit.state.receivedRequests.single.status, 'accepted');
+      expect(cubit.state.pendingRequestCount, 0);
+      expect(
+        cubit.state.friends.any((user) => user.accountId == 2 && user.isFriend),
+        isTrue,
+      );
+      await cubit.close();
+    },
+  );
 }
 
 class _FakeFriendRepository implements FriendRepository {
@@ -64,6 +68,13 @@ class _FakeFriendRepository implements FriendRepository {
       createdAt: DateTime.utc(2026, 7, 29),
     ),
   ];
+
+  @override
+  Future<List<FriendRequest>> getSentRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  }) async => const [];
 
   @override
   Future<FriendAcceptResult> acceptRequest(String requestId) async {

@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 
 import 'friend_user.dart';
 
+enum FriendRequestDirection { received, sent }
+
 class FriendRequest extends Equatable {
   const FriendRequest({
     required this.id,
@@ -9,12 +11,36 @@ class FriendRequest extends Equatable {
     required this.message,
     required this.status,
     required this.createdAt,
+    this.direction = FriendRequestDirection.received,
   });
 
-  factory FriendRequest.fromJson(Map<String, dynamic> json) {
-    final user = json['from_user'];
+  factory FriendRequest.fromJson(Map<String, dynamic> json) =>
+      FriendRequest.fromReceivedJson(json);
+
+  factory FriendRequest.fromReceivedJson(Map<String, dynamic> json) {
+    return FriendRequest._fromJson(
+      json,
+      userKey: 'from_user',
+      direction: FriendRequestDirection.received,
+    );
+  }
+
+  factory FriendRequest.fromSentJson(Map<String, dynamic> json) {
+    return FriendRequest._fromJson(
+      json,
+      userKey: 'to_user',
+      direction: FriendRequestDirection.sent,
+    );
+  }
+
+  factory FriendRequest._fromJson(
+    Map<String, dynamic> json, {
+    required String userKey,
+    required FriendRequestDirection direction,
+  }) {
+    final user = json[userKey];
     if (user is! Map) {
-      throw const FormatException('Friend request from_user is required.');
+      throw FormatException('Friend request $userKey is required.');
     }
     return FriendRequest(
       id: _requiredString(json, 'id'),
@@ -22,6 +48,7 @@ class FriendRequest extends Equatable {
       message: json['message'] is String ? json['message'] as String : '',
       status: json['status'] is String ? json['status'] as String : 'pending',
       createdAt: DateTime.parse(_requiredString(json, 'created_at')),
+      direction: direction,
     );
   }
 
@@ -30,9 +57,32 @@ class FriendRequest extends Equatable {
   final String message;
   final String status;
   final DateTime createdAt;
+  final FriendRequestDirection direction;
+
+  FriendUser get otherUser => fromUser;
+  bool get isReceived => direction == FriendRequestDirection.received;
+  bool get isPending => status == 'pending';
+
+  FriendRequest copyWith({String? status}) {
+    return FriendRequest(
+      id: id,
+      fromUser: fromUser,
+      message: message,
+      status: status ?? this.status,
+      createdAt: createdAt,
+      direction: direction,
+    );
+  }
 
   @override
-  List<Object?> get props => [id, fromUser, message, status, createdAt];
+  List<Object?> get props => [
+    id,
+    fromUser,
+    message,
+    status,
+    createdAt,
+    direction,
+  ];
 }
 
 class FriendAcceptResult extends Equatable {

@@ -82,6 +82,13 @@ class _ContactsRepository implements FriendRepository {
   }) async => const [];
 
   @override
+  Future<List<FriendRequest>> getSentRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  }) async => const [];
+
+  @override
   Future<FriendAcceptResult> acceptRequest(String requestId) =>
       throw UnimplementedError();
 

@@ -39,6 +39,41 @@ void main() {
 
     await DioFriendRepository(dio: dio).sendRequest(toUserId: 9, message: '你好');
   });
+
+  test('loads all sent request history with the target user', () async {
+    final adapter = _RecordingAdapter((options) {
+      expect(options.method, 'GET');
+      expect(options.path, '/api/friends/requests/sent');
+      expect(options.queryParameters, <String, dynamic>{
+        'status': 'all',
+        'limit': 50,
+        'offset': 0,
+      });
+      return const <Map<String, dynamic>>[
+        <String, dynamic>{
+          'id': 'request-1',
+          'to_user': <String, dynamic>{
+            'account_id': 9,
+            'nickname': '小雨',
+            'avatar': '',
+            'signature': '',
+          },
+          'message': '你好',
+          'status': 'accepted',
+          'created_at': '2026-07-29T06:00:00Z',
+        },
+      ];
+    });
+    final dio = Dio()..httpClientAdapter = adapter;
+
+    final requests = await DioFriendRepository(
+      dio: dio,
+    ).getSentRequests(status: 'all');
+
+    expect(requests.single.otherUser.accountId, 9);
+    expect(requests.single.direction, FriendRequestDirection.sent);
+    expect(requests.single.status, 'accepted');
+  });
 }
 
 class _RecordingAdapter implements HttpClientAdapter {

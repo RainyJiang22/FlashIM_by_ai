@@ -77,6 +77,7 @@ class _ContactsHeader extends StatelessWidget {
         ),
       ),
       child: SizedBox(
+        width: 365,
         height: 64,
         child: Stack(
           alignment: Alignment.center,

@@ -1,4 +1,5 @@
 import 'package:flash_session/flash_session.dart';
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -58,17 +59,17 @@ class _MinePageState extends State<MinePage> {
 
         return RefreshIndicator(
           onRefresh: _reload,
-          color: const Color(0xFF07C160),
+          color: FlashPalette.primary,
+          backgroundColor: FlashPalette.surface,
           child: ListView(
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
-              const SizedBox(height: 18),
               UserCard(
                 user: user,
                 onTap: () =>
                     Navigator.of(context).pushNamed(AppRoutes.editProfile),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               MineInfoCard(
                 user: user,
                 onPasswordTap: () => Navigator.of(context).pushNamed(
@@ -78,7 +79,7 @@ class _MinePageState extends State<MinePage> {
                 ),
                 onLogout: _logout,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
             ],
           ),
         );

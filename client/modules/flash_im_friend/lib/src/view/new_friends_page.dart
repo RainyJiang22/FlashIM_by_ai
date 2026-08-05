@@ -5,6 +5,7 @@ import '../data/friend_request.dart';
 import '../logic/friend_cubit.dart';
 import '../logic/friend_state.dart';
 import 'widgets/friend_avatar_tile.dart';
+import 'widgets/friend_ui.dart';
 
 class NewFriendsPage extends StatelessWidget {
   const NewFriendsPage({super.key});
@@ -12,21 +13,30 @@ class NewFriendsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('新的朋友')),
+      backgroundColor: FriendPalette.background,
+      appBar: AppBar(
+        backgroundColor: FriendPalette.background,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: FriendPalette.ink,
+        title: const Text('新的朋友'),
+      ),
       body: BlocBuilder<FriendCubit, FriendState>(
         builder: (context, state) {
           final requests = state.requestHistory;
           if (requests.isEmpty) {
             return RefreshIndicator(
+              color: FriendPalette.primary,
+              backgroundColor: FriendPalette.surface,
               onRefresh: context.read<FriendCubit>().refresh,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
                 children: const [
-                  SizedBox(height: 180),
-                  Center(
-                    child: Text(
-                      '暂无新的朋友',
-                      style: TextStyle(color: Color(0xFF8A8A8A)),
+                  FriendCard(
+                    child: FriendEmptyState(
+                      icon: Icons.person_add_alt_1_rounded,
+                      title: '暂无新的朋友',
+                      message: '收到或发送好友申请后，会在这里留下记录',
                     ),
                   ),
                 ],
@@ -34,18 +44,43 @@ class NewFriendsPage extends StatelessWidget {
             );
           }
           return RefreshIndicator(
+            color: FriendPalette.primary,
+            backgroundColor: FriendPalette.surface,
             onRefresh: context.read<FriendCubit>().refresh,
-            child: ListView.separated(
+            child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: requests.length,
-              separatorBuilder: (_, _) => const Divider(height: 1, indent: 80),
-              itemBuilder: (context, index) {
-                final request = requests[index];
-                return _RequestTile(
-                  request: request,
-                  processing: state.processingRequestIds.contains(request.id),
-                );
-              },
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+              children: [
+                FriendSectionTitle(
+                  title: '申请记录',
+                  caption: '${requests.length} 条记录 · 只保留待处理申请提醒',
+                ),
+                FriendCard(
+                  child: Column(
+                    children: [
+                      for (
+                        var index = 0;
+                        index < requests.length;
+                        index += 1
+                      ) ...[
+                        _RequestTile(
+                          request: requests[index],
+                          processing: state.processingRequestIds.contains(
+                            requests[index].id,
+                          ),
+                        ),
+                        if (index != requests.length - 1)
+                          const Divider(
+                            height: 1,
+                            indent: 84,
+                            endIndent: 16,
+                            color: FriendPalette.border,
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -68,7 +103,10 @@ class _RequestTile extends StatelessWidget {
       trailing: processing
           ? const SizedBox.square(
               dimension: 22,
-              child: CircularProgressIndicator(strokeWidth: 2.2),
+              child: CircularProgressIndicator(
+                color: FriendPalette.primary,
+                strokeWidth: 2.2,
+              ),
             )
           : _requestTrailing(context),
     );
@@ -81,15 +119,25 @@ class _RequestTile extends StatelessWidget {
         children: [
           TextButton(
             onPressed: () => _confirmReject(context),
+            style: TextButton.styleFrom(
+              foregroundColor: FriendPalette.secondaryInk,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: const Size(0, 38),
+            ),
             child: const Text('拒绝'),
           ),
           const SizedBox(width: 4),
           FilledButton(
             style: FilledButton.styleFrom(
-              minimumSize: const Size(58, 36),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              backgroundColor: FriendPalette.primary,
+              minimumSize: const Size(58, 38),
+              padding: const EdgeInsets.symmetric(horizontal: 13),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
             ),
             onPressed: () => context.read<FriendCubit>().acceptRequest(request),
@@ -98,18 +146,27 @@ class _RequestTile extends StatelessWidget {
         ],
       );
     }
-    final label = switch (request.status) {
-      'accepted' => '已添加',
-      'rejected' => '已拒绝',
-      _ => '等待验证',
-    };
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Text(
-        label,
-        style: const TextStyle(color: Color(0xFF8A8A8A), fontSize: 14),
+
+    final status = switch (request.status) {
+      'accepted' => const FriendStatusPill(
+        label: '已添加',
+        color: FriendPalette.success,
+        backgroundColor: FriendPalette.successSoft,
+        icon: Icons.check_rounded,
       ),
-    );
+      'rejected' => const FriendStatusPill(
+        label: '已拒绝',
+        color: FriendPalette.danger,
+        backgroundColor: FriendPalette.dangerSoft,
+        icon: Icons.close_rounded,
+      ),
+      _ => const FriendStatusPill(
+        label: '等待验证',
+        color: FriendPalette.secondaryInk,
+        icon: Icons.schedule_rounded,
+      ),
+    };
+    return status;
   }
 
   String _requestSubtitle(FriendRequest request) {
@@ -135,6 +192,7 @@ class _RequestTile extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: const Text('拒绝好友申请？'),
         content: Text('将拒绝 ${request.otherUser.displayName} 的好友申请。'),
         actions: [
@@ -143,6 +201,9 @@ class _RequestTile extends StatelessWidget {
             child: const Text('取消'),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: FriendPalette.danger,
+            ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('拒绝'),
           ),

@@ -13,60 +13,67 @@ class ConversationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Material(
-      color: Colors.white,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          child: Row(
-            children: [
-              _ConversationAvatar(conversation: conversation),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      conversation.displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: const Color(0xFF111111),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      conversation.displayPreview,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF7A7A7A),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+    return Container(
+      decoration: flashCardDecoration(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
                 children: [
-                  Text(
-                    _formatConversationTime(conversation.displayTime),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF9AA6B2),
-                      fontWeight: FontWeight.w600,
+                  _ConversationAvatar(conversation: conversation),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          conversation.displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: FlashPalette.ink,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          conversation.displayPreview,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: FlashPalette.secondaryInk,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  if (conversation.unreadCount > 0) ...[
-                    const SizedBox(height: 8),
-                    _UnreadBadge(count: conversation.unreadCount),
-                  ],
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        _formatConversationTime(conversation.displayTime),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: FlashPalette.mutedInk,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (conversation.unreadCount > 0) ...[
+                        const SizedBox(height: 8),
+                        _UnreadBadge(count: conversation.unreadCount),
+                      ],
+                    ],
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -84,8 +91,8 @@ class _ConversationAvatar extends StatelessWidget {
     return AvatarWidget(
       avatar: conversation.peerAvatar?.trim(),
       seed: conversation.avatarSeed,
-      size: 48,
-      borderRadius: BorderRadius.circular(8),
+      size: 52,
+      borderRadius: BorderRadius.circular(15),
     );
   }
 }

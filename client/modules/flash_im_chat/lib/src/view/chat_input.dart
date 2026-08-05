@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,8 +52,8 @@ class _ChatInputState extends State<ChatInput> {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE7E7E7))),
+        color: FlashPalette.surface,
+        border: Border(top: BorderSide(color: FlashPalette.border)),
       ),
       child: SafeArea(
         top: false,
@@ -68,7 +69,10 @@ class _ChatInputState extends State<ChatInput> {
                     tooltip: '更多',
                     onPressed: _togglePanel,
                     icon: Icon(
-                      _panelVisible ? Icons.close : Icons.add_circle_outline,
+                      _panelVisible
+                          ? Icons.close_rounded
+                          : Icons.add_circle_outline_rounded,
+                      color: FlashPalette.ink,
                     ),
                   ),
                   Expanded(
@@ -82,7 +86,7 @@ class _ChatInputState extends State<ChatInput> {
                         hintText: '输入消息',
                         isDense: true,
                         filled: true,
-                        fillColor: const Color(0xFFF6F7F9),
+                        fillColor: FlashPalette.background,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 10,
@@ -277,7 +281,7 @@ class _ActionItem extends StatelessWidget {
           children: [
             DecoratedBox(
               decoration: BoxDecoration(
-                color: const Color(0xFFF4F5F7),
+                color: FlashPalette.primarySoft,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Padding(

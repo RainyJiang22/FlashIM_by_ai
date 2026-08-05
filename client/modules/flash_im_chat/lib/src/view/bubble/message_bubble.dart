@@ -37,8 +37,8 @@ class MessageBubble extends StatelessWidget {
           ? (currentUserAvatar ?? message.senderAvatar)
           : message.senderAvatar,
       seed: message.senderId,
-      size: 36,
-      borderRadius: BorderRadius.circular(8),
+      size: 40,
+      borderRadius: BorderRadius.circular(14),
     );
     final content = switch (message.type) {
       MessageType.text => TextBubble(content: message.content, isMine: isMine),
@@ -78,7 +78,7 @@ class MessageBubble extends StatelessWidget {
                   Text(
                     message.senderName,
                     style: const TextStyle(
-                      color: Color(0xFF7A7A7A),
+                      color: FlashPalette.secondaryInk,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -116,7 +116,7 @@ class _MessageStatusIcon extends StatelessWidget {
     ),
     MessageStatus.failed => const Icon(
       Icons.error_outline,
-      color: Color(0xFFE35D6A),
+      color: FlashPalette.danger,
       size: 14,
     ),
     MessageStatus.sent => const SizedBox.shrink(),

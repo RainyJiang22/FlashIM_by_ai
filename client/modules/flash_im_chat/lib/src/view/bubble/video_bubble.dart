@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/message.dart';
@@ -26,7 +27,7 @@ class VideoBubble extends StatelessWidget {
             thumbnail,
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const ColoredBox(
-              color: Color(0xFF202124),
+              color: FlashPalette.ink,
               child: Center(
                 child: Icon(Icons.videocam_off_outlined, color: Colors.white70),
               ),
@@ -36,7 +37,7 @@ class VideoBubble extends StatelessWidget {
       key: const Key('video_bubble'),
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
         child: SizedBox(
           width: 200,
           height: 140,

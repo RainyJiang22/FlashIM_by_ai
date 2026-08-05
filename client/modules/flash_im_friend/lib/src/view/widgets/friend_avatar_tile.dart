@@ -2,6 +2,7 @@ import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/friend_user.dart';
+import 'friend_ui.dart';
 
 class FriendAvatarTile extends StatelessWidget {
   const FriendAvatarTile({
@@ -20,18 +21,18 @@ class FriendAvatarTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           child: Row(
             children: [
               AvatarWidget(
                 avatar: user.avatar,
                 seed: '${user.accountId}',
-                size: 48,
-                borderRadius: BorderRadius.circular(8),
+                size: 52,
+                borderRadius: BorderRadius.circular(15),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -44,20 +45,23 @@ class FriendAvatarTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF111111),
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                        color: FriendPalette.ink,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.1,
                       ),
                     ),
                     if (subtitle?.trim().isNotEmpty == true) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 5),
                       Text(
                         subtitle!,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Color(0xFF8A8A8A),
-                          fontSize: 14,
+                          color: FriendPalette.secondaryInk,
+                          fontSize: 13,
+                          height: 1.35,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],

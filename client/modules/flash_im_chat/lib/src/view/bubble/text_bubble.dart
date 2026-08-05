@@ -1,3 +1,4 @@
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 
 class TextBubble extends StatelessWidget {
@@ -11,7 +12,8 @@ class TextBubble extends StatelessWidget {
     return DecoratedBox(
       key: const Key('text_bubble'),
       decoration: BoxDecoration(
-        color: isMine ? const Color(0xFF3B82F6) : const Color(0xFFF0F0F0),
+        color: isMine ? FlashPalette.primary : FlashPalette.surface,
+        border: isMine ? null : Border.all(color: FlashPalette.border),
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(12),
           topRight: const Radius.circular(12),
@@ -24,7 +26,7 @@ class TextBubble extends StatelessWidget {
         child: Text(
           content,
           style: TextStyle(
-            color: isMine ? Colors.white : const Color(0xFF111111),
+            color: isMine ? Colors.white : FlashPalette.ink,
             fontSize: 15,
             height: 1.35,
           ),

@@ -1,5 +1,6 @@
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -76,7 +77,7 @@ class _ChatScaffold extends StatelessWidget {
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: ColoredBox(
-          color: Colors.white,
+          color: FlashPalette.background,
           child: Column(
             children: [
               Expanded(
@@ -109,9 +110,22 @@ class _MessageList extends StatelessWidget {
     return BlocBuilder<ChatCubit, ChatState>(
       builder: (context, state) => switch (state) {
         ChatInitial() || ChatLoading() => const _MessageSkeleton(),
-        ChatError(:final message) => Center(child: Text(message)),
+        ChatError(:final message) => _ChatMessageError(message: message),
         ChatLoaded(:final messages) when messages.isEmpty => const Center(
-          child: Text('还没有消息'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.forum_outlined, color: FlashPalette.primary, size: 38),
+              SizedBox(height: 14),
+              Text(
+                '还没有消息',
+                style: TextStyle(
+                  color: FlashPalette.secondaryInk,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
         ChatLoaded(
           :final messages,
@@ -158,7 +172,7 @@ class _LoadedMessageList extends StatelessWidget {
       child: ListView.builder(
         reverse: true,
         shrinkWrap: messages.length <= 15,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.fromLTRB(8, 12, 8, 16),
         itemCount: reversed.length,
         itemBuilder: (context, index) {
           final message = reversed[index];
@@ -233,12 +247,46 @@ class _MessageSkeleton extends StatelessWidget {
             height: 38,
             margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F0F0),
+              color: FlashPalette.primarySoft,
               borderRadius: BorderRadius.circular(12),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _ChatMessageError extends StatelessWidget {
+  const _ChatMessageError({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              color: FlashPalette.mutedInk,
+              size: 38,
+            ),
+            const SizedBox(height: 14),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: FlashPalette.secondaryInk,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

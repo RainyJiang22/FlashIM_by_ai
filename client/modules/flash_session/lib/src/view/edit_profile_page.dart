@@ -27,11 +27,10 @@ class EditProfilePage extends StatelessWidget {
 
         return Scaffold(
           appBar: _ProfileAppBar(title: '个人资料'),
-          backgroundColor: const Color(0xFFF1F1F1),
+          backgroundColor: const Color(0xFFF6F8FC),
           body: ListView(
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
-              const SizedBox(height: 1),
               _SectionCard(
                 children: [
                   _ProfileRow(
@@ -194,7 +193,7 @@ class _AvatarEditPageState extends State<_AvatarEditPage> {
     final previewUser = widget.initialUser.copyWith(avatar: _avatarValue);
     return Scaffold(
       appBar: _ProfileAppBar(title: '修改头像'),
-      backgroundColor: const Color(0xFFF1F1F1),
+      backgroundColor: const Color(0xFFF6F8FC),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -238,7 +237,7 @@ class _ProfileRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = Padding(
-      padding: const EdgeInsets.fromLTRB(22, 0, 20, 0),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -247,9 +246,10 @@ class _ProfileRow extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 19,
+                fontSize: 15,
                 height: 1.15,
-                color: Color(0xFF191919),
+                color: Color(0xFF17233B),
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -262,9 +262,10 @@ class _ProfileRow extends StatelessWidget {
                     maxLines: maxLines,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       height: 1.22,
-                      color: Color(0xFF7A7A7A),
+                      color: Color(0xFF72809A),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
           ),
@@ -273,8 +274,8 @@ class _ProfileRow extends StatelessWidget {
             const SizedBox(width: 8),
             const Icon(
               Icons.chevron_right_rounded,
-              color: Color(0xFFC7C7C7),
-              size: 28,
+              color: Color(0xFF9AA6B8),
+              size: 16,
             ),
           ],
         ],
@@ -282,7 +283,7 @@ class _ProfileRow extends StatelessWidget {
     );
 
     final row = SizedBox(
-      height: trailing == null && maxLines == 1 ? 64 : 82,
+      height: trailing == null && maxLines == 1 ? 62 : 82,
       child: content,
     );
 
@@ -305,15 +306,30 @@ class _SectionCard extends StatelessWidget {
     for (var i = 0; i < children.length; i += 1) {
       if (i > 0) {
         rows.add(
-          const Divider(height: 1, indent: 22, color: Color(0xFFEDEDED)),
+          const Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: Color(0xFFE4EAF3),
+          ),
         );
       }
       rows.add(children[i]);
     }
 
-    return Material(
-      color: Colors.white,
-      child: Column(children: rows),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE4EAF3)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Material(
+          color: Colors.transparent,
+          child: Column(children: rows),
+        ),
+      ),
     );
   }
 }
@@ -331,21 +347,21 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       centerTitle: true,
-      backgroundColor: const Color(0xFFEDEDED),
+      backgroundColor: const Color(0xFFF6F8FC),
       surfaceTintColor: Colors.transparent,
-      foregroundColor: const Color(0xFF191919),
+      foregroundColor: const Color(0xFF17233B),
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.chevron_left_rounded, size: 36),
+        icon: const Icon(Icons.chevron_left_rounded, size: 30),
         onPressed: () => Navigator.of(context).maybePop(),
       ),
       title: Text(
         title,
         style: const TextStyle(
-          fontSize: 22,
+          fontSize: 18,
           height: 1.1,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF111111),
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF17233B),
         ),
       ),
       actions: [
@@ -373,13 +389,13 @@ class _SaveButton extends StatelessWidget {
         minimumSize: const Size(60, 36),
         padding: const EdgeInsets.symmetric(horizontal: 12),
         foregroundColor: Colors.white,
-        disabledForegroundColor: const Color(0xFFBFBFBF),
+        disabledForegroundColor: const Color(0xFF9AA6B8),
         backgroundColor: enabled
-            ? const Color(0xFF07C160)
-            : const Color(0xFFE5E5E5),
-        disabledBackgroundColor: const Color(0xFFE5E5E5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ? const Color(0xFF2C6BED)
+            : const Color(0xFFE4EAF3),
+        disabledBackgroundColor: const Color(0xFFE4EAF3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
       ),
       child: const Text('保存'),
     );
@@ -444,10 +460,10 @@ class _TextEditPageState extends State<_TextEditPage> {
         title: widget.title,
         action: _SaveButton(enabled: _canSubmit, onPressed: _submit),
       ),
-      backgroundColor: const Color(0xFFF1F1F1),
+      backgroundColor: const Color(0xFFF6F8FC),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 48, 20, 0),
+          padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -456,25 +472,25 @@ class _TextEditPageState extends State<_TextEditPage> {
                 autofocus: true,
                 maxLines: widget.maxLines,
                 minLines: widget.maxLines,
-                cursorColor: const Color(0xFF07C160),
+                cursorColor: const Color(0xFF2C6BED),
                 style: const TextStyle(
-                  fontSize: 23,
+                  fontSize: 20,
                   height: 1.25,
-                  color: Color(0xFF191919),
+                  color: Color(0xFF17233B),
                 ),
                 decoration: const InputDecoration(
                   filled: false,
                   isDense: true,
                   contentPadding: EdgeInsets.fromLTRB(0, 0, 0, 8),
                   border: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF07C160)),
+                    borderSide: BorderSide(color: Color(0xFF2C6BED)),
                   ),
                   enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF07C160)),
+                    borderSide: BorderSide(color: Color(0xFF2C6BED)),
                   ),
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(
-                      color: Color(0xFF07C160),
+                      color: Color(0xFF2C6BED),
                       width: 1.4,
                     ),
                   ),
@@ -485,7 +501,7 @@ class _TextEditPageState extends State<_TextEditPage> {
                 Text(
                   _inlineError!,
                   style: const TextStyle(
-                    color: Color(0xFFE64340),
+                    color: Color(0xFFD95D6A),
                     fontSize: 13,
                   ),
                 ),

@@ -4,6 +4,7 @@ import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_im_friend/flash_im_friend.dart';
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flash_starter/flash_starter.dart';
 import 'package:flutter/material.dart';
@@ -71,13 +72,13 @@ class _FlashImAppState extends State<FlashImApp> {
 
   @override
   Widget build(BuildContext context) {
-    const appBackgroundColor = Color(0xFFEDEDED);
-    const appPrimaryColor = Color(0xFF3B82F6);
-    const appSurfaceColor = Colors.white;
-    const appMutedBlue = Color(0xFFEAF1FF);
-    const appOutlineColor = Color(0xFFD5E2F3);
-    const appTextPrimary = Color(0xFF1A2A42);
-    const appTextSecondary = Color(0xFF6A7B92);
+    const appBackgroundColor = FlashPalette.background;
+    const appPrimaryColor = FlashPalette.primary;
+    const appSurfaceColor = FlashPalette.surface;
+    const appMutedBlue = FlashPalette.primarySoft;
+    const appOutlineColor = FlashPalette.border;
+    const appTextPrimary = FlashPalette.ink;
+    const appTextSecondary = FlashPalette.secondaryInk;
 
     final theme = ThemeData(
       useMaterial3: true,
@@ -92,13 +93,13 @@ class _FlashImAppState extends State<FlashImApp> {
             onPrimaryContainer: appTextPrimary,
             surface: appSurfaceColor,
             onSurface: appTextPrimary,
-            secondary: const Color(0xFF5B8CFF),
+            secondary: FlashPalette.primaryDeep,
             outline: appOutlineColor,
           ),
       scaffoldBackgroundColor: appBackgroundColor,
       canvasColor: appBackgroundColor,
       cardColor: appSurfaceColor,
-      dividerColor: const Color(0xFFE7EEF7),
+      dividerColor: FlashPalette.border,
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: appPrimaryColor,
         selectionColor: Color(0x331C4EFF),
@@ -115,8 +116,8 @@ class _FlashImAppState extends State<FlashImApp> {
         scrolledUnderElevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: Colors.black,
-          fontSize: 17,
+          color: appTextPrimary,
+          fontSize: 16,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -132,7 +133,7 @@ class _FlashImAppState extends State<FlashImApp> {
           fontWeight: FontWeight.w700,
         ),
         hintStyle: const TextStyle(
-          color: Color(0xFF98A7BA),
+          color: FlashPalette.mutedInk,
           fontWeight: FontWeight.w500,
         ),
         contentPadding: const EdgeInsets.symmetric(
@@ -141,31 +142,31 @@ class _FlashImAppState extends State<FlashImApp> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: appOutlineColor, width: 1.4),
+          borderSide: const BorderSide(color: appOutlineColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: appOutlineColor, width: 1.4),
+          borderSide: const BorderSide(color: appOutlineColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: appPrimaryColor, width: 1.8),
+          borderSide: const BorderSide(color: appPrimaryColor, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFE35D6A), width: 1.6),
+          borderSide: const BorderSide(color: FlashPalette.danger, width: 1.4),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFE35D6A), width: 1.8),
+          borderSide: const BorderSide(color: FlashPalette.danger, width: 1.6),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: appPrimaryColor,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: const Color(0xFFD8E1F0),
-          disabledForegroundColor: const Color(0xFF8A9AB0),
+          disabledBackgroundColor: const Color(0xFFDCE4F1),
+          disabledForegroundColor: FlashPalette.mutedInk,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
@@ -176,7 +177,7 @@ class _FlashImAppState extends State<FlashImApp> {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: appPrimaryColor,
-          side: const BorderSide(color: appOutlineColor, width: 1.4),
+          side: const BorderSide(color: appOutlineColor),
           backgroundColor: appSurfaceColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),

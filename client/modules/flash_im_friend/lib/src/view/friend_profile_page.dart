@@ -7,6 +7,7 @@ import '../logic/friend_cubit.dart';
 import '../logic/friend_state.dart';
 import 'new_friends_page.dart';
 import 'send_friend_request_page.dart';
+import 'widgets/friend_ui.dart';
 
 class FriendProfilePage extends StatelessWidget {
   const FriendProfilePage({
@@ -25,15 +26,17 @@ class FriendProfilePage extends StatelessWidget {
         final current = _currentUser(state, user);
         final processing = state.processingUserIds.contains(current.accountId);
         return Scaffold(
-          backgroundColor: const Color(0xFFEDEDED),
+          backgroundColor: FriendPalette.background,
           appBar: AppBar(
-            backgroundColor: Colors.white,
-            title: const SizedBox.shrink(),
+            backgroundColor: FriendPalette.background,
+            surfaceTintColor: Colors.transparent,
+            foregroundColor: FriendPalette.ink,
+            title: const Text('个人资料'),
             actions: current.isFriend
                 ? [
                     PopupMenuButton<_ProfileMenuAction>(
                       tooltip: '更多',
-                      icon: const Icon(Icons.more_horiz, size: 30),
+                      icon: const Icon(Icons.more_horiz_rounded, size: 27),
                       onSelected: (action) {
                         if (action == _ProfileMenuAction.deleteFriend) {
                           _deleteFriend(context, current);
@@ -44,7 +47,7 @@ class FriendProfilePage extends StatelessWidget {
                           value: _ProfileMenuAction.deleteFriend,
                           child: Text(
                             '删除好友',
-                            style: TextStyle(color: Color(0xFFE35D6A)),
+                            style: TextStyle(color: FriendPalette.danger),
                           ),
                         ),
                       ],
@@ -54,11 +57,13 @@ class FriendProfilePage extends StatelessWidget {
                 : null,
           ),
           body: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             children: [
-              _ProfileHeader(user: current),
-              const SizedBox(height: 10),
+              _ProfileHero(user: current),
+              const SizedBox(height: 24),
+              const FriendSectionTitle(title: '资料'),
               _ProfileDetails(user: current),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
               _ProfileActionSection(
                 user: current,
                 processing: processing,
@@ -75,6 +80,7 @@ class FriendProfilePage extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
         title: const Text('删除好友？'),
         content: Text('删除 ${current.displayName} 后，双方好友关系将解除。'),
         actions: [
@@ -84,7 +90,7 @@ class FriendProfilePage extends StatelessWidget {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFE35D6A),
+              backgroundColor: FriendPalette.danger,
             ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('删除'),
@@ -104,75 +110,131 @@ class FriendProfilePage extends StatelessWidget {
 
 enum _ProfileMenuAction { deleteFriend }
 
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.user});
+class _ProfileHero extends StatelessWidget {
+  const _ProfileHero({required this.user});
 
   final FriendUser user;
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 34, 24, 34),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AvatarWidget(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEAF1FF), Color(0xFFF7FAFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFDDE8FC)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: const BoxDecoration(
+              color: FriendPalette.primary,
+              shape: BoxShape.circle,
+            ),
+            child: AvatarWidget(
               avatar: user.avatar,
               seed: '${user.accountId}',
-              size: 88,
-              borderRadius: BorderRadius.circular(10),
+              size: 78,
+              borderRadius: BorderRadius.all(Radius.circular(50)),
             ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          ),
+          const SizedBox(width: 18),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: FriendPalette.ink,
+                      fontSize: 24,
+                      height: 1.15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+                  Text(
+                    '闪讯号：${user.flashId ?? 'flash_${user.accountId}'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: FriendPalette.secondaryInk,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (user.signature.trim().isNotEmpty) ...[
+                    const SizedBox(height: 9),
                     Text(
-                      user.displayName,
-                      maxLines: 1,
+                      user.signature.trim(),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Color(0xFF111111),
-                        fontSize: 27,
-                        height: 1.15,
-                        fontWeight: FontWeight.w700,
+                        color: FriendPalette.secondaryInk,
+                        fontSize: 13,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    Text(
-                      '闪讯号：${user.flashId ?? 'flash_${user.accountId}'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF777777),
-                        fontSize: 16,
-                        height: 1.3,
-                      ),
-                    ),
-                    if (user.signature.trim().isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        user.signature.trim(),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF777777),
-                          fontSize: 16,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
                   ],
-                ),
+                  const SizedBox(height: 12),
+                  _ProfileRelationTag(user: user),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+class _ProfileRelationTag extends StatelessWidget {
+  const _ProfileRelationTag({required this.user});
+
+  final FriendUser user;
+
+  @override
+  Widget build(BuildContext context) {
+    if (user.isFriend) {
+      return const FriendStatusPill(
+        label: '好友',
+        color: FriendPalette.success,
+        backgroundColor: FriendPalette.successSoft,
+        icon: Icons.check_rounded,
+      );
+    }
+    if (user.isPendingSent) {
+      return const FriendStatusPill(
+        label: '等待验证',
+        color: FriendPalette.secondaryInk,
+        icon: Icons.schedule_rounded,
+      );
+    }
+    if (user.isPendingReceived) {
+      return const FriendStatusPill(
+        label: '待处理申请',
+        color: FriendPalette.warning,
+        backgroundColor: FriendPalette.warningSoft,
+        icon: Icons.notifications_none_rounded,
+      );
+    }
+    return const FriendStatusPill(
+      label: '新朋友',
+      color: FriendPalette.primary,
+      backgroundColor: FriendPalette.primarySoft,
+      icon: Icons.person_add_alt_1_rounded,
     );
   }
 }
@@ -184,12 +246,16 @@ class _ProfileDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.white,
+    return FriendCard(
       child: Column(
         children: [
           _DetailRow(label: '账号', value: '${user.accountId}'),
-          const Divider(height: 1, indent: 24),
+          const Divider(
+            height: 1,
+            indent: 20,
+            endIndent: 20,
+            color: FriendPalette.border,
+          ),
           _DetailRow(
             label: '个性签名',
             value: user.signature.trim().isEmpty ? '暂无' : user.signature.trim(),
@@ -209,18 +275,18 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 17),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 88,
+            width: 78,
             child: Text(
               label,
               style: const TextStyle(
-                color: Color(0xFF222222),
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
+                color: FriendPalette.ink,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -229,9 +295,10 @@ class _DetailRow extends StatelessWidget {
               value,
               textAlign: TextAlign.right,
               style: const TextStyle(
-                color: Color(0xFF777777),
-                fontSize: 16,
-                height: 1.35,
+                color: FriendPalette.secondaryInk,
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -254,41 +321,55 @@ class _ProfileActionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: InkWell(
-        onTap: processing ? null : () => _handle(context),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 74),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (processing)
-                const SizedBox.square(
-                  dimension: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2.2),
-                )
-              else
-                Icon(
-                  user.isFriend
-                      ? Icons.chat_bubble_outline
-                      : Icons.person_add_alt_1_outlined,
-                  color: const Color(0xFF536F9F),
-                  size: 29,
-                ),
-              const SizedBox(width: 12),
-              Text(
-                _label,
-                style: TextStyle(
-                  color: user.isPendingSent
-                      ? const Color(0xFF999999)
-                      : const Color(0xFF536F9F),
-                  fontSize: 19,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+    if (processing) {
+      return const SizedBox(
+        height: 54,
+        child: Center(
+          child: CircularProgressIndicator(
+            color: FriendPalette.primary,
+            strokeWidth: 2.2,
           ),
+        ),
+      );
+    }
+
+    if (user.isPendingSent) {
+      return SizedBox(
+        height: 54,
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.schedule_rounded, size: 20),
+          label: const Text('等待验证'),
+          style: OutlinedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final isFriend = user.isFriend;
+    return SizedBox(
+      height: 54,
+      width: double.infinity,
+      child: FilledButton.icon(
+        onPressed: () => _handle(context),
+        icon: Icon(
+          isFriend
+              ? Icons.chat_bubble_outline_rounded
+              : Icons.person_add_alt_1_rounded,
+          size: 20,
+        ),
+        label: Text(_label),
+        style: FilledButton.styleFrom(
+          backgroundColor: FriendPalette.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -297,9 +378,6 @@ class _ProfileActionSection extends StatelessWidget {
   String get _label {
     if (user.isFriend) {
       return '发消息';
-    }
-    if (user.isPendingSent) {
-      return '等待验证';
     }
     if (user.isPendingReceived) {
       return '处理好友申请';
@@ -322,9 +400,6 @@ class _ProfileActionSection extends StatelessWidget {
           ),
         ),
       );
-      return;
-    }
-    if (user.isPendingSent) {
       return;
     }
     Navigator.of(context).push<void>(

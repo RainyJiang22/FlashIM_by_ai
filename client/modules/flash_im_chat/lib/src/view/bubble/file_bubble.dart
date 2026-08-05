@@ -1,3 +1,4 @@
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/message.dart';
@@ -20,11 +21,14 @@ class FileBubble extends StatelessWidget {
     final extra = message.fileExtra;
     return Material(
       key: const Key('file_bubble'),
-      color: const Color(0xFFF4F5F7),
-      borderRadius: BorderRadius.circular(10),
+      color: FlashPalette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: FlashPalette.border),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         child: SizedBox(
           width: 230,
           child: Padding(
@@ -33,7 +37,7 @@ class FileBubble extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.insert_drive_file,
-                  color: Color(0xFF5B6B82),
+                  color: FlashPalette.primary,
                   size: 36,
                 ),
                 const SizedBox(width: 10),
@@ -53,7 +57,7 @@ class FileBubble extends StatelessWidget {
                       Text(
                         '${extra?.formattedSize ?? '0 B'}  ${extra?.fileType.toUpperCase() ?? ''}',
                         style: const TextStyle(
-                          color: Color(0xFF777777),
+                          color: FlashPalette.secondaryInk,
                           fontSize: 12,
                         ),
                       ),
@@ -88,11 +92,11 @@ class _DownloadStatusIcon extends StatelessWidget {
     ),
     FileDownloadStatus.done => const Icon(
       Icons.check_circle,
-      color: Colors.green,
+      color: FlashPalette.success,
     ),
     FileDownloadStatus.error => const Icon(
       Icons.error_outline,
-      color: Colors.red,
+      color: FlashPalette.danger,
     ),
     _ => const Icon(Icons.download_outlined),
   };

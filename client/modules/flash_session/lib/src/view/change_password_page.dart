@@ -72,10 +72,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       setState(() {
         _inlineError = error.response?.statusCode == 401
             ? '旧密码错误'
-            : readSessionDioErrorMessage(
-                error,
-                fallback: '修改密码失败，请稍后重试',
-              );
+            : readSessionDioErrorMessage(error, fallback: '修改密码失败，请稍后重试');
       });
     } catch (_) {
       if (!mounted) {
@@ -96,33 +93,40 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF6F8FC),
       appBar: AppBar(title: const Text('修改密码')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
-            TextField(
-              controller: _oldPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '旧密码',
-                border: OutlineInputBorder(),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE4EAF3)),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _newPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '新密码',
-                border: OutlineInputBorder(),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _oldPasswordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: '旧密码'),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _newPasswordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: '新密码'),
+                  ),
+                ],
               ),
             ),
             if (_inlineError != null) ...[
               const SizedBox(height: 12),
               Text(
                 _inlineError!,
-                style: const TextStyle(color: Color(0xFFE35D6A), fontSize: 13),
+                style: const TextStyle(color: Color(0xFFD95D6A), fontSize: 13),
               ),
             ],
             const SizedBox(height: 24),

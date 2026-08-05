@@ -1,3 +1,4 @@
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -69,42 +70,43 @@ class _ConversationListBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final conversations = state.conversations;
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification.metrics.extentAfter < 200) {
-          context.read<ConversationListCubit>().loadMore();
-        }
-        return false;
-      },
-      child: RefreshIndicator(
-        onRefresh: context.read<ConversationListCubit>().refresh,
-        child: ListView.separated(
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: conversations.length + (state.hasMore ? 1 : 0),
-          separatorBuilder: (_, index) {
-            if (index >= conversations.length - 1) {
-              return const SizedBox.shrink();
-            }
-            return const Divider(
-              height: 1,
-              thickness: 0.8,
-              indent: 80,
-              color: Color(0xFFE7EEF7),
-            );
-          },
-          itemBuilder: (context, index) {
-            if (index >= conversations.length) {
-              return _LoadMoreFooter(
-                isLoadingMore: state.isLoadingMore,
-                error: state.loadMoreError,
+    return ColoredBox(
+      color: FlashPalette.background,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification.metrics.extentAfter < 200) {
+            context.read<ConversationListCubit>().loadMore();
+          }
+          return false;
+        },
+        child: RefreshIndicator(
+          color: FlashPalette.primary,
+          backgroundColor: FlashPalette.surface,
+          onRefresh: context.read<ConversationListCubit>().refresh,
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: conversations.length + (state.hasMore ? 1 : 0),
+            separatorBuilder: (_, index) {
+              if (index >= conversations.length - 1) {
+                return const SizedBox.shrink();
+              }
+              return const SizedBox(height: 10);
+            },
+            itemBuilder: (context, index) {
+              if (index >= conversations.length) {
+                return _LoadMoreFooter(
+                  isLoadingMore: state.isLoadingMore,
+                  error: state.loadMoreError,
+                );
+              }
+              final conversation = conversations[index];
+              return ConversationTile(
+                conversation: conversation,
+                onTap: () => onConversationTap?.call(conversation),
               );
-            }
-            final conversation = conversations[index];
-            return ConversationTile(
-              conversation: conversation,
-              onTap: () => onConversationTap?.call(conversation),
-            );
-          },
+            },
+          ),
         ),
       ),
     );
@@ -126,7 +128,7 @@ class _LoadMoreFooter extends StatelessWidget {
           child: Text(
             error!,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: const Color(0xFFE35D6A),
+              color: FlashPalette.danger,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -153,22 +155,35 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: context.read<ConversationListCubit>().refresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 160),
-          Center(
-            child: Text(
-              '暂无会话',
-              style: TextStyle(
-                color: Color(0xFF7A7A7A),
-                fontWeight: FontWeight.w600,
+    return ColoredBox(
+      color: FlashPalette.background,
+      child: RefreshIndicator(
+        color: FlashPalette.primary,
+        backgroundColor: FlashPalette.surface,
+        onRefresh: context.read<ConversationListCubit>().refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [
+            SizedBox(height: 120),
+            Center(
+              child: Icon(
+                Icons.chat_bubble_outline_rounded,
+                color: FlashPalette.primary,
+                size: 38,
               ),
             ),
-          ),
-        ],
+            SizedBox(height: 16),
+            Center(
+              child: Text(
+                '暂无会话',
+                style: TextStyle(
+                  color: FlashPalette.secondaryInk,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -187,20 +202,27 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              color: FlashPalette.mutedInk,
+              size: 38,
+            ),
+            const SizedBox(height: 14),
             Text(
               message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFFE35D6A),
+                color: FlashPalette.secondaryInk,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 14),
-            OutlinedButton(
+            OutlinedButton.icon(
               onPressed: context
                   .read<ConversationListCubit>()
                   .loadConversations,
-              child: const Text('重试'),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('重试'),
             ),
           ],
         ),

@@ -1,5 +1,6 @@
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
+import 'package:flash_shared/flash_shared.dart' hide IdenticonAvatar;
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -71,14 +72,9 @@ class _MessagesHeader extends StatelessWidget {
     final wsClient = context.read<WsClient>();
 
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFE7EEF7), width: 0.8),
-        ),
-      ),
+      decoration: const BoxDecoration(color: FlashPalette.background),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
         child: Row(
           children: [
             avatar,
@@ -93,8 +89,8 @@ class _MessagesHeader extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF111111),
+                      fontWeight: FontWeight.w800,
+                      color: FlashPalette.ink,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -103,7 +99,7 @@ class _MessagesHeader extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF7A7A7A),
+                      color: FlashPalette.secondaryInk,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -135,32 +131,41 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (state) {
-      WsConnectionState.authenticated => const Color(0xFF07C160),
+      WsConnectionState.authenticated => FlashPalette.success,
       WsConnectionState.connecting ||
-      WsConnectionState.authenticating => const Color(0xFFFFB020),
-      WsConnectionState.disconnected => const Color(0xFFE35D6A),
+      WsConnectionState.authenticating => FlashPalette.warning,
+      WsConnectionState.disconnected => FlashPalette.danger,
     };
 
     return Tooltip(
       message: _label,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                _label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 6),
-          Text(
-            _label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

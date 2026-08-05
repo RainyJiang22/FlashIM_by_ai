@@ -28,22 +28,27 @@ class WsStatusIndicator extends StatelessWidget {
           WsConnectionState.authenticated => '',
         };
 
-        return Material(
-          color: color.withValues(alpha: 0.12),
-          child: InkWell(
-            onTap: state == WsConnectionState.disconnected
-                ? client.connect
-                : null,
-            child: SizedBox(
-              width: double.infinity,
-              height: 34,
-              child: Center(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Material(
+            color: color.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(13),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(13),
+              onTap: state == WsConnectionState.disconnected
+                  ? client.connect
+                  : null,
+              child: SizedBox(
+                width: double.infinity,
+                height: 32,
+                child: Center(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),

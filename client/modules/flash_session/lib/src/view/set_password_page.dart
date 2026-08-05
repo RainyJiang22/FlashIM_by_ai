@@ -80,33 +80,60 @@ class _SetPasswordPageState extends State<SetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF6F8FC),
       appBar: AppBar(title: const Text('设置密码')),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
-            const Text(
-              '为账号设置一个密码，之后可以直接使用密码登录。',
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.6,
-                color: Color(0xFF6A7B92),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAF1FF),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE4EAF3)),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.shield_outlined,
+                    color: Color(0xFF2C6BED),
+                    size: 28,
+                  ),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      '为账号设置一个密码，之后可以直接使用密码登录。',
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: Color(0xFF72809A),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '新密码',
-                border: OutlineInputBorder(),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE4EAF3)),
+              ),
+              child: TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: '新密码'),
               ),
             ),
             if (_inlineError != null) ...[
               const SizedBox(height: 12),
               Text(
                 _inlineError!,
-                style: const TextStyle(color: Color(0xFFE35D6A), fontSize: 13),
+                style: const TextStyle(color: Color(0xFFD95D6A), fontSize: 13),
               ),
             ],
             const SizedBox(height: 24),

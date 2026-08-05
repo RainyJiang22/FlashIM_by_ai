@@ -1,3 +1,4 @@
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 
 class HomeNavigationBar extends StatelessWidget {
@@ -16,23 +17,25 @@ class HomeNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE7EEF7), width: 0.8)),
+        color: FlashPalette.surface,
+        border: Border(top: BorderSide(color: FlashPalette.border)),
       ),
+      padding: const EdgeInsets.fromLTRB(8, 5, 8, 5),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: onDestinationSelected,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        selectedItemColor: const Color(0xFF1C4EFF),
-        unselectedItemColor: const Color(0xFF6A7B92),
-        selectedFontSize: 13,
-        unselectedFontSize: 13,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+        selectedItemColor: FlashPalette.primary,
+        unselectedItemColor: FlashPalette.secondaryInk,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+        iconSize: 25,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
         items: [
           BottomNavigationBarItem(
             icon: _messageIcon(Icons.chat_bubble_outline),
@@ -44,9 +47,9 @@ class HomeNavigationBar extends StatelessWidget {
             activeIcon: _contactIcon(Icons.people),
             label: '通讯录',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline, size: 30),
-            activeIcon: Icon(Icons.person, size: 30),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: '我的',
           ),
         ],

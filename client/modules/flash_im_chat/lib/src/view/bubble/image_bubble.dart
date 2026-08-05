@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/message.dart';
@@ -27,7 +28,7 @@ class ImageBubble extends StatelessWidget {
             thumbnail.isNotEmpty ? thumbnail : source,
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const ColoredBox(
-              color: Color(0xFFE9EAEC),
+              color: FlashPalette.primarySoft,
               child: Center(child: Icon(Icons.broken_image_outlined)),
             ),
           );
@@ -35,7 +36,7 @@ class ImageBubble extends StatelessWidget {
       key: const Key('image_bubble'),
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
         child: SizedBox(
           width: 190,
           height: 150,

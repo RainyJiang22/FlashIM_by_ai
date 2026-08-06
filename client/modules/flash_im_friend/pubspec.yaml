@@ -17,6 +17,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
+  pinyin: ^3.3.0
 
 dev_dependencies:
   flutter_test:

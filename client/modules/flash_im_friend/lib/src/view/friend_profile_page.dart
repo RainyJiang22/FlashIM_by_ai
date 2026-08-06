@@ -37,6 +37,24 @@ class FriendProfilePage extends StatelessWidget {
                     PopupMenuButton<_ProfileMenuAction>(
                       tooltip: '更多',
                       icon: const Icon(Icons.more_horiz_rounded, size: 27),
+                      iconColor: FriendPalette.ink,
+                      padding: EdgeInsets.zero,
+                      splashRadius: 21,
+                      position: PopupMenuPosition.under,
+                      offset: const Offset(0, 6),
+                      color: FriendPalette.surface,
+                      surfaceTintColor: Colors.transparent,
+                      shadowColor: const Color(0x2417233B),
+                      elevation: 12,
+                      menuPadding: const EdgeInsets.symmetric(vertical: 6),
+                      constraints: const BoxConstraints(
+                        minWidth: 184,
+                        maxWidth: 220,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        side: const BorderSide(color: FriendPalette.border),
+                      ),
                       onSelected: (action) {
                         if (action == _ProfileMenuAction.deleteFriend) {
                           _deleteFriend(context, current);
@@ -45,10 +63,9 @@ class FriendProfilePage extends StatelessWidget {
                       itemBuilder: (context) => const [
                         PopupMenuItem<_ProfileMenuAction>(
                           value: _ProfileMenuAction.deleteFriend,
-                          child: Text(
-                            '删除好友',
-                            style: TextStyle(color: FriendPalette.danger),
-                          ),
+                          height: 56,
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: _DeleteFriendMenuItem(),
                         ),
                       ],
                     ),
@@ -109,6 +126,49 @@ class FriendProfilePage extends StatelessWidget {
 }
 
 enum _ProfileMenuAction { deleteFriend }
+
+class _DeleteFriendMenuItem extends StatelessWidget {
+  const _DeleteFriendMenuItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: FriendPalette.dangerSoft,
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: const SizedBox(
+            width: 36,
+            height: 36,
+            child: Icon(
+              Icons.person_remove_alt_1_rounded,
+              color: FriendPalette.danger,
+              size: 19,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        const Expanded(
+          child: Text(
+            '删除好友',
+            style: TextStyle(
+              color: FriendPalette.danger,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const Icon(
+          Icons.chevron_right_rounded,
+          color: FriendPalette.mutedInk,
+          size: 18,
+        ),
+      ],
+    );
+  }
+}
 
 class _ProfileHero extends StatelessWidget {
   const _ProfileHero({required this.user});

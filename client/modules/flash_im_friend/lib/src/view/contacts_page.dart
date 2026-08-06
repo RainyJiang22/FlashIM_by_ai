@@ -8,7 +8,9 @@ import 'add_friend_page.dart';
 import 'friend_profile_page.dart';
 import 'friend_search_page.dart';
 import 'new_friends_page.dart';
+import 'widgets/friend_alphabet_index.dart';
 import 'widgets/friend_avatar_tile.dart';
+import 'widgets/friend_sort.dart';
 import 'widgets/friend_ui.dart';
 
 class ContactsPage extends StatelessWidget {
@@ -109,16 +111,6 @@ class _ContactsHeader extends StatelessWidget {
                     letterSpacing: 0.2,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  '和重要的人保持联系',
-                  style: TextStyle(
-                    color: FriendPalette.mutedInk,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.4,
-                  ),
-                ),
               ],
             ),
           ),
@@ -185,63 +177,217 @@ class _ContactsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final friends = [...state.friends]
-      ..sort((left, right) => left.displayName.compareTo(right.displayName));
+    final friends = List<FriendUser>.of(state.friends);
+
+    return _AlphabeticalContactsList(
+      friends: friends,
+      pendingRequestCount: state.pendingRequestCount,
+      onRefresh: context.read<FriendCubit>().refresh,
+      onMessageFriend: onMessageFriend,
+      onOpenNewFriends: () => _pushWithCubit(context, const NewFriendsPage()),
+    );
+  }
+}
+
+class _AlphabeticalContactsList extends StatefulWidget {
+  const _AlphabeticalContactsList({
+    required this.friends,
+    required this.pendingRequestCount,
+    required this.onRefresh,
+    required this.onMessageFriend,
+    required this.onOpenNewFriends,
+  });
+
+  final List<FriendUser> friends;
+  final int pendingRequestCount;
+  final Future<void> Function() onRefresh;
+  final ValueChanged<FriendUser> onMessageFriend;
+  final VoidCallback onOpenNewFriends;
+
+  @override
+  State<_AlphabeticalContactsList> createState() =>
+      _AlphabeticalContactsListState();
+}
+
+class _AlphabeticalContactsListState extends State<_AlphabeticalContactsList> {
+  final ScrollController _scrollController = ScrollController();
+  Map<String, GlobalKey> _sectionKeys = const {};
+  List<FriendSection> _sections = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _updateSections(widget.friends);
+  }
+
+  @override
+  void didUpdateWidget(covariant _AlphabeticalContactsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.friends != widget.friends) {
+      _updateSections(widget.friends);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFriends = _sections.isNotEmpty;
 
     return RefreshIndicator(
       color: FriendPalette.primary,
       backgroundColor: FriendPalette.surface,
-      onRefresh: context.read<FriendCubit>().refresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+      onRefresh: widget.onRefresh,
+      child: Stack(
         children: [
-          _NewFriendsEntry(
-            count: state.pendingRequestCount,
-            onTap: () => _pushWithCubit(context, const NewFriendsPage()),
-          ),
-          const SizedBox(height: 24),
-          FriendSectionTitle(
-            title: friends.isEmpty ? '通讯录' : '好友',
-            caption: friends.isEmpty ? null : '${friends.length} 位联系人',
-          ),
-          if (friends.isEmpty)
-            const FriendCard(
-              child: FriendEmptyState(
-                icon: Icons.people_alt_outlined,
-                title: '还没有好友',
-                message: '搜索账号，和重要的人建立联系',
-              ),
-            )
-          else
-            FriendCard(
-              child: Column(
-                children: [
-                  for (var index = 0; index < friends.length; index += 1) ...[
-                    FriendAvatarTile(
-                      user: friends[index],
-                      onTap: () => _pushWithCubit(
-                        context,
-                        FriendProfilePage(
-                          user: friends[index],
-                          onMessageFriend: onMessageFriend,
-                        ),
-                      ),
+          SingleChildScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 16, 44, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _NewFriendsEntry(
+                  count: widget.pendingRequestCount,
+                  onTap: widget.onOpenNewFriends,
+                ),
+                const SizedBox(height: 24),
+                FriendSectionTitle(
+                  title: hasFriends ? '好友' : '通讯录',
+                  caption: hasFriends
+                      ? '${widget.friends.length} 位联系人'
+                      : null,
+                ),
+                if (!hasFriends)
+                  const FriendCard(
+                    child: FriendEmptyState(
+                      icon: Icons.people_alt_outlined,
+                      title: '还没有好友',
+                      message: '搜索账号，和重要的人建立联系',
                     ),
-                    if (index != friends.length - 1)
-                      const Divider(
-                        height: 1,
-                        indent: 84,
-                        endIndent: 16,
-                        color: FriendPalette.border,
-                      ),
-                  ],
-                ],
-              ),
+                  )
+                else
+                  FriendCard(child: _buildFriendGroups(context)),
+              ],
+            ),
+          ),
+          if (hasFriends)
+            Positioned.fill(
+              child: FriendAlphabetIndex(onSelected: _jumpToLetter),
             ),
         ],
       ),
     );
+  }
+
+  Widget _buildFriendGroups(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final section in _sections) ...[
+          Container(
+            key: _sectionKeys[section.letter],
+            height: 32,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            color: FriendPalette.background,
+            child: Text(
+              section.letter,
+              style: const TextStyle(
+                color: FriendPalette.primaryDeep,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+          for (var index = 0; index < section.friends.length; index += 1) ...[
+            FriendAvatarTile(
+              user: section.friends[index],
+              onTap: () => _openFriendProfile(context, section.friends[index]),
+            ),
+            if (index != section.friends.length - 1)
+              const Divider(
+                height: 1,
+                indent: 84,
+                endIndent: 16,
+                color: FriendPalette.border,
+              ),
+          ],
+        ],
+      ],
+    );
+  }
+
+  void _updateSections(Iterable<FriendUser> friends) {
+    final sections = buildFriendSections(friends);
+    final oldKeys = _sectionKeys;
+    _sections = sections;
+    _sectionKeys = {
+      for (final section in sections)
+        section.letter:
+            oldKeys[section.letter] ?? GlobalKey(debugLabel: section.letter),
+    };
+  }
+
+  void _openFriendProfile(BuildContext context, FriendUser friend) {
+    _pushWithCubit(
+      context,
+      FriendProfilePage(user: friend, onMessageFriend: widget.onMessageFriend),
+    );
+  }
+
+  void _jumpToLetter(String selectedLetter) {
+    if (_sections.isEmpty) {
+      return;
+    }
+
+    final target = _findSection(selectedLetter);
+    final targetContext = _sectionKeys[target.letter]?.currentContext;
+    if (targetContext != null) {
+      Scrollable.ensureVisible(
+        targetContext,
+        alignment: 0.02,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    final targetIndex = _sections.indexOf(target);
+    final estimatedOffset =
+        _scrollController.position.maxScrollExtent *
+        (targetIndex / _sections.length);
+    _scrollController.animateTo(
+      estimatedOffset,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  FriendSection _findSection(String selectedLetter) {
+    if (selectedLetter == '#') {
+      for (final section in _sections) {
+        if (section.letter == '#') {
+          return section;
+        }
+      }
+      return _sections.last;
+    }
+    for (final section in _sections) {
+      if (section.letter == selectedLetter ||
+          section.letter.compareTo(selectedLetter) > 0) {
+        return section;
+      }
+    }
+    return _sections.last;
   }
 }
 

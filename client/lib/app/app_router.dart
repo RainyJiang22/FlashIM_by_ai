@@ -2,6 +2,8 @@ import 'package:flash_starter/flash_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
+import 'package:flash_im_friend/flash_im_friend.dart';
+import 'package:flash_im_group/flash_im_group.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,6 +18,29 @@ abstract final class AppRoutes {
   static const setPassword = '/mine/password/set';
   static const changePassword = '/mine/password/change';
   static const chat = '/chat';
+  static const createGroup = '/group/create';
+  static const myGroups = '/group/list';
+  static const privateChatDetails = '/chat/private/details';
+}
+
+class CreateGroupRouteArguments {
+  const CreateGroupRouteArguments({this.initialMembers = const []});
+
+  final List<FriendUser> initialMembers;
+}
+
+class PrivateChatDetailsRouteArguments {
+  const PrivateChatDetailsRouteArguments({
+    required this.friend,
+    required this.currentUserId,
+    this.currentUserName,
+    this.currentUserAvatar,
+  });
+
+  final FriendUser friend;
+  final String currentUserId;
+  final String? currentUserName;
+  final String? currentUserAvatar;
 }
 
 class ChatRouteArguments {
@@ -93,11 +118,85 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
         );
       }
       return MaterialPageRoute<void>(
-        builder: (_) => ChatPage(
+        builder: (context) => ChatPage(
           conversation: args.conversation,
           currentUserId: args.currentUserId,
           currentUserName: args.currentUserName,
           currentUserAvatar: args.currentUserAvatar,
+          onDetailsTap: args.conversation.isPrivateChat
+              ? () async {
+                  final peerId = int.tryParse(
+                    args.conversation.peerUserId ?? '',
+                  );
+                  if (peerId == null) {
+                    return;
+                  }
+                  final group = await Navigator.of(context)
+                      .pushNamed<Conversation>(
+                        AppRoutes.privateChatDetails,
+                        arguments: PrivateChatDetailsRouteArguments(
+                          friend: FriendUser(
+                            accountId: peerId,
+                            nickname: args.conversation.peerNickname ?? '',
+                            avatar: args.conversation.peerAvatar ?? '',
+                            signature: '',
+                            relationStatus: 'friend',
+                          ),
+                          currentUserId: args.currentUserId,
+                          currentUserName: args.currentUserName,
+                          currentUserAvatar: args.currentUserAvatar,
+                        ),
+                      );
+                  if (group != null && context.mounted) {
+                    await Navigator.of(context).pushReplacementNamed(
+                      AppRoutes.chat,
+                      arguments: ChatRouteArguments(
+                        conversation: group,
+                        currentUserId: args.currentUserId,
+                        currentUserName: args.currentUserName,
+                        currentUserAvatar: args.currentUserAvatar,
+                      ),
+                    );
+                  }
+                }
+              : null,
+        ),
+        settings: settings,
+      );
+    case AppRoutes.createGroup:
+      final args = settings.arguments;
+      final initialMembers = args is CreateGroupRouteArguments
+          ? args.initialMembers
+          : const <FriendUser>[];
+      return MaterialPageRoute<Conversation>(
+        builder: (_) => CreateGroupPage(initialMembers: initialMembers),
+        settings: settings,
+      );
+    case AppRoutes.myGroups:
+      return MaterialPageRoute<Conversation>(
+        builder: (_) => const MyGroupsPage(),
+        settings: settings,
+      );
+    case AppRoutes.privateChatDetails:
+      final args = settings.arguments;
+      if (args is! PrivateChatDetailsRouteArguments) {
+        return MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Center(child: Text('聊天参数异常'))),
+          settings: settings,
+        );
+      }
+      return MaterialPageRoute<Conversation>(
+        builder: (context) => PrivateChatDetailsPage(
+          friend: args.friend,
+          onInviteMore: (friend) async {
+            final group = await Navigator.of(context).pushNamed<Conversation>(
+              AppRoutes.createGroup,
+              arguments: CreateGroupRouteArguments(initialMembers: [friend]),
+            );
+            if (group != null && context.mounted) {
+              Navigator.of(context).pop(group);
+            }
+          },
         ),
         settings: settings,
       );

@@ -162,13 +162,35 @@ class _MainShellPageState extends State<MainShellPage> {
     await _openChat(conversation);
   }
 
+  Future<void> _createGroup() async {
+    final result = await Navigator.of(context).pushNamed(AppRoutes.createGroup);
+    if (result is! Conversation || !mounted) {
+      return;
+    }
+    await _conversationListCubit.refresh();
+    if (mounted) {
+      await _openChat(result);
+    }
+  }
+
+  Future<void> _openMyGroups() async {
+    final result = await Navigator.of(context).pushNamed(AppRoutes.myGroups);
+    if (result is Conversation && mounted) {
+      await _openChat(result);
+    }
+  }
+
   List<Widget> _buildPages() {
     return [
       MessagesPlaceholderPage(
         conversationListCubit: _conversationListCubit,
         onConversationTap: _openChat,
+        onCreateGroup: _createGroup,
       ),
-      ContactsPage(onMessageFriend: _openFriendChat),
+      ContactsPage(
+        onMessageFriend: _openFriendChat,
+        onOpenGroups: _openMyGroups,
+      ),
       const MinePage(),
     ];
   }

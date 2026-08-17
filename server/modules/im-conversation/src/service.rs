@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use flash_core::{AppError, AppResult, SharedContext};
+use std::collections::HashSet;
 use uuid::Uuid;
 
-use crate::models::{ConversationListItem, ConversationListQuery};
+use crate::models::{ConversationListItem, ConversationListQuery, CreateConversationBody};
 
 const DEFAULT_LIMIT: i64 = 20;
 const MAX_LIMIT: i64 = 100;
@@ -21,21 +22,83 @@ pub fn normalize_pagination(query: ConversationListQuery) -> AppResult<(i64, i64
     Ok((limit.min(MAX_LIMIT), offset))
 }
 
+pub fn normalize_list_query(query: ConversationListQuery) -> AppResult<(i64, i64, Option<i16>)> {
+    let conversation_type = query.r#type;
+    if conversation_type.is_some_and(|value| value != 0 && value != 1) {
+        return Err(AppError::bad_request("invalid conversation type"));
+    }
+    let (limit, offset) = normalize_pagination(query)?;
+    Ok((limit, offset, conversation_type))
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct CreateGroupInput {
+    pub name: String,
+    pub member_ids: Vec<i64>,
+}
+
+pub fn normalize_group_input(
+    owner_id: i64,
+    body: CreateConversationBody,
+) -> AppResult<CreateGroupInput> {
+    if body.r#type.trim() != "group" {
+        return Err(AppError::bad_request("unsupported conversation type"));
+    }
+
+    let name = body.name.trim().to_string();
+    if name.is_empty() || name.chars().count() > 100 {
+        return Err(AppError::bad_request("invalid group name"));
+    }
+    if !(2..=199).contains(&body.member_ids.len()) {
+        return Err(AppError::bad_request("invalid group member count"));
+    }
+
+    let mut unique_ids = HashSet::with_capacity(body.member_ids.len());
+    for member_id in &body.member_ids {
+        if *member_id == owner_id || !unique_ids.insert(*member_id) {
+            return Err(AppError::bad_request("invalid group members"));
+        }
+    }
+
+    Ok(CreateGroupInput {
+        name,
+        member_ids: body.member_ids,
+    })
+}
+
 pub async fn list_conversations(
     context: &SharedContext,
     user_id: i64,
     query: ConversationListQuery,
 ) -> AppResult<Vec<ConversationListItem>> {
-    let (limit, offset) = normalize_pagination(query)?;
+    let (limit, offset, conversation_type) = normalize_list_query(query)?;
     let rows = crate::repository::list_conversations_by_user(
         context.postgres.pool(),
         user_id,
         limit,
         offset,
+        conversation_type,
     )
     .await?;
 
     Ok(rows.into_iter().map(ConversationListItem::from).collect())
+}
+
+pub async fn create_conversation(
+    context: &SharedContext,
+    owner_id: i64,
+    body: CreateConversationBody,
+) -> AppResult<ConversationListItem> {
+    let input = normalize_group_input(owner_id, body)?;
+    let conversation = crate::repository::create_group_conversation(
+        context.postgres.pool(),
+        owner_id,
+        &input.name,
+        &input.member_ids,
+    )
+    .await?;
+
+    Ok(ConversationListItem::from(conversation))
 }
 
 pub async fn get_conversation_by_id(
@@ -148,45 +211,240 @@ impl<'a> ConversationMessageService<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{models::ConversationListQuery, service::normalize_pagination};
+    use std::sync::Arc;
+
+    use flash_core::{AppConfig, AppContext};
+
+    use crate::{
+        models::{ConversationListQuery, CreateConversationBody},
+        service::{normalize_group_input, normalize_list_query, normalize_pagination},
+    };
+
+    fn list_query(limit: Option<i64>, offset: Option<i64>) -> ConversationListQuery {
+        ConversationListQuery {
+            limit,
+            offset,
+            r#type: None,
+        }
+    }
 
     #[test]
     fn pagination_defaults_to_twenty() {
-        let (limit, offset) = normalize_pagination(ConversationListQuery {
-            limit: None,
-            offset: None,
-        })
-        .expect("pagination should be valid");
+        let (limit, offset) =
+            normalize_pagination(list_query(None, None)).expect("pagination should be valid");
 
         assert_eq!((limit, offset), (20, 0));
     }
 
     #[test]
     fn pagination_clamps_limit_to_maximum() {
-        let (limit, offset) = normalize_pagination(ConversationListQuery {
-            limit: Some(200),
-            offset: Some(30),
-        })
-        .expect("pagination should be valid");
+        let (limit, offset) = normalize_pagination(list_query(Some(200), Some(30)))
+            .expect("pagination should be valid");
 
         assert_eq!((limit, offset), (100, 30));
     }
 
     #[test]
     fn pagination_rejects_invalid_values() {
+        assert!(normalize_pagination(list_query(Some(0), Some(0))).is_err());
+        assert!(normalize_pagination(list_query(Some(20), Some(-1))).is_err());
+    }
+
+    #[test]
+    fn list_query_accepts_private_and_group_filters() {
+        for conversation_type in [0, 1] {
+            let normalized = normalize_list_query(ConversationListQuery {
+                limit: None,
+                offset: None,
+                r#type: Some(conversation_type),
+            })
+            .expect("conversation type should be valid");
+            assert_eq!(normalized, (20, 0, Some(conversation_type)));
+        }
+
         assert!(
-            normalize_pagination(ConversationListQuery {
-                limit: Some(0),
+            normalize_list_query(ConversationListQuery {
+                limit: None,
+                offset: None,
+                r#type: Some(2),
+            })
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn group_input_trims_name_and_keeps_member_order() {
+        let input = normalize_group_input(
+            1,
+            CreateConversationBody {
+                r#type: "group".to_string(),
+                name: "  小雨、朱红  ".to_string(),
+                member_ids: vec![2, 3],
+            },
+        )
+        .expect("group input should be valid");
+
+        assert_eq!(input.name, "小雨、朱红");
+        assert_eq!(input.member_ids, vec![2, 3]);
+    }
+
+    #[test]
+    fn group_input_rejects_invalid_type_name_and_members() {
+        let valid = || CreateConversationBody {
+            r#type: "group".to_string(),
+            name: "群聊".to_string(),
+            member_ids: vec![2, 3],
+        };
+
+        let mut wrong_type = valid();
+        wrong_type.r#type = "private".to_string();
+        assert!(normalize_group_input(1, wrong_type).is_err());
+
+        let mut empty_name = valid();
+        empty_name.name = "   ".to_string();
+        assert!(normalize_group_input(1, empty_name).is_err());
+
+        let mut long_name = valid();
+        long_name.name = "群".repeat(101);
+        assert!(normalize_group_input(1, long_name).is_err());
+
+        let mut too_few = valid();
+        too_few.member_ids = vec![2];
+        assert!(normalize_group_input(1, too_few).is_err());
+
+        let mut contains_owner = valid();
+        contains_owner.member_ids = vec![1, 2];
+        assert!(normalize_group_input(1, contains_owner).is_err());
+
+        let mut duplicates = valid();
+        duplicates.member_ids = vec![2, 2];
+        assert!(normalize_group_input(1, duplicates).is_err());
+    }
+
+    #[test]
+    fn group_input_accepts_maximum_invited_members() {
+        let member_ids = (2..=200).collect::<Vec<_>>();
+        let input = normalize_group_input(
+            1,
+            CreateConversationBody {
+                r#type: "group".to_string(),
+                name: "大群".to_string(),
+                member_ids,
+            },
+        )
+        .expect("199 invited members should be valid");
+
+        assert_eq!(input.member_ids.len(), 199);
+    }
+
+    #[tokio::test]
+    async fn group_service_round_trips_against_configured_database() {
+        let Ok(config) = AppConfig::from_env() else {
+            return;
+        };
+        let context = Arc::new(
+            AppContext::from_config(config)
+                .await
+                .expect("configured test database should connect"),
+        );
+        let pool = context.postgres.pool();
+        let marker = format!("{:016x}", rand_marker());
+        let mut user_ids = Vec::new();
+        for index in 0..4 {
+            let account_id = sqlx::query_scalar::<_, i64>(
+                r#"
+                INSERT INTO accounts (primary_identifier)
+                VALUES ($1)
+                RETURNING id
+                "#,
+            )
+            .bind(format!("group-service-test-{marker}-{index}"))
+            .fetch_one(pool)
+            .await
+            .expect("test account should be inserted");
+            sqlx::query(
+                r#"
+                INSERT INTO user_profiles (account_id, nickname, avatar_url)
+                VALUES ($1, $2, $3)
+                "#,
+            )
+            .bind(account_id)
+            .bind(format!("群成员{index}"))
+            .bind(format!("identicon:{account_id}"))
+            .execute(pool)
+            .await
+            .expect("test profile should be inserted");
+            user_ids.push(account_id);
+        }
+
+        let owner_id = user_ids[0];
+        for friend_id in &user_ids[1..3] {
+            sqlx::query(
+                r#"
+                INSERT INTO friend_relations (user_id, friend_user_id)
+                VALUES ($1, $2)
+                "#,
+            )
+            .bind(owner_id)
+            .bind(friend_id)
+            .execute(pool)
+            .await
+            .expect("test friendship should be inserted");
+        }
+
+        let created = super::create_conversation(
+            &context,
+            owner_id,
+            CreateConversationBody {
+                r#type: "group".to_string(),
+                name: "服务测试群".to_string(),
+                member_ids: user_ids[1..3].to_vec(),
+            },
+        )
+        .await
+        .expect("group should be created");
+        assert_eq!(created.r#type, 1);
+        assert_eq!(created.owner_id, Some(owner_id.to_string()));
+        assert_eq!(created.member_avatars.len(), 3);
+
+        let groups = super::list_conversations(
+            &context,
+            owner_id,
+            ConversationListQuery {
+                limit: Some(100),
                 offset: Some(0),
-            })
-            .is_err()
-        );
-        assert!(
-            normalize_pagination(ConversationListQuery {
-                limit: Some(20),
-                offset: Some(-1),
-            })
-            .is_err()
-        );
+                r#type: Some(1),
+            },
+        )
+        .await
+        .expect("group list should load");
+        assert!(groups.iter().any(|item| item.id == created.id));
+
+        let invalid = super::create_conversation(
+            &context,
+            owner_id,
+            CreateConversationBody {
+                r#type: "group".to_string(),
+                name: "包含非好友".to_string(),
+                member_ids: vec![user_ids[1], user_ids[3]],
+            },
+        )
+        .await;
+        assert!(invalid.is_err());
+
+        sqlx::query("DELETE FROM accounts WHERE id = ANY($1)")
+            .bind(&user_ids)
+            .execute(pool)
+            .await
+            .expect("test accounts should be cleaned up");
+    }
+
+    fn rand_marker() -> u64 {
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos() as u64
     }
 }

@@ -2,6 +2,7 @@ import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/material.dart';
 
 import '../data/conversation.dart';
+import 'group_avatar.dart';
 
 class ConversationTile extends StatelessWidget {
   const ConversationTile({super.key, required this.conversation, this.onTap});
@@ -88,6 +89,12 @@ class _ConversationAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (conversation.isGroupChat) {
+      return GroupAvatar(
+        avatars: conversation.memberAvatars,
+        seed: conversation.id,
+      );
+    }
     return AvatarWidget(
       avatar: conversation.peerAvatar?.trim(),
       seed: conversation.avatarSeed,

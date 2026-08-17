@@ -1,0 +1,141 @@
+import 'package:flash_im_conversation/flash_im_conversation.dart';
+import 'package:flash_im_friend/flash_im_friend.dart';
+
+class FakeFriendRepository implements FriendRepository {
+  FakeFriendRepository({this.friends = const [], this.error});
+
+  final List<FriendUser> friends;
+  final Object? error;
+
+  @override
+  Future<List<FriendUser>> getFriends() async {
+    if (error != null) throw error!;
+    return friends;
+  }
+
+  @override
+  Future<FriendAcceptResult> acceptRequest(String requestId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<FriendUser> getUser(int accountId) => throw UnimplementedError();
+
+  @override
+  Future<List<FriendRequest>> getReceivedRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<List<FriendRequest>> getSentRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> rejectRequest(String requestId) => throw UnimplementedError();
+
+  @override
+  Future<void> removeFriend(int accountId) => throw UnimplementedError();
+
+  @override
+  Future<List<FriendUser>> searchUsers(String query, {int limit = 30}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> sendRequest({required int toUserId, required String message}) =>
+      throw UnimplementedError();
+}
+
+class FakeConversationRepository implements ConversationRepository {
+  FakeConversationRepository({
+    this.pages = const {},
+    this.created,
+    this.createError,
+    this.listError,
+  });
+
+  final Map<int, List<Conversation>> pages;
+  final Conversation? created;
+  final Object? createError;
+  final Object? listError;
+  final List<int?> requestedTypes = [];
+  final List<int> requestedOffsets = [];
+  String? createdName;
+  List<int>? createdMemberIds;
+
+  @override
+  Future<Conversation> createGroup({
+    required String name,
+    required List<int> memberIds,
+  }) async {
+    createdName = name;
+    createdMemberIds = memberIds;
+    if (createError != null) throw createError!;
+    return created!;
+  }
+
+  @override
+  Future<Conversation> getById(String id) => throw UnimplementedError();
+
+  @override
+  Future<List<Conversation>> getList({
+    int limit = 20,
+    int offset = 0,
+    int? type,
+  }) async {
+    requestedTypes.add(type);
+    requestedOffsets.add(offset);
+    if (listError != null) throw listError!;
+    return pages[offset] ?? const [];
+  }
+
+  @override
+  Future<void> markRead(String id) async {}
+}
+
+const friends = <FriendUser>[
+  FriendUser(
+    accountId: 2,
+    nickname: '阿青',
+    avatar: 'identicon:2',
+    signature: '',
+    flashId: 'aqing',
+    relationStatus: 'friend',
+  ),
+  FriendUser(
+    accountId: 3,
+    nickname: '白露',
+    avatar: 'identicon:3',
+    signature: '',
+    flashId: 'bailu',
+    relationStatus: 'friend',
+  ),
+  FriendUser(
+    accountId: 4,
+    nickname: '橙子',
+    avatar: 'identicon:4',
+    signature: '',
+    flashId: 'orange',
+    relationStatus: 'friend',
+  ),
+  FriendUser(
+    accountId: 5,
+    nickname: '丁香',
+    avatar: 'identicon:5',
+    signature: '',
+    flashId: 'dingxiang',
+    relationStatus: 'friend',
+  ),
+];
+
+Conversation groupConversation(String id, String name) => Conversation(
+  id: id,
+  type: 1,
+  name: name,
+  memberAvatars: const ['identicon:1', 'identicon:2'],
+  unreadCount: 0,
+  createdAt: DateTime(2026, 8, 16),
+);

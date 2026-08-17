@@ -42,6 +42,8 @@ dependencies:
     path: modules/flash_im_chat
   flash_im_friend:
     path: modules/flash_im_friend
+  flash_im_group:
+    path: modules/flash_im_group
   flash_shared:
     path: modules/flash_shared
   flash_starter:

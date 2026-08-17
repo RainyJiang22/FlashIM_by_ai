@@ -24,6 +24,7 @@ class ChatPage extends StatelessWidget {
     this.currentUserName,
     this.currentUserAvatar,
     this.videoThumbnailService,
+    this.onDetailsTap,
   });
 
   final Conversation conversation;
@@ -31,6 +32,7 @@ class ChatPage extends StatelessWidget {
   final String? currentUserName;
   final String? currentUserAvatar;
   final VideoThumbnailService? videoThumbnailService;
+  final Future<void> Function()? onDetailsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +56,7 @@ class ChatPage extends StatelessWidget {
         conversation: conversation,
         currentUserId: currentUserId,
         currentUserAvatar: currentUserAvatar,
+        onDetailsTap: onDetailsTap,
       ),
     );
   }
@@ -64,16 +67,29 @@ class _ChatScaffold extends StatelessWidget {
     required this.conversation,
     required this.currentUserId,
     this.currentUserAvatar,
+    this.onDetailsTap,
   });
 
   final Conversation conversation;
   final String currentUserId;
   final String? currentUserAvatar;
+  final Future<void> Function()? onDetailsTap;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(conversation.displayName)),
+      appBar: AppBar(
+        title: Text(conversation.displayName),
+        actions: [
+          if (conversation.isPrivateChat && onDetailsTap != null)
+            IconButton(
+              key: const Key('chat-details-action'),
+              tooltip: '聊天详情',
+              onPressed: onDetailsTap,
+              icon: const Icon(Icons.more_horiz_rounded),
+            ),
+        ],
+      ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: ColoredBox(

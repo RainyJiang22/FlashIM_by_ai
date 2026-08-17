@@ -14,9 +14,14 @@ import 'widgets/friend_sort.dart';
 import 'widgets/friend_ui.dart';
 
 class ContactsPage extends StatelessWidget {
-  const ContactsPage({super.key, required this.onMessageFriend});
+  const ContactsPage({
+    super.key,
+    required this.onMessageFriend,
+    required this.onOpenGroups,
+  });
 
   final ValueChanged<FriendUser> onMessageFriend;
+  final VoidCallback onOpenGroups;
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +74,7 @@ class ContactsPage extends StatelessWidget {
                   return _ContactsBody(
                     state: state,
                     onMessageFriend: onMessageFriend,
+                    onOpenGroups: onOpenGroups,
                   );
                 },
               ),
@@ -170,10 +176,15 @@ class _HeaderAction extends StatelessWidget {
 }
 
 class _ContactsBody extends StatelessWidget {
-  const _ContactsBody({required this.state, required this.onMessageFriend});
+  const _ContactsBody({
+    required this.state,
+    required this.onMessageFriend,
+    required this.onOpenGroups,
+  });
 
   final FriendState state;
   final ValueChanged<FriendUser> onMessageFriend;
+  final VoidCallback onOpenGroups;
 
   @override
   Widget build(BuildContext context) {
@@ -185,6 +196,7 @@ class _ContactsBody extends StatelessWidget {
       onRefresh: context.read<FriendCubit>().refresh,
       onMessageFriend: onMessageFriend,
       onOpenNewFriends: () => _pushWithCubit(context, const NewFriendsPage()),
+      onOpenGroups: onOpenGroups,
     );
   }
 }
@@ -196,6 +208,7 @@ class _AlphabeticalContactsList extends StatefulWidget {
     required this.onRefresh,
     required this.onMessageFriend,
     required this.onOpenNewFriends,
+    required this.onOpenGroups,
   });
 
   final List<FriendUser> friends;
@@ -203,6 +216,7 @@ class _AlphabeticalContactsList extends StatefulWidget {
   final Future<void> Function() onRefresh;
   final ValueChanged<FriendUser> onMessageFriend;
   final VoidCallback onOpenNewFriends;
+  final VoidCallback onOpenGroups;
 
   @override
   State<_AlphabeticalContactsList> createState() =>
@@ -255,12 +269,12 @@ class _AlphabeticalContactsListState extends State<_AlphabeticalContactsList> {
                   count: widget.pendingRequestCount,
                   onTap: widget.onOpenNewFriends,
                 ),
+                const SizedBox(height: 10),
+                _GroupsEntry(onTap: widget.onOpenGroups),
                 const SizedBox(height: 24),
                 FriendSectionTitle(
                   title: hasFriends ? '好友' : '通讯录',
-                  caption: hasFriends
-                      ? '${widget.friends.length} 位联系人'
-                      : null,
+                  caption: hasFriends ? '${widget.friends.length} 位联系人' : null,
                 ),
                 if (!hasFriends)
                   const FriendCard(
@@ -449,6 +463,30 @@ class _NewFriendsEntry extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _GroupsEntry extends StatelessWidget {
+  const _GroupsEntry({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FriendCard(
+      child: ListTile(
+        key: const Key('contacts-groups-entry'),
+        onTap: onTap,
+        leading: const FriendIconBadge(
+          icon: Icons.groups_rounded,
+          color: FriendPalette.primary,
+          backgroundColor: FriendPalette.primarySoft,
+        ),
+        title: const Text('群聊', style: TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: const Text('查看我加入的群聊'),
+        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
       ),
     );
   }

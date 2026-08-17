@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   testWidgets('ChatPage renders input', (tester) async {
+    var detailsTapped = false;
     await tester.pumpWidget(
       MultiRepositoryProvider(
         providers: [
@@ -25,6 +26,7 @@ void main() {
               createdAt: DateTime(2026, 4, 2),
             ),
             currentUserId: '1',
+            onDetailsTap: () async => detailsTapped = true,
           ),
         ),
       ),
@@ -33,6 +35,9 @@ void main() {
 
     expect(find.text('输入消息'), findsOneWidget);
     expect(find.text('朱红'), findsOneWidget);
+    expect(find.byKey(const Key('chat-details-action')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('chat-details-action')));
+    expect(detailsTapped, isTrue);
   });
 
   testWidgets('plus button expands media action panel', (tester) async {
@@ -72,10 +77,80 @@ void main() {
         .last;
     expect(panel.constraints?.maxHeight, 112);
   });
+
+  testWidgets('renders loaded message list', (tester) async {
+    final message = Message(
+      id: 'm1',
+      conversationId: 'c1',
+      senderId: '2',
+      senderName: '朱红',
+      seq: 1,
+      content: '群聊消息',
+      status: MessageStatus.sent,
+      createdAt: DateTime(2026, 8, 16),
+    );
+    await tester.pumpWidget(
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<MessageRepository>.value(
+            value: _FakeMessageRepository(messages: [message]),
+          ),
+          RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+        ],
+        child: MaterialApp(
+          home: ChatPage(
+            conversation: Conversation(
+              id: 'c1',
+              type: 1,
+              name: '测试群',
+              unreadCount: 0,
+              createdAt: DateTime(2026, 8, 16),
+            ),
+            currentUserId: '1',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('群聊消息'), findsOneWidget);
+    expect(find.byKey(const Key('chat-details-action')), findsNothing);
+  });
+
+  testWidgets('renders message load error', (tester) async {
+    await tester.pumpWidget(
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<MessageRepository>.value(
+            value: const _FakeMessageRepository(error: true),
+          ),
+          RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+        ],
+        child: MaterialApp(
+          home: ChatPage(
+            conversation: Conversation(
+              id: 'c1',
+              type: 0,
+              peerNickname: '朱红',
+              unreadCount: 0,
+              createdAt: DateTime(2026, 8, 16),
+            ),
+            currentUserId: '1',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('消息加载失败，请稍后重试'), findsOneWidget);
+  });
 }
 
 class _FakeMessageRepository implements MessageRepository {
-  const _FakeMessageRepository();
+  const _FakeMessageRepository({this.messages = const [], this.error = false});
+
+  final List<Message> messages;
+  final bool error;
 
   @override
   Future<List<Message>> getMessages({
@@ -83,7 +158,10 @@ class _FakeMessageRepository implements MessageRepository {
     int? beforeSeq,
     int limit = 50,
   }) async {
-    return const [];
+    if (error) {
+      throw StateError('load failed');
+    }
+    return messages;
   }
 
   @override

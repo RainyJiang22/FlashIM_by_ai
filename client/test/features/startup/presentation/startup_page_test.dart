@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
-import 'package:flash_im_core/flash_im_core.dart';
+import 'package:flash_im_core/flash_im_core.dart' hide FriendUser;
+import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flash_starter/flash_starter.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,9 @@ void main() {
             value: _FakeConversationRepository(),
           ),
           RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+          RepositoryProvider<FriendRepository>.value(
+            value: _FakeFriendRepository(),
+          ),
         ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
@@ -62,6 +66,9 @@ void main() {
             value: _FakeConversationRepository(),
           ),
           RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+          RepositoryProvider<FriendRepository>.value(
+            value: _FakeFriendRepository(),
+          ),
         ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
@@ -92,6 +99,9 @@ void main() {
             value: _FakeConversationRepository(),
           ),
           RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+          RepositoryProvider<FriendRepository>.value(
+            value: _FakeFriendRepository(),
+          ),
         ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
@@ -165,6 +175,46 @@ class _FakeAuthRepository implements AuthRepository {
   Future<String> sendSmsCode(String phone) async => '654321';
 }
 
+class _FakeFriendRepository implements FriendRepository {
+  @override
+  Future<List<FriendUser>> getFriends() async => const [];
+
+  @override
+  Future<List<FriendRequest>> getReceivedRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  }) async => const [];
+
+  @override
+  Future<List<FriendRequest>> getSentRequests({
+    String status = 'pending',
+    int limit = 50,
+    int offset = 0,
+  }) async => const [];
+
+  @override
+  Future<FriendAcceptResult> acceptRequest(String requestId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<FriendUser> getUser(int accountId) => throw UnimplementedError();
+
+  @override
+  Future<void> rejectRequest(String requestId) => throw UnimplementedError();
+
+  @override
+  Future<void> removeFriend(int accountId) => throw UnimplementedError();
+
+  @override
+  Future<List<FriendUser>> searchUsers(String query, {int limit = 30}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> sendRequest({required int toUserId, required String message}) =>
+      throw UnimplementedError();
+}
+
 class _FakeSessionRepository implements SessionRepository {
   _FakeSessionRepository({this.cachedSession});
 
@@ -212,6 +262,14 @@ class _FakeSessionRepository implements SessionRepository {
 
 class _FakeConversationRepository implements ConversationRepository {
   @override
+  Future<Conversation> createGroup({
+    required String name,
+    required List<int> memberIds,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<Conversation> getById(String id) async {
     return Conversation(
       id: id,
@@ -226,7 +284,11 @@ class _FakeConversationRepository implements ConversationRepository {
   }
 
   @override
-  Future<List<Conversation>> getList({int limit = 20, int offset = 0}) async {
+  Future<List<Conversation>> getList({
+    int limit = 20,
+    int offset = 0,
+    int? type,
+  }) async {
     if (offset > 0) {
       return const <Conversation>[];
     }

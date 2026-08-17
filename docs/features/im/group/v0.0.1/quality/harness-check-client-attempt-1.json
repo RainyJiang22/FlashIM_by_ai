@@ -1,0 +1,633 @@
+{
+  "status": "FAIL",
+  "project": {
+    "kind": "flutter",
+    "root": "/Users/rainyjiang/AndroidStudioProjects/flash_im",
+    "config": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.1/quality/client-harness-attempt-1.json"
+  },
+  "changed_files": [
+    ".idea/caches/deviceStreaming.xml",
+    ".idea/flash_im.iml",
+    ".idea/workspace.xml",
+    "client/lib/app/app_router.dart",
+    "client/lib/features/home/presentation/main_shell_page.dart",
+    "client/lib/features/messages/presentation/messages_placeholder_page.dart",
+    "client/modules/flash_im_chat/build/native_assets/macos/objective_c.dylib",
+    "client/modules/flash_im_chat/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill",
+    "client/modules/flash_im_chat/coverage/lcov.info",
+    "client/modules/flash_im_chat/lib/src/view/chat_page.dart",
+    "client/modules/flash_im_chat/test/chat_page_test.dart",
+    "client/modules/flash_im_conversation/lib/flash_im_conversation.dart",
+    "client/modules/flash_im_conversation/lib/src/data/conversation.dart",
+    "client/modules/flash_im_conversation/lib/src/data/conversation_repository.dart",
+    "client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart",
+    "client/modules/flash_im_conversation/lib/src/view/group_avatar.dart",
+    "client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_test.dart",
+    "client/modules/flash_im_friend/build/native_assets/macos/native_assets.json",
+    "client/modules/flash_im_friend/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill",
+    "client/modules/flash_im_friend/build/unit_test_assets/AssetManifest.bin",
+    "client/modules/flash_im_friend/build/unit_test_assets/FontManifest.json",
+    "client/modules/flash_im_friend/build/unit_test_assets/NOTICES.Z",
+    "client/modules/flash_im_friend/build/unit_test_assets/NativeAssetsManifest.json",
+    "client/modules/flash_im_friend/build/unit_test_assets/fonts/MaterialIcons-Regular.otf",
+    "client/modules/flash_im_friend/build/unit_test_assets/shaders/ink_sparkle.frag",
+    "client/modules/flash_im_friend/build/unit_test_assets/shaders/stretch_effect.frag",
+    "client/modules/flash_im_friend/coverage/lcov.info",
+    "client/modules/flash_im_friend/lib/flash_im_friend.dart",
+    "client/modules/flash_im_friend/lib/src/view/contacts_page.dart",
+    "client/modules/flash_im_friend/test/contacts_page_test.dart",
+    "client/modules/flash_im_group/analysis_options.yaml",
+    "client/modules/flash_im_group/build/native_assets/macos/native_assets.json",
+    "client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill",
+    "client/modules/flash_im_group/build/unit_test_assets/AssetManifest.bin",
+    "client/modules/flash_im_group/build/unit_test_assets/FontManifest.json",
+    "client/modules/flash_im_group/build/unit_test_assets/NOTICES.Z",
+    "client/modules/flash_im_group/build/unit_test_assets/NativeAssetsManifest.json",
+    "client/modules/flash_im_group/build/unit_test_assets/fonts/MaterialIcons-Regular.otf",
+    "client/modules/flash_im_group/build/unit_test_assets/shaders/ink_sparkle.frag",
+    "client/modules/flash_im_group/build/unit_test_assets/shaders/stretch_effect.frag",
+    "client/modules/flash_im_group/coverage/lcov.info",
+    "client/modules/flash_im_group/lib/flash_im_group.dart",
+    "client/modules/flash_im_group/lib/src/logic/create_group_cubit.dart",
+    "client/modules/flash_im_group/lib/src/logic/create_group_state.dart",
+    "client/modules/flash_im_group/lib/src/logic/group_list_cubit.dart",
+    "client/modules/flash_im_group/lib/src/logic/group_list_state.dart",
+    "client/modules/flash_im_group/lib/src/view/create_group_page.dart",
+    "client/modules/flash_im_group/lib/src/view/my_groups_page.dart",
+    "client/modules/flash_im_group/lib/src/view/private_chat_details_page.dart",
+    "client/modules/flash_im_group/lib/src/view/widgets/group_feedback_view.dart",
+    "client/modules/flash_im_group/lib/src/view/widgets/selectable_friend_tile.dart",
+    "client/modules/flash_im_group/lib/src/view/widgets/selected_friend_strip.dart",
+    "client/modules/flash_im_group/pubspec.lock",
+    "client/modules/flash_im_group/pubspec.yaml",
+    "client/modules/flash_im_group/test/create_group_cubit_test.dart",
+    "client/modules/flash_im_group/test/create_group_page_test.dart",
+    "client/modules/flash_im_group/test/group_list_cubit_test.dart",
+    "client/modules/flash_im_group/test/my_groups_page_test.dart",
+    "client/modules/flash_im_group/test/test_fakes.dart",
+    "client/pubspec.lock",
+    "client/pubspec.yaml",
+    "client/test/features/main_shell/presentation/main_shell_page_test.dart",
+    "client/test/features/startup/presentation/startup_page_test.dart",
+    "docs/features/im/core/v0.0.3/test/__pycache__/conversation_message.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/__pycache__/ws_chat_test.cpython-314.pyc",
+    "docs/features/im/core/v0.0.4_media/test/proto/__pycache__/ws_pb2.cpython-314.pyc",
+    "docs/features/im/group/v0.0.1/analysis.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/00_link.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/01_create_unauthorized.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/02_create_group.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/03_list_groups.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/04_group_detail.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/05_too_few_members.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/06_duplicate_members.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/07_owner_in_members.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/08_non_friend_member.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/09_invalid_type_filter.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/10_non_member_detail.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/11_group_message_ws.md",
+    "docs/features/im/group/v0.0.1/api/group/doc/12_group_message_history.md",
+    "docs/features/im/group/v0.0.1/api/group/request/group.py",
+    "docs/features/im/group/v0.0.1/client/design.md",
+    "docs/features/im/group/v0.0.1/client/tasks.md",
+    "docs/features/im/group/v0.0.1/quality/client-attempt-1/lcov.info",
+    "docs/features/im/group/v0.0.1/quality/client-harness-attempt-1.json",
+    "docs/features/im/group/v0.0.1/quality/merge_client_lcov.py",
+    "docs/features/im/group/v0.0.1/quality/server-attempt-1/coverage.lcov",
+    "docs/features/im/group/v0.0.1/quality/server-attempt-2/coverage.lcov",
+    "docs/features/im/group/v0.0.1/quality/server-attempt-3/coverage.lcov",
+    "docs/features/im/group/v0.0.1/quality/server-attempt-3/workspace-coverage.lcov",
+    "docs/features/im/group/v0.0.1/quality/server-attempt-4/coverage.lcov",
+    "docs/features/im/group/v0.0.1/quality/server-attempt-4/summary.md",
+    "docs/features/im/group/v0.0.1/server/design.md",
+    "docs/features/im/group/v0.0.1/server/tasks.md",
+    "server/Cargo.lock",
+    "server/modules/im-conversation/Cargo.toml",
+    "server/modules/im-conversation/src/models.rs",
+    "server/modules/im-conversation/src/repository.rs",
+    "server/modules/im-conversation/src/routes.rs",
+    "server/modules/im-conversation/src/service.rs",
+    "server/src/lib.rs"
+  ],
+  "test_files": [
+    "client/modules/flash_auth/test/flash_auth_test.dart",
+    "client/modules/flash_im_chat/test/chat_cubit_test.dart",
+    "client/modules/flash_im_chat/test/chat_input_test.dart",
+    "client/modules/flash_im_chat/test/chat_page_test.dart",
+    "client/modules/flash_im_chat/test/message_bubble_test.dart",
+    "client/modules/flash_im_chat/test/message_repository_test.dart",
+    "client/modules/flash_im_chat/test/message_test.dart",
+    "client/modules/flash_im_chat/test/video_player_page_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_api_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_test.dart",
+    "client/modules/flash_im_core/test/im_config_test.dart",
+    "client/modules/flash_im_core/test/proto_compile_test.dart",
+    "client/modules/flash_im_core/test/ws_client_test.dart",
+    "client/modules/flash_im_core/test/ws_status_indicator_test.dart",
+    "client/modules/flash_im_friend/test/contacts_page_test.dart",
+    "client/modules/flash_im_friend/test/friend_cubit_test.dart",
+    "client/modules/flash_im_friend/test/friend_models_test.dart",
+    "client/modules/flash_im_friend/test/friend_repository_test.dart",
+    "client/modules/flash_im_friend/test/friend_sort_test.dart",
+    "client/modules/flash_im_friend/test/new_friends_page_test.dart",
+    "client/modules/flash_im_group/test/create_group_cubit_test.dart",
+    "client/modules/flash_im_group/test/create_group_page_test.dart",
+    "client/modules/flash_im_group/test/group_list_cubit_test.dart",
+    "client/modules/flash_im_group/test/my_groups_page_test.dart",
+    "client/modules/flash_im_group/test/test_fakes.dart",
+    "client/modules/flash_session/test/session_cubit_test.dart",
+    "client/modules/flash_session/test/session_repository_test.dart",
+    "client/modules/flash_shared/test/avatar_widget_test.dart",
+    "client/modules/flash_starter/test/app_starter_test.dart",
+    "client/test/.DS_Store",
+    "client/test/.env",
+    "client/test/features/auth/cubit/app_session_cubit_test.dart",
+    "client/test/features/auth/data/auth_repository_test.dart",
+    "client/test/features/auth/presentation/login_page_test.dart",
+    "client/test/features/main_shell/presentation/main_shell_page_test.dart",
+    "client/test/features/mine/presentation/mine_page_test.dart",
+    "client/test/features/startup/presentation/startup_page_test.dart",
+    "client/test/login_for_test.dart",
+    "client/test/playground/auth/data/auth_api_test.dart",
+    "client/test/playground/auth/data/auth_repository_test.dart",
+    "client/test/playground/auth/presentation/auth_playground_page_test.dart",
+    "client/test/playground/conversation/data/conversation_api_test.dart",
+    "client/test/playground/conversation/data/conversation_repository_test.dart",
+    "client/test/playground/conversation/fixtures/conversation_list_fixture.json",
+    "client/test/playground/im_playground/data/chat_room_api_test.dart",
+    "client/test/playground/im_playground/data/chat_room_repository_test.dart",
+    "client/test/test_env.dart",
+    "client/test/widget_test.dart",
+    "docs/features/im/core/conversation/request/test_lnk.md",
+    "docs/features/im/core/conversation/roles/link_test_writer.md",
+    "docs/features/im/core/v0.0.3/test/__pycache__/conversation_message.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/__pycache__/ws_chat_test.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/conversation_message.py",
+    "docs/features/im/core/v0.0.3/test/ws_chat_test.py",
+    "docs/features/im/core/v0.0.4_media/test/assets/README.md",
+    "docs/features/im/core/v0.0.4_media/test/assets/sky_engine.zip",
+    "docs/features/im/core/v0.0.4_media/test/assets/test.mp4",
+    "docs/features/im/core/v0.0.4_media/test/assets/test.webp",
+    "docs/features/im/core/v0.0.4_media/test/assets/test_meta.json",
+    "docs/features/im/core/v0.0.4_media/test/assets/test_thumb.jpg",
+    "docs/features/im/core/v0.0.4_media/test/proto/__pycache__/ws_pb2.cpython-314.pyc",
+    "docs/features/im/core/v0.0.4_media/test/proto/message_pb2.py",
+    "docs/features/im/core/v0.0.4_media/test/proto/ws_pb2.py",
+    "docs/features/im/core/v0.0.4_media/test/send_message.py",
+    "docs/features/im/core/v0.0.4_media/test/test_upload.py",
+    "docs/features/session/api/request/test_lnk.md",
+    "docs/features/session/api/roles/link_test_writer.md",
+    "scripts/playground/ws_smoke_test.mjs",
+    "scripts/server/conversation_api_test_link.sh",
+    "scripts/server/session_api_test_link.sh"
+  ],
+  "commands": [
+    {
+      "command": "flutter test --coverage",
+      "status": "FAIL",
+      "returncode": 1,
+      "duration_seconds": 9.383,
+      "stdout": "00:00 +0: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart\n00:00 +0: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_api_test.dart: fetches first page conversations\n00:00 +1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_api_test.dart: fetches first page conversations\n00:00 +2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_api_test.dart: fetches first page conversations\n00:00 +2 -1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart: hasMore false prevents extra loadMore requests\n00:00 +3 -1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart: loadMore failure keeps existing conversations\n00:00 +4 -1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart: markConversationReadLocally clears unread and totalUnread\n00:00 +5 -1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_api_test.dart: fetches first page conversations [E]\n  DioException [connection error]: The connection errored: Connection refused This indicates an error which most likely cannot be solved by the library.\n  Error: SocketException: Connection refused (OS Error: Connection refused, errno = 61), address = 127.0.0.1, port = 52037\n  package:dio/src/dio_mixin.dart 564:7  DioMixin.fetch\n  \n00:00 +5 -1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_api_test.dart: fetches all seeded conversations without duplicate ids\n00:00 +5 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_api_test.dart: fetches all seeded conversations without duplicate ids [E]\n  DioException [connection error]: The connection errored: Connection refused This indicates an error which most likely cannot be solved by the library.\n  Error: SocketException: Connection refused (OS Error: Connection refused, errno = 61), address = 127.0.0.1, port = 52041\n  package:dio/src/dio_mixin.dart 564:7  DioMixin.fetch\n  \n00:00 +5 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: Conversation.fromJson maps backend snake_case payload\n00:00 +6 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: display fields fallback for empty private conversation\n00:00 +7 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: Conversation.fromJson maps immutable group fields\n00:00 +8 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: Conversation.fromJson treats missing member avatars as empty\n00:00 +9 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: avatarSeed prefers peer user id over avatar protocol value\n00:00 +10 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: conversation tile passes raw avatar protocol to AvatarWidget\n00:03 +11 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: group conversation tile uses composite group avatar\n00:03 +12 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: created_at is required\n00:03 +13 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: placeholder creates local skeleton conversation\n00:03 +14 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: repository filters group list and sends create body\n00:03 +15 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_conversation/test/conversation_test.dart: repository rejects non-object create response\n00:04 +16 -2: Some tests failed.\n",
+      "stderr": "package:flash_im_core has `uses-material-design: true` set but the primary pubspec contains `uses-material-design: false`. If the application needs material icons, then `uses-material-design`  must be set to true.\n",
+      "error": null
+    },
+    {
+      "command": "flutter test --coverage",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 12.148,
+      "stdout": "00:00 +0: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_list_cubit_test.dart\n00:00 +0: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_list_cubit_test.dart: loads group pages with type filter and searches locally\n00:00 +1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_list_cubit_test.dart: load error is recoverable by refresh\n00:00 +2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/my_groups_page_test.dart: lists, searches and returns selected group\n00:01 +3: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/my_groups_page_test.dart: lists, searches and returns selected group\n00:01 +4: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/my_groups_page_test.dart: lists, searches and returns selected group\n00:01 +5: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/my_groups_page_test.dart: lists, searches and returns selected group\n00:03 +6: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/create_group_page_test.dart: selects two friends and returns created conversation\n00:04 +7: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/create_group_page_test.dart: private-chat member is selected and locked\n00:05 +8: All tests passed!\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter test test/chat_page_test.dart --coverage",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 11.882,
+      "stdout": "00:00 +0: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_chat/test/chat_page_test.dart\n00:00 +0: ChatPage renders input\n00:01 +1: plus button expands media action panel\n00:03 +2: All tests passed!\n",
+      "stderr": "package:flash_im_core has `uses-material-design: true` set but the primary pubspec contains `uses-material-design: false`. If the application needs material icons, then `uses-material-design`  must be set to true.\n",
+      "error": null
+    },
+    {
+      "command": "flutter test test/contacts_page_test.dart --coverage",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 15.83,
+      "stdout": "00:00 +0: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart\n00:00 +0: shows implemented contact entries without unsupported shells\n00:06 +1: All tests passed!\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter test test/features/main_shell/presentation/main_shell_page_test.dart test/features/startup/presentation/startup_page_test.dart --coverage",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 19.158,
+      "stdout": "00:00 +0: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/main_shell/presentation/main_shell_page_test.dart\n00:00 +0: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/main_shell/presentation/main_shell_page_test.dart: main shell shows password setup prompt and switches tabs\n00:03 +1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/main_shell/presentation/main_shell_page_test.dart: main shell shows password setup prompt and switches tabs\n00:04 +2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/main_shell/presentation/main_shell_page_test.dart: main shell shows password setup prompt and switches tabs\n00:04 +3: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/main_shell/presentation/main_shell_page_test.dart: main shell shows password setup prompt and switches tabs\n00:06 +4: All tests passed!\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "python3 docs/features/im/group/v0.0.1/quality/merge_client_lcov.py",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 0.088,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 5.233,
+      "stdout": "Analyzing flash_im_conversation...                              \nNo issues found! (ran in 3.1s)\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 4.728,
+      "stdout": "Analyzing flash_im_group...                                     \nNo issues found! (ran in 2.9s)\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 6.524,
+      "stdout": "Analyzing flash_im_chat...                                      \nNo issues found! (ran in 4.5s)\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 4.743,
+      "stdout": "Analyzing flash_im_friend...                                    \nNo issues found! (ran in 2.6s)\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze lib/app/app_router.dart lib/features/home/presentation/main_shell_page.dart lib/features/messages/presentation/messages_placeholder_page.dart test/features/main_shell/presentation/main_shell_page_test.dart test/features/startup/presentation/startup_page_test.dart",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 5.014,
+      "stdout": "Analyzing 5 items...                                            \nNo issues found! (ran in 2.4s)\n",
+      "stderr": "",
+      "error": null
+    }
+  ],
+  "coverage": {
+    "status": "FAIL",
+    "format": "lcov",
+    "scope": "changed",
+    "threshold_percent": 80.0,
+    "path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.1/quality/client-attempt-1/lcov.info",
+    "total": 1095,
+    "covered": 803,
+    "percent": 73.33,
+    "files": [
+      {
+        "path": "client/modules/flash_im_conversation/lib/src/data/conversation.dart",
+        "total": 82,
+        "covered": 79
+      },
+      {
+        "path": "client/modules/flash_im_conversation/lib/src/data/conversation_repository.dart",
+        "total": 27,
+        "covered": 20
+      },
+      {
+        "path": "client/modules/flash_im_conversation/lib/src/logic/conversation_list_cubit.dart",
+        "total": 95,
+        "covered": 44
+      },
+      {
+        "path": "client/modules/flash_im_conversation/lib/src/logic/conversation_list_state.dart",
+        "total": 24,
+        "covered": 21
+      },
+      {
+        "path": "client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart",
+        "total": 70,
+        "covered": 1
+      },
+      {
+        "path": "client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart",
+        "total": 55,
+        "covered": 48
+      },
+      {
+        "path": "client/modules/flash_im_conversation/lib/src/view/group_avatar.dart",
+        "total": 46,
+        "covered": 32
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/create_group_cubit.dart",
+        "total": 48,
+        "covered": 41
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/create_group_state.dart",
+        "total": 34,
+        "covered": 34
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_list_cubit.dart",
+        "total": 24,
+        "covered": 22
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_list_state.dart",
+        "total": 27,
+        "covered": 27
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/create_group_page.dart",
+        "total": 67,
+        "covered": 59
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/my_groups_page.dart",
+        "total": 39,
+        "covered": 32
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/private_chat_details_page.dart",
+        "total": 21,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/group_feedback_view.dart",
+        "total": 10,
+        "covered": 1
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/selectable_friend_tile.dart",
+        "total": 16,
+        "covered": 16
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/selected_friend_strip.dart",
+        "total": 18,
+        "covered": 18
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/data/message_repository.dart",
+        "total": 96,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/data/message.dart",
+        "total": 116,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/data/video_thumbnail_service.dart",
+        "total": 16,
+        "covered": 2
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart",
+        "total": 241,
+        "covered": 16
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/logic/chat_state.dart",
+        "total": 28,
+        "covered": 6
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/chat_page.dart",
+        "total": 113,
+        "covered": 56
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/file_preview_page.dart",
+        "total": 33,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/image_preview_page.dart",
+        "total": 12,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/video_player_page.dart",
+        "total": 122,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/bubble/file_bubble.dart",
+        "total": 32,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/bubble/image_bubble.dart",
+        "total": 22,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart",
+        "total": 46,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/bubble/text_bubble.dart",
+        "total": 14,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/bubble/video_bubble.dart",
+        "total": 22,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_chat/lib/src/view/chat_input.dart",
+        "total": 116,
+        "covered": 62
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/data/friend_repository.dart",
+        "total": 45,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/data/friend_request.dart",
+        "total": 50,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/data/friend_user.dart",
+        "total": 47,
+        "covered": 14
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/widgets/friend_sort.dart",
+        "total": 52,
+        "covered": 29
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/logic/friend_cubit.dart",
+        "total": 207,
+        "covered": 23
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/logic/friend_state.dart",
+        "total": 31,
+        "covered": 25
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/contacts_page.dart",
+        "total": 176,
+        "covered": 120
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/add_friend_page.dart",
+        "total": 29,
+        "covered": 0
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/friend_search_page.dart",
+        "total": 90,
+        "covered": 2
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/widgets/friend_ui.dart",
+        "total": 64,
+        "covered": 52
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/friend_profile_page.dart",
+        "total": 134,
+        "covered": 97
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/new_friends_page.dart",
+        "total": 75,
+        "covered": 1
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/widgets/friend_alphabet_index.dart",
+        "total": 72,
+        "covered": 33
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/widgets/friend_avatar_tile.dart",
+        "total": 21,
+        "covered": 19
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/send_friend_request_page.dart",
+        "total": 44,
+        "covered": 0
+      },
+      {
+        "path": "client/lib/app/app_router.dart",
+        "total": 80,
+        "covered": 11
+      },
+      {
+        "path": "client/lib/app/session_app_starter_controller.dart",
+        "total": 16,
+        "covered": 14
+      },
+      {
+        "path": "client/lib/features/home/presentation/main_shell_page.dart",
+        "total": 137,
+        "covered": 113
+      },
+      {
+        "path": "client/lib/features/mine/presentation/dialogs/password_setup_prompt_dialog.dart",
+        "total": 8,
+        "covered": 8
+      },
+      {
+        "path": "client/lib/features/mine/presentation/mine_page.dart",
+        "total": 37,
+        "covered": 1
+      },
+      {
+        "path": "client/lib/features/messages/presentation/messages_placeholder_page.dart",
+        "total": 75,
+        "covered": 74
+      },
+      {
+        "path": "client/lib/features/home/presentation/widgets/home_navigation_bar.dart",
+        "total": 25,
+        "covered": 22
+      },
+      {
+        "path": "client/lib/features/mine/presentation/widgets/mine_error_view.dart",
+        "total": 8,
+        "covered": 0
+      },
+      {
+        "path": "client/lib/features/mine/presentation/widgets/mine_info_card.dart",
+        "total": 61,
+        "covered": 0
+      }
+    ],
+    "unmeasured_changed_files": [],
+    "note": "覆盖率 73.33% 低于门槛 80.00%"
+  },
+  "static_analysis": {
+    "status": "PASS",
+    "commands": [
+      {
+        "command": "flutter analyze",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 5.233,
+        "stdout": "Analyzing flash_im_conversation...                              \nNo issues found! (ran in 3.1s)\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "flutter analyze",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 4.728,
+        "stdout": "Analyzing flash_im_group...                                     \nNo issues found! (ran in 2.9s)\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "flutter analyze",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 6.524,
+        "stdout": "Analyzing flash_im_chat...                                      \nNo issues found! (ran in 4.5s)\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "flutter analyze",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 4.743,
+        "stdout": "Analyzing flash_im_friend...                                    \nNo issues found! (ran in 2.6s)\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "flutter analyze lib/app/app_router.dart lib/features/home/presentation/main_shell_page.dart lib/features/messages/presentation/messages_placeholder_page.dart test/features/main_shell/presentation/main_shell_page_test.dart test/features/startup/presentation/startup_page_test.dart",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 5.014,
+        "stdout": "Analyzing 5 items...                                            \nNo issues found! (ran in 2.4s)\n",
+        "stderr": "",
+        "error": null
+      }
+    ],
+    "conclusion": null
+  },
+  "errors": [],
+  "generated_at": "2026-08-16T12:41:50Z"
+}

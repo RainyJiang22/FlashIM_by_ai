@@ -9,7 +9,17 @@ use flash_core::{AppResult, SharedContext, jwt::extract_user_id, response::utf8_
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::models::ConversationListQuery;
+use crate::models::{ConversationListQuery, CreateConversationBody};
+
+pub async fn create_conversation(
+    State(context): State<SharedContext>,
+    headers: HeaderMap,
+    Json(body): Json<CreateConversationBody>,
+) -> AppResult<impl IntoResponse> {
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let conversation = crate::service::create_conversation(&context, user_id, body).await?;
+    Ok(utf8_json(Json(conversation)))
+}
 
 pub async fn list_conversations(
     State(context): State<SharedContext>,
@@ -51,7 +61,10 @@ struct MarkReadResponse {
 
 pub fn router() -> Router<SharedContext> {
     Router::new()
-        .route("/conversations", get(list_conversations))
+        .route(
+            "/conversations",
+            get(list_conversations).post(create_conversation),
+        )
         .route("/conversations/{id}", get(get_conversation))
         .route("/conversations/{id}/read", post(mark_conversation_read))
 }

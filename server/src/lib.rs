@@ -227,6 +227,153 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn create_group_conversation_route_requires_authentication() {
+        let (_, _, app) = build_test_app();
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/conversations")
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                r#"{"type":"group","name":"测试群","member_ids":[10002,10003]}"#,
+            ))
+            .unwrap();
+        let response = app.oneshot(request).await.unwrap();
+
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn group_conversation_routes_round_trip_against_configured_database() {
+        let Ok(config) = flash_core::AppConfig::from_env() else {
+            return;
+        };
+        let context = Arc::new(
+            AppContext::from_config(config)
+                .await
+                .expect("configured test database should connect"),
+        );
+        let pool = context.postgres.pool();
+        let marker = format!("{:016x}", rand::random::<u64>());
+        let mut user_ids = Vec::new();
+        for index in 0..4 {
+            let account_id = sqlx::query_scalar::<_, i64>(
+                r#"
+                INSERT INTO accounts (primary_identifier)
+                VALUES ($1)
+                RETURNING id
+                "#,
+            )
+            .bind(format!("group-route-test-{marker}-{index}"))
+            .fetch_one(pool)
+            .await
+            .expect("test account should be inserted");
+            sqlx::query(
+                r#"
+                INSERT INTO user_profiles (account_id, nickname, avatar_url)
+                VALUES ($1, $2, $3)
+                "#,
+            )
+            .bind(account_id)
+            .bind(format!("群成员{index}"))
+            .bind(format!("identicon:{account_id}"))
+            .execute(pool)
+            .await
+            .expect("test profile should be inserted");
+            user_ids.push(account_id);
+        }
+
+        let owner_id = user_ids[0];
+        for friend_id in &user_ids[1..3] {
+            sqlx::query(
+                r#"
+                INSERT INTO friend_relations (user_id, friend_user_id)
+                VALUES ($1, $2)
+                "#,
+            )
+            .bind(owner_id)
+            .bind(friend_id)
+            .execute(pool)
+            .await
+            .expect("test friendship should be inserted");
+        }
+
+        let token = sign_token(context.as_ref(), owner_id).expect("test token should sign");
+        let auth_store: SharedAuthStore = Arc::new(InMemoryStore::new());
+        let app = build_app(context.clone(), auth_store);
+        let create_request = Request::builder()
+            .method("POST")
+            .uri("/conversations")
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "type": "group",
+                    "name": "数据库路由测试群",
+                    "member_ids": [user_ids[1], user_ids[2]],
+                })
+                .to_string(),
+            ))
+            .unwrap();
+        let create_response = app.clone().oneshot(create_request).await.unwrap();
+        assert_eq!(create_response.status(), StatusCode::OK);
+        let create_body = to_bytes(create_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let created: serde_json::Value = serde_json::from_slice(&create_body).unwrap();
+        assert_eq!(created["type"], 1);
+        assert_eq!(created["owner_id"], owner_id.to_string());
+        assert_eq!(created["member_avatars"].as_array().unwrap().len(), 3);
+        let conversation_id = created["id"].as_str().unwrap();
+
+        let list_request = Request::builder()
+            .method("GET")
+            .uri("/conversations?type=1&limit=100&offset=0")
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let list_response = app.clone().oneshot(list_request).await.unwrap();
+        assert_eq!(list_response.status(), StatusCode::OK);
+        let list_body = to_bytes(list_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let groups: Vec<serde_json::Value> = serde_json::from_slice(&list_body).unwrap();
+        assert!(groups.iter().any(|item| item["id"] == conversation_id));
+
+        let detail_request = Request::builder()
+            .method("GET")
+            .uri(format!("/conversations/{conversation_id}"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let detail_response = app.clone().oneshot(detail_request).await.unwrap();
+        assert_eq!(detail_response.status(), StatusCode::OK);
+
+        let invalid_request = Request::builder()
+            .method("POST")
+            .uri("/conversations")
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "type": "group",
+                    "name": "包含非好友",
+                    "member_ids": [user_ids[1], user_ids[3]],
+                })
+                .to_string(),
+            ))
+            .unwrap();
+        let invalid_response = app.oneshot(invalid_request).await.unwrap();
+        assert_eq!(invalid_response.status(), StatusCode::BAD_REQUEST);
+
+        sqlx::query("DELETE FROM accounts WHERE id = ANY($1)")
+            .bind(&user_ids)
+            .execute(pool)
+            .await
+            .expect("test accounts should be cleaned up");
+    }
+
+    #[tokio::test]
     async fn conversation_messages_route_requires_authentication() {
         let (_, _, app) = build_test_app();
 

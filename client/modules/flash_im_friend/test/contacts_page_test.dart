@@ -9,6 +9,7 @@ void main() {
   ) async {
     final cubit = FriendCubit(repository: _ContactsRepository());
     FriendUser? messagedUser;
+    var openedGroups = false;
     await cubit.load();
 
     await tester.pumpWidget(
@@ -16,7 +17,10 @@ void main() {
         home: Scaffold(
           body: BlocProvider<FriendCubit>.value(
             value: cubit,
-            child: ContactsPage(onMessageFriend: (user) => messagedUser = user),
+            child: ContactsPage(
+              onMessageFriend: (user) => messagedUser = user,
+              onOpenGroups: () => openedGroups = true,
+            ),
           ),
         ),
       ),
@@ -25,9 +29,10 @@ void main() {
 
     expect(find.text('通讯录'), findsOneWidget);
     expect(find.text('新的朋友'), findsOneWidget);
+    expect(find.text('1'), findsOneWidget);
     expect(find.text('阿青'), findsOneWidget);
     expect(find.text('扫一扫'), findsNothing);
-    expect(find.text('群聊'), findsNothing);
+    expect(find.text('群聊'), findsOneWidget);
     expect(find.text('公众号'), findsNothing);
 
     final screenWidth = tester.getSize(find.byType(Scaffold).first).width;
@@ -37,6 +42,10 @@ void main() {
     expect(titleCenter.dx, closeTo(screenWidth / 2, 0.5));
     expect(searchCenter.dx, greaterThan(screenWidth - 100));
     expect(addCenter.dx, greaterThan(searchCenter.dx));
+
+    await tester.tap(find.text('群聊'));
+    expect(openedGroups, isTrue);
+    expect(find.text('1'), findsOneWidget);
 
     await tester.tap(find.text('阿青'));
     await tester.pumpAndSettle();
@@ -79,7 +88,20 @@ class _ContactsRepository implements FriendRepository {
     String status = 'pending',
     int limit = 50,
     int offset = 0,
-  }) async => const [];
+  }) async => [
+    FriendRequest(
+      id: 'request-1',
+      fromUser: const FriendUser(
+        accountId: 2,
+        nickname: '白露',
+        avatar: '',
+        signature: '',
+      ),
+      message: '你好',
+      status: 'pending',
+      createdAt: DateTime(2026, 8, 16),
+    ),
+  ];
 
   @override
   Future<List<FriendRequest>> getSentRequests({

@@ -160,7 +160,19 @@ class _FakeConversationRepository implements ConversationRepository {
   final List<int> offsets = <int>[];
 
   @override
-  Future<List<Conversation>> getList({int limit = 20, int offset = 0}) async {
+  Future<Conversation> createGroup({
+    required String name,
+    required List<int> memberIds,
+  }) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<Conversation>> getList({
+    int limit = 20,
+    int offset = 0,
+    int? type,
+  }) async {
     offsets.add(offset);
     if (failingOffsets.contains(offset)) {
       throw StateError('network failed');

@@ -3,11 +3,26 @@ import 'package:dio/dio.dart';
 import 'conversation.dart';
 
 abstract interface class ConversationRepository {
-  Future<List<Conversation>> getList({int limit = 20, int offset = 0});
+  Future<List<Conversation>> getList({
+    int limit = 20,
+    int offset = 0,
+    int? type,
+  });
 
   Future<Conversation> getById(String id);
 
+  Future<Conversation> createGroup({
+    required String name,
+    required List<int> memberIds,
+  });
+
   Future<void> markRead(String id);
+}
+
+class ConversationRequestException implements Exception {
+  const ConversationRequestException([this.serverMessage]);
+
+  final String? serverMessage;
 }
 
 class DioConversationRepository implements ConversationRepository {
@@ -16,10 +31,19 @@ class DioConversationRepository implements ConversationRepository {
   final Dio _dio;
 
   @override
-  Future<List<Conversation>> getList({int limit = 20, int offset = 0}) async {
+  Future<List<Conversation>> getList({
+    int limit = 20,
+    int offset = 0,
+    int? type,
+  }) async {
+    final queryParameters = <String, dynamic>{
+      'limit': limit,
+      'offset': offset,
+      'type': ?type,
+    };
     final response = await _dio.get<dynamic>(
       '/conversations',
-      queryParameters: <String, int>{'limit': limit, 'offset': offset},
+      queryParameters: queryParameters,
     );
 
     return _parseConversationList(response.data);
@@ -28,6 +52,37 @@ class DioConversationRepository implements ConversationRepository {
   @override
   Future<Conversation> getById(String id) async {
     final response = await _dio.get<dynamic>('/conversations/$id');
+    final data = response.data;
+    if (data is! Map) {
+      throw const FormatException('Conversation detail is not a JSON object.');
+    }
+    return Conversation.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
+  Future<Conversation> createGroup({
+    required String name,
+    required List<int> memberIds,
+  }) async {
+    late final Response<dynamic> response;
+    try {
+      response = await _dio.post<dynamic>(
+        '/conversations',
+        data: <String, dynamic>{
+          'type': 'group',
+          'name': name,
+          'member_ids': memberIds,
+        },
+      );
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      final message = data is Map && data['message'] is String
+          ? (data['message'] as String).trim()
+          : null;
+      throw ConversationRequestException(
+        message?.isNotEmpty == true ? message : null,
+      );
+    }
     final data = response.data;
     if (data is! Map) {
       throw const FormatException('Conversation detail is not a JSON object.');

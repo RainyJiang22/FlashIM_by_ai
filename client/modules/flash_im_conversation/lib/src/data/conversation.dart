@@ -1,24 +1,30 @@
 import 'package:equatable/equatable.dart';
 
 class Conversation extends Equatable {
-  const Conversation({
+  Conversation({
     required this.id,
     required this.type,
     required this.unreadCount,
     required this.createdAt,
     this.name,
+    this.avatar,
+    this.ownerId,
+    List<String> memberAvatars = const <String>[],
     this.peerUserId,
     this.peerNickname,
     this.peerAvatar,
     this.lastMessageAt,
     this.lastMessagePreview,
-  });
+  }) : memberAvatars = List<String>.unmodifiable(memberAvatars);
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
     return Conversation(
       id: _readRequiredString(json, 'id'),
       type: (json['type'] as num?)?.toInt() ?? 0,
       name: json['name'] as String?,
+      avatar: json['avatar'] as String?,
+      ownerId: json['owner_id']?.toString(),
+      memberAvatars: _parseStringList(json['member_avatars']),
       peerUserId: json['peer_user_id']?.toString(),
       peerNickname: json['peer_nickname'] as String?,
       peerAvatar: json['peer_avatar'] as String?,
@@ -48,6 +54,9 @@ class Conversation extends Equatable {
   final String id;
   final int type;
   final String? name;
+  final String? avatar;
+  final String? ownerId;
+  final List<String> memberAvatars;
   final String? peerUserId;
   final String? peerNickname;
   final String? peerAvatar;
@@ -69,6 +78,9 @@ class Conversation extends Equatable {
       unreadCount: unreadCount ?? this.unreadCount,
       createdAt: createdAt,
       name: name,
+      avatar: avatar,
+      ownerId: ownerId,
+      memberAvatars: memberAvatars,
       peerUserId: peerUserId,
       peerNickname: peerNickname ?? this.peerNickname,
       peerAvatar: peerAvatar ?? this.peerAvatar,
@@ -82,6 +94,9 @@ class Conversation extends Equatable {
     id,
     type,
     name,
+    avatar,
+    ownerId,
+    memberAvatars,
     peerUserId,
     peerNickname,
     peerAvatar,
@@ -94,6 +109,8 @@ class Conversation extends Equatable {
 
 extension ConversationDisplay on Conversation {
   bool get isPrivateChat => type == 0;
+
+  bool get isGroupChat => type == 1;
 
   String get displayName {
     if (isPrivateChat) {
@@ -132,6 +149,20 @@ extension ConversationDisplay on Conversation {
     }
     return name?.trim().isNotEmpty == true ? name!.trim() : id;
   }
+}
+
+List<String> _parseStringList(dynamic value) {
+  if (value == null) {
+    return const <String>[];
+  }
+  if (value is! List) {
+    throw const FormatException(
+      'Conversation field "member_avatars" is not a list.',
+    );
+  }
+  return List<String>.unmodifiable(
+    value.whereType<String>().where((item) => item.trim().isNotEmpty),
+  );
 }
 
 String _readRequiredString(Map<String, dynamic> json, String key) {

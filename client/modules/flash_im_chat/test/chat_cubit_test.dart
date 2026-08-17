@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
@@ -42,6 +43,36 @@ void main() {
       ChatLoaded(messages: [history], hasMore: false),
     ],
   );
+
+  test('text message without ACK becomes failed after 12 seconds', () {
+    fakeAsync((async) {
+      final wsClient = _FakeWsClient();
+      final cubit = ChatCubit(
+        repository: _FakeMessageRepository(messages: const []),
+        wsClient: wsClient,
+        conversation: conversation,
+        currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
+      );
+      cubit.loadMessages();
+      async.flushMicrotasks();
+      cubit.sendText('等待确认');
+      expect(
+        (cubit.state as ChatLoaded).messages.single.status,
+        MessageStatus.sending,
+      );
+
+      async.elapse(const Duration(seconds: 12));
+
+      expect(
+        (cubit.state as ChatLoaded).messages.single.status,
+        MessageStatus.failed,
+      );
+      cubit.close();
+      wsClient.dispose();
+      async.flushMicrotasks();
+    });
+  });
 
   blocTest<ChatCubit, ChatState>(
     'sendText appends sending message',
@@ -174,6 +205,25 @@ void main() {
     final sent = cubit.state as ChatLoaded;
     expect(sent.messages.single.id, 'server-image');
     expect(sent.messages.single.status, MessageStatus.sent);
+  });
+
+  test('image upload failure keeps existing failed message state', () async {
+    final wsClient = _FakeWsClient();
+    final cubit = ChatCubit(
+      repository: _MediaMessageRepository(failUpload: true),
+      wsClient: wsClient,
+      conversation: conversation,
+      currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
+    );
+    addTearDown(cubit.close);
+    addTearDown(wsClient.dispose);
+    await cubit.loadMessages();
+
+    await cubit.sendImageFromFile('/tmp/photo.jpg');
+
+    final state = cubit.state as ChatLoaded;
+    expect(state.messages.single.status, MessageStatus.failed);
   });
 
   test('video upload uses extracted metadata', () async {
@@ -313,9 +363,10 @@ class _FakeVideoThumbnailService implements VideoThumbnailService {
 }
 
 class _MediaMessageRepository implements MessageRepository {
-  _MediaMessageRepository({this.failDownload = false});
+  _MediaMessageRepository({this.failDownload = false, this.failUpload = false});
 
   final bool failDownload;
+  final bool failUpload;
   int? uploadedDurationMs;
 
   @override
@@ -330,6 +381,9 @@ class _MediaMessageRepository implements MessageRepository {
     String filePath, {
     void Function(int sent, int total)? onProgress,
   }) async {
+    if (failUpload) {
+      throw StateError('upload failed');
+    }
     onProgress?.call(1, 2);
     onProgress?.call(2, 2);
     return const ImageUploadResult(

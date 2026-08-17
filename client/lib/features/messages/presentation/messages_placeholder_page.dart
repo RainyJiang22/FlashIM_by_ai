@@ -10,10 +10,12 @@ class MessagesPlaceholderPage extends StatelessWidget {
     super.key,
     required this.conversationListCubit,
     required this.onConversationTap,
+    required this.onCreateGroup,
   });
 
   final ConversationListCubit conversationListCubit;
   final ValueChanged<Conversation> onConversationTap;
+  final VoidCallback onCreateGroup;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +43,7 @@ class MessagesPlaceholderPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     )
                   : UserAvatar(user: user, size: 48),
+              onCreateGroup: onCreateGroup,
             ),
             Expanded(
               child: ConversationListPage(
@@ -60,11 +63,13 @@ class _MessagesHeader extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.avatar,
+    required this.onCreateGroup,
   });
 
   final String title;
   final String subtitle;
   final Widget avatar;
+  final VoidCallback onCreateGroup;
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +112,28 @@ class _MessagesHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
+            PopupMenuButton<String>(
+              key: const Key('messages-create-group'),
+              tooltip: '更多',
+              onSelected: (value) {
+                if (value == 'create_group') {
+                  onCreateGroup();
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem<String>(
+                  value: 'create_group',
+                  child: Row(
+                    children: [
+                      Icon(Icons.group_add_rounded),
+                      SizedBox(width: 10),
+                      Text('发起群聊'),
+                    ],
+                  ),
+                ),
+              ],
+              icon: const Icon(Icons.add_circle_outline_rounded),
+            ),
             StreamBuilder<WsConnectionState>(
               stream: wsClient.stateStream,
               initialData: wsClient.state,

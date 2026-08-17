@@ -38,6 +38,34 @@ void main() {
             routes: {
               AppRoutes.chat: (_) => const Scaffold(body: Text('聊天页')),
               AppRoutes.login: (_) => const Scaffold(body: Text('登录页')),
+              AppRoutes.createGroup: (context) => Scaffold(
+                body: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(
+                    Conversation(
+                      id: 'group-1',
+                      type: 1,
+                      name: '测试群聊',
+                      unreadCount: 0,
+                      createdAt: DateTime(2026, 8, 16),
+                    ),
+                  ),
+                  child: const Text('建群完成'),
+                ),
+              ),
+              AppRoutes.myGroups: (context) => Scaffold(
+                body: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(
+                    Conversation(
+                      id: 'group-2',
+                      type: 1,
+                      name: '已有群聊',
+                      unreadCount: 0,
+                      createdAt: DateTime(2026, 8, 16),
+                    ),
+                  ),
+                  child: const Text('选择已有群'),
+                ),
+              ),
             },
             home: const MainShellPage(),
           ),
@@ -67,9 +95,21 @@ void main() {
     expect(find.text('消息页暂未开放'), findsNothing);
     expect(find.text('3'), findsWidgets);
 
+    await tester.tap(find.byKey(const Key('messages-create-group')));
+    await tester.pumpAndSettle();
+    expect(find.text('发起群聊'), findsOneWidget);
+    await tester.tap(find.text('发起群聊'));
+    await tester.pumpAndSettle();
+    expect(find.text('建群完成'), findsOneWidget);
+    await tester.tap(find.text('建群完成'));
+    await tester.pumpAndSettle();
+    expect(find.text('聊天页'), findsOneWidget);
+    Navigator.of(tester.element(find.text('聊天页'))).pop();
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('橘橙'));
     await tester.pumpAndSettle();
-    expect(conversationRepository.markReadIds, ['conversation-1']);
+    expect(conversationRepository.markReadIds, contains('conversation-1'));
     expect(find.text('聊天页'), findsOneWidget);
 
     Navigator.of(tester.element(find.text('聊天页'))).pop();
@@ -81,6 +121,15 @@ void main() {
     expect(find.text('新的朋友'), findsOneWidget);
     expect(find.text('小雨'), findsOneWidget);
     expect(find.text('通讯录页暂未开放'), findsNothing);
+
+    await tester.tap(find.text('群聊'));
+    await tester.pumpAndSettle();
+    expect(find.text('选择已有群'), findsOneWidget);
+    await tester.tap(find.text('选择已有群'));
+    await tester.pumpAndSettle();
+    expect(find.text('聊天页'), findsOneWidget);
+    Navigator.of(tester.element(find.text('聊天页'))).pop();
+    await tester.pumpAndSettle();
 
     await cubit.logout();
     await tester.pumpAndSettle();
@@ -143,7 +192,20 @@ class _FakeConversationRepository implements ConversationRepository {
   final markReadIds = <String>[];
 
   @override
-  Future<List<Conversation>> getList({int limit = 20, int offset = 0}) async {
+  Future<Conversation> createGroup({
+    required String name,
+    required List<int> memberIds,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<List<Conversation>> getList({
+    int limit = 20,
+    int offset = 0,
+    int? type,
+  }) async {
+    if (type == 1) {
+      return const <Conversation>[];
+    }
     if (offset > 0) {
       return const <Conversation>[];
     }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flash_starter/flash_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im_chat/flash_im_chat.dart';
@@ -21,6 +23,7 @@ abstract final class AppRoutes {
   static const createGroup = '/group/create';
   static const myGroups = '/group/list';
   static const privateChatDetails = '/chat/private/details';
+  static const groupDetails = '/chat/group/details';
 }
 
 class CreateGroupRouteArguments {
@@ -55,6 +58,12 @@ class ChatRouteArguments {
   final String currentUserId;
   final String? currentUserName;
   final String? currentUserAvatar;
+}
+
+class GroupDetailsRouteArguments {
+  const GroupDetailsRouteArguments({required this.conversation});
+
+  final Conversation conversation;
 }
 
 Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
@@ -129,7 +138,7 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
                     args.conversation.peerUserId ?? '',
                   );
                   if (peerId == null) {
-                    return;
+                    return null;
                   }
                   final group = await Navigator.of(context)
                       .pushNamed<Conversation>(
@@ -158,8 +167,39 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
                       ),
                     );
                   }
+                  return null;
                 }
-              : null,
+              : () async {
+                  final result = await Navigator.of(context)
+                      .pushNamed<GroupDetailsResult>(
+                        AppRoutes.groupDetails,
+                        arguments: GroupDetailsRouteArguments(
+                          conversation: args.conversation,
+                        ),
+                      );
+                  if (result?.isDissolved == true && context.mounted) {
+                    Navigator.of(context).pop(true);
+                    return null;
+                  }
+                  return result?.conversation;
+                },
+          onAcceptGroupInvitation: (invitationId) async {
+            final group = await context
+                .read<GroupRepository>()
+                .acceptInvitation(invitationId);
+            if (!context.mounted) return;
+            unawaited(
+              Navigator.of(context).pushNamed(
+                AppRoutes.chat,
+                arguments: ChatRouteArguments(
+                  conversation: group,
+                  currentUserId: args.currentUserId,
+                  currentUserName: args.currentUserName,
+                  currentUserAvatar: args.currentUserAvatar,
+                ),
+              ),
+            );
+          },
         ),
         settings: settings,
       );
@@ -198,6 +238,18 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
             }
           },
         ),
+        settings: settings,
+      );
+    case AppRoutes.groupDetails:
+      final args = settings.arguments;
+      if (args is! GroupDetailsRouteArguments) {
+        return MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Center(child: Text('群聊参数异常'))),
+          settings: settings,
+        );
+      }
+      return MaterialPageRoute<GroupDetailsResult>(
+        builder: (_) => GroupDetailsPage(conversation: args.conversation),
         settings: settings,
       );
     default:

@@ -1,5 +1,6 @@
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_friend/flash_im_friend.dart';
+import 'package:flash_im_group/flash_im_group.dart';
 
 class FakeFriendRepository implements FriendRepository {
   FakeFriendRepository({this.friends = const [], this.error});
@@ -139,3 +140,109 @@ Conversation groupConversation(String id, String name) => Conversation(
   unreadCount: 0,
   createdAt: DateTime(2026, 8, 16),
 );
+
+GroupDetail groupDetail({
+  bool isOwner = true,
+  bool joinApprovalRequired = false,
+  String name = '测试群聊',
+}) => GroupDetail(
+  conversationId: 'group-1',
+  name: name,
+  ownerId: 1,
+  joinApprovalRequired: joinApprovalRequired,
+  currentUserRole: isOwner ? 'owner' : 'member',
+  memberCount: 2,
+  members: [
+    GroupMember(
+      accountId: 1,
+      nickname: '群主',
+      avatar: 'identicon:1',
+      isOwner: true,
+      joinedAt: DateTime(2026, 8, 17),
+    ),
+    GroupMember(
+      accountId: 2,
+      nickname: '阿青',
+      avatar: 'identicon:2',
+      isOwner: false,
+      joinedAt: DateTime(2026, 8, 17),
+    ),
+  ],
+);
+
+class FakeGroupRepository implements GroupRepository {
+  FakeGroupRepository({GroupDetail? detail, this.error})
+    : detail = detail ?? groupDetail();
+
+  GroupDetail detail;
+  final Object? error;
+  final List<List<int>> addedMemberIds = [];
+  final List<List<int>> invitedMemberIds = [];
+  final List<int> removedMemberIds = [];
+  var dissolveCount = 0;
+
+  void _throwIfNeeded() {
+    if (error != null) throw error!;
+  }
+
+  @override
+  Future<Conversation> acceptInvitation(String invitationId) async =>
+      groupConversation('group-1', detail.name);
+
+  @override
+  Future<GroupDetail> addMembers(String groupId, List<int> memberIds) async {
+    _throwIfNeeded();
+    addedMemberIds.add(memberIds);
+    return detail;
+  }
+
+  @override
+  Future<void> dissolveGroup(String groupId) async {
+    _throwIfNeeded();
+    dissolveCount += 1;
+  }
+
+  @override
+  Future<GroupDetail> getDetail(String groupId) async {
+    _throwIfNeeded();
+    return detail;
+  }
+
+  @override
+  Future<void> inviteMembers(String groupId, List<int> inviteeIds) async {
+    _throwIfNeeded();
+    invitedMemberIds.add(inviteeIds);
+  }
+
+  @override
+  Future<GroupDetail> removeMember(String groupId, int memberId) async {
+    _throwIfNeeded();
+    removedMemberIds.add(memberId);
+    return detail;
+  }
+
+  @override
+  Future<GroupDetail> updateName(String groupId, String name) async {
+    _throwIfNeeded();
+    detail = groupDetail(
+      isOwner: detail.isOwner,
+      joinApprovalRequired: detail.joinApprovalRequired,
+      name: name,
+    );
+    return detail;
+  }
+
+  @override
+  Future<GroupDetail> updateSettings(
+    String groupId, {
+    required bool joinApprovalRequired,
+  }) async {
+    _throwIfNeeded();
+    detail = groupDetail(
+      isOwner: detail.isOwner,
+      joinApprovalRequired: joinApprovalRequired,
+      name: detail.name,
+    );
+    return detail;
+  }
+}

@@ -3,6 +3,7 @@ import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart' hide FriendUser;
 import 'package:flash_im_friend/flash_im_friend.dart';
+import 'package:flash_im_group/flash_im_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +26,10 @@ void main() {
     );
     expect(
       onGenerateAppRoute(const RouteSettings(name: AppRoutes.chat)),
+      isA<MaterialPageRoute<void>>(),
+    );
+    expect(
+      onGenerateAppRoute(const RouteSettings(name: AppRoutes.groupDetails)),
       isA<MaterialPageRoute<void>>(),
     );
     expect(onGenerateAppRoute(const RouteSettings(name: '/missing')), isNull);
@@ -105,6 +110,39 @@ void main() {
     expect(find.text('新群聊'), findsOneWidget);
     expect(conversations.createdMemberIds, [2, 3]);
   });
+
+  testWidgets('group chat opens details and updates title on return', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app());
+    final context = tester.element(find.text('home'));
+    Navigator.of(context).pushNamed(
+      AppRoutes.chat,
+      arguments: ChatRouteArguments(
+        conversation: Conversation(
+          id: 'group-1',
+          type: 1,
+          name: '旧群名',
+          unreadCount: 0,
+          createdAt: DateTime(2026, 8, 17),
+        ),
+        currentUserId: '1',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('chat-details-action')));
+    await tester.pumpAndSettle();
+    expect(find.text('聊天信息'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('group-name-row')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('group-name-input')), '新群名');
+    await tester.tap(find.byKey(const Key('group-name-save')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+    await tester.pumpAndSettle();
+    expect(find.text('新群名'), findsOneWidget);
+  });
 }
 
 Widget _app({_ConversationRepository? conversations}) {
@@ -117,6 +155,7 @@ Widget _app({_ConversationRepository? conversations}) {
       RepositoryProvider<MessageRepository>.value(
         value: const _MessageRepository(),
       ),
+      RepositoryProvider<GroupRepository>.value(value: _GroupRepository()),
       RepositoryProvider<WsClient>.value(value: _WsClient()),
     ],
     child: MaterialApp(
@@ -124,6 +163,61 @@ Widget _app({_ConversationRepository? conversations}) {
       home: const Scaffold(body: Text('home')),
     ),
   );
+}
+
+class _GroupRepository implements GroupRepository {
+  var detail = GroupDetail(
+    conversationId: 'group-1',
+    name: '旧群名',
+    ownerId: 1,
+    joinApprovalRequired: false,
+    currentUserRole: 'owner',
+    memberCount: 1,
+    members: [
+      GroupMember(
+        accountId: 1,
+        nickname: '群主',
+        avatar: 'identicon:1',
+        isOwner: true,
+        joinedAt: DateTime(2026, 8, 17),
+      ),
+    ],
+  );
+
+  @override
+  Future<Conversation> acceptInvitation(String invitationId) =>
+      throw UnimplementedError();
+  @override
+  Future<GroupDetail> addMembers(String groupId, List<int> memberIds) async =>
+      detail;
+  @override
+  Future<void> dissolveGroup(String groupId) async {}
+  @override
+  Future<GroupDetail> getDetail(String groupId) async => detail;
+  @override
+  Future<void> inviteMembers(String groupId, List<int> inviteeIds) async {}
+  @override
+  Future<GroupDetail> removeMember(String groupId, int memberId) async =>
+      detail;
+  @override
+  Future<GroupDetail> updateName(String groupId, String name) async {
+    detail = GroupDetail(
+      conversationId: detail.conversationId,
+      name: name,
+      ownerId: detail.ownerId,
+      joinApprovalRequired: detail.joinApprovalRequired,
+      currentUserRole: detail.currentUserRole,
+      memberCount: detail.memberCount,
+      members: detail.members,
+    );
+    return detail;
+  }
+
+  @override
+  Future<GroupDetail> updateSettings(
+    String groupId, {
+    required bool joinApprovalRequired,
+  }) async => detail;
 }
 
 class _ConversationRepository implements ConversationRepository {

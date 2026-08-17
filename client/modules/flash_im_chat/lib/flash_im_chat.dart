@@ -1,7 +1,13 @@
 library;
 
 export 'src/data/message.dart'
-    show FileExtra, Message, MessageStatus, MessageType, VideoExtra;
+    show
+        FileExtra,
+        GroupInvitationExtra,
+        Message,
+        MessageStatus,
+        MessageType,
+        VideoExtra;
 export 'src/data/message_repository.dart'
     show
         DioMessageRepository,

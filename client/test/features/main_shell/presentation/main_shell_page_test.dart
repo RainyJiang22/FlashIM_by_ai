@@ -95,9 +95,14 @@ void main() {
     expect(find.text('消息页暂未开放'), findsNothing);
     expect(find.text('3'), findsWidgets);
 
+    final triggerBottom = tester.getBottomLeft(
+      find.byKey(const Key('messages-create-group')),
+    );
     await tester.tap(find.byKey(const Key('messages-create-group')));
     await tester.pumpAndSettle();
     expect(find.text('发起群聊'), findsOneWidget);
+    final actionTop = tester.getTopLeft(find.text('发起群聊'));
+    expect(actionTop.dy, greaterThan(triggerBottom.dy));
     await tester.tap(find.text('发起群聊'));
     await tester.pumpAndSettle();
     expect(find.text('建群完成'), findsOneWidget);

@@ -95,4 +95,45 @@ void main() {
       }
     });
   }
+
+  testWidgets('group invitation card accepts once and shows joined state', (
+    tester,
+  ) async {
+    String? acceptedId;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'invite-1',
+              conversationId: 'private-1',
+              senderId: '2',
+              senderName: '小雨',
+              seq: 1,
+              content: '邀请你加入群聊',
+              type: MessageType.groupInvitation,
+              extra: const {
+                'invitation_id': 'invitation-1',
+                'group_id': 'group-1',
+                'group_name': '周末读书会',
+                'inviter_name': '小雨',
+              },
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 8, 17),
+            ),
+            isMine: false,
+            onAcceptGroupInvitation: (invitationId) async {
+              acceptedId = invitationId;
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('周末读书会'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('group-invitation-accept')));
+    await tester.pumpAndSettle();
+    expect(acceptedId, 'invitation-1');
+    expect(find.text('已加入'), findsOneWidget);
+  });
 }

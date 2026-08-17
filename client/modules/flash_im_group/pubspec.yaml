@@ -8,6 +8,7 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
+  dio: ^5.9.0
   equatable: ^2.0.7
   flash_im_conversation:
     path: ../flash_im_conversation

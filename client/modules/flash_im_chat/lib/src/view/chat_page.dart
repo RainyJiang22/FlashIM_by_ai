@@ -25,6 +25,7 @@ class ChatPage extends StatelessWidget {
     this.currentUserAvatar,
     this.videoThumbnailService,
     this.onDetailsTap,
+    this.onAcceptGroupInvitation,
   });
 
   final Conversation conversation;
@@ -32,7 +33,8 @@ class ChatPage extends StatelessWidget {
   final String? currentUserName;
   final String? currentUserAvatar;
   final VideoThumbnailService? videoThumbnailService;
-  final Future<void> Function()? onDetailsTap;
+  final Future<Conversation?> Function()? onDetailsTap;
+  final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
 
   @override
   Widget build(BuildContext context) {
@@ -57,35 +59,51 @@ class ChatPage extends StatelessWidget {
         currentUserId: currentUserId,
         currentUserAvatar: currentUserAvatar,
         onDetailsTap: onDetailsTap,
+        onAcceptGroupInvitation: onAcceptGroupInvitation,
       ),
     );
   }
 }
 
-class _ChatScaffold extends StatelessWidget {
+class _ChatScaffold extends StatefulWidget {
   const _ChatScaffold({
     required this.conversation,
     required this.currentUserId,
     this.currentUserAvatar,
     this.onDetailsTap,
+    this.onAcceptGroupInvitation,
   });
 
   final Conversation conversation;
   final String currentUserId;
   final String? currentUserAvatar;
-  final Future<void> Function()? onDetailsTap;
+  final Future<Conversation?> Function()? onDetailsTap;
+  final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
+
+  @override
+  State<_ChatScaffold> createState() => _ChatScaffoldState();
+}
+
+class _ChatScaffoldState extends State<_ChatScaffold> {
+  late Conversation _displayConversation;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayConversation = widget.conversation;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(conversation.displayName),
+        title: Text(_displayConversation.displayName),
         actions: [
-          if (conversation.isPrivateChat && onDetailsTap != null)
+          if (widget.onDetailsTap != null)
             IconButton(
               key: const Key('chat-details-action'),
               tooltip: '聊天详情',
-              onPressed: onDetailsTap,
+              onPressed: _openDetails,
               icon: const Icon(Icons.more_horiz_rounded),
             ),
         ],
@@ -98,8 +116,9 @@ class _ChatScaffold extends StatelessWidget {
             children: [
               Expanded(
                 child: _MessageList(
-                  currentUserId: currentUserId,
-                  currentUserAvatar: currentUserAvatar,
+                  currentUserId: widget.currentUserId,
+                  currentUserAvatar: widget.currentUserAvatar,
+                  onAcceptGroupInvitation: widget.onAcceptGroupInvitation,
                 ),
               ),
               ChatInput(
@@ -114,12 +133,25 @@ class _ChatScaffold extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _openDetails() async {
+    final updated = await widget.onDetailsTap?.call();
+    if (!mounted || updated == null || updated.id != _displayConversation.id) {
+      return;
+    }
+    setState(() => _displayConversation = updated);
+  }
 }
 
 class _MessageList extends StatelessWidget {
-  const _MessageList({required this.currentUserId, this.currentUserAvatar});
+  const _MessageList({
+    required this.currentUserId,
+    this.currentUserAvatar,
+    this.onAcceptGroupInvitation,
+  });
   final String currentUserId;
   final String? currentUserAvatar;
+  final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +186,7 @@ class _MessageList extends StatelessWidget {
             currentUserAvatar: currentUserAvatar,
             fileDownloads: fileDownloads,
             uploadProgress: uploadProgress,
+            onAcceptGroupInvitation: onAcceptGroupInvitation,
           ),
       },
     );
@@ -167,6 +200,7 @@ class _LoadedMessageList extends StatelessWidget {
     required this.fileDownloads,
     this.currentUserAvatar,
     this.uploadProgress,
+    this.onAcceptGroupInvitation,
   });
 
   final List<Message> messages;
@@ -174,6 +208,7 @@ class _LoadedMessageList extends StatelessWidget {
   final String? currentUserAvatar;
   final Map<String, FileDownloadInfo> fileDownloads;
   final double? uploadProgress;
+  final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
 
   @override
   Widget build(BuildContext context) {
@@ -203,6 +238,7 @@ class _LoadedMessageList extends StatelessWidget {
             onOpenImage: () => _openImage(context, message),
             onOpenVideo: () => _openVideo(context, message),
             onOpenFile: () => _openFile(context, message),
+            onAcceptGroupInvitation: onAcceptGroupInvitation,
           );
         },
       ),

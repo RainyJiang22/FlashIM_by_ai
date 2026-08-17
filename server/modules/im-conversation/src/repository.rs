@@ -47,6 +47,7 @@ pub fn list_conversations_sql() -> &'static str {
     ) group_members ON TRUE
     WHERE me.user_id = $1
       AND me.is_deleted = FALSE
+      AND c.is_dissolved = FALSE
       AND ($4::SMALLINT IS NULL OR c.type = $4)
     ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC
     LIMIT $2 OFFSET $3
@@ -96,6 +97,7 @@ pub fn get_conversation_by_id_sql() -> &'static str {
     WHERE me.user_id = $1
       AND c.id = $2
       AND me.is_deleted = FALSE
+      AND c.is_dissolved = FALSE
     "#
 }
 
@@ -251,10 +253,12 @@ pub async fn is_member(pool: &PgPool, conversation_id: Uuid, user_id: i64) -> Ap
         r#"
         SELECT EXISTS(
             SELECT 1
-            FROM conversation_members
-            WHERE conversation_id = $1
-              AND user_id = $2
-              AND is_deleted = FALSE
+            FROM conversation_members member
+            JOIN conversations c ON c.id = member.conversation_id
+            WHERE member.conversation_id = $1
+              AND member.user_id = $2
+              AND member.is_deleted = FALSE
+              AND c.is_dissolved = FALSE
         )
         "#,
     )
@@ -269,9 +273,11 @@ pub async fn get_member_ids(pool: &PgPool, conversation_id: Uuid) -> AppResult<V
     sqlx::query_scalar::<_, i64>(
         r#"
         SELECT user_id
-        FROM conversation_members
-        WHERE conversation_id = $1
-          AND is_deleted = FALSE
+        FROM conversation_members member
+        JOIN conversations c ON c.id = member.conversation_id
+        WHERE member.conversation_id = $1
+          AND member.is_deleted = FALSE
+          AND c.is_dissolved = FALSE
         ORDER BY joined_at ASC
         "#,
     )
@@ -439,6 +445,7 @@ mod tests {
 
         assert!(sql.contains("ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC"));
         assert!(sql.contains("AND me.is_deleted = FALSE"));
+        assert!(sql.contains("c.is_dissolved = FALSE"));
         assert!(sql.contains("$4::SMALLINT IS NULL OR c.type = $4"));
         assert!(sql.contains("c.owner_id"));
         assert!(sql.contains("ARRAY_AGG(group_member.avatar_url"));
@@ -471,6 +478,7 @@ mod tests {
         assert!(sql.contains("member_avatars"));
         assert!(sql.contains("AND c.id = $2"));
         assert!(sql.contains("AND me.is_deleted = FALSE"));
+        assert!(sql.contains("c.is_dissolved = FALSE"));
     }
 
     #[test]

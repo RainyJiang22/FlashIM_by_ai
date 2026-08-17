@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../data/message.dart';
 import '../../logic/chat_state.dart';
 import 'file_bubble.dart';
+import 'group_invitation_bubble.dart';
 import 'image_bubble.dart';
 import 'text_bubble.dart';
 import 'video_bubble.dart';
@@ -19,6 +20,7 @@ class MessageBubble extends StatelessWidget {
     this.onOpenFile,
     this.downloadInfo,
     this.uploadProgress,
+    this.onAcceptGroupInvitation,
   });
 
   final Message message;
@@ -29,6 +31,7 @@ class MessageBubble extends StatelessWidget {
   final VoidCallback? onOpenFile;
   final FileDownloadInfo? downloadInfo;
   final double? uploadProgress;
+  final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +59,11 @@ class MessageBubble extends StatelessWidget {
         message: message,
         onTap: onOpenFile,
         downloadInfo: downloadInfo,
+      ),
+      MessageType.groupInvitation => GroupInvitationBubble(
+        message: message,
+        canAccept: !isMine,
+        onAccept: onAcceptGroupInvitation,
       ),
     };
 

@@ -45,6 +45,7 @@ async fn handle_chat_message(
 ) -> AppResult<Vec<u8>> {
     let request = SendMessageRequest::decode(payload.as_slice())
         .map_err(|_| AppError::bad_request("invalid chat message payload"))?;
+    validate_client_message_type(request.r#type)?;
     let conversation_id = Uuid::parse_str(request.conversation_id.trim())
         .map_err(|_| AppError::bad_request("invalid conversation id"))?;
     let extra = parse_extra(request.extra.trim())?;
@@ -68,6 +69,13 @@ async fn handle_chat_message(
     }))
 }
 
+fn validate_client_message_type(message_type: i32) -> AppResult<()> {
+    if !(0..=3).contains(&message_type) {
+        return Err(AppError::bad_request("unsupported client message type"));
+    }
+    Ok(())
+}
+
 fn parse_extra(extra: &str) -> AppResult<Option<serde_json::Value>> {
     if extra.is_empty() {
         return Ok(None);
@@ -80,7 +88,7 @@ fn parse_extra(extra: &str) -> AppResult<Option<serde_json::Value>> {
 
 #[cfg(test)]
 mod tests {
-    use super::parse_extra;
+    use super::{parse_extra, validate_client_message_type};
 
     #[test]
     fn parse_extra_allows_empty_payload() {
@@ -90,5 +98,14 @@ mod tests {
     #[test]
     fn parse_extra_rejects_invalid_json() {
         assert!(parse_extra("{").is_err());
+    }
+
+    #[test]
+    fn client_cannot_forge_group_invitation_message() {
+        for message_type in 0..=3 {
+            assert!(validate_client_message_type(message_type).is_ok());
+        }
+        assert!(validate_client_message_type(4).is_err());
+        assert!(validate_client_message_type(-1).is_err());
     }
 }

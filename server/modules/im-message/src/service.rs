@@ -10,7 +10,6 @@ use crate::{
     broadcast::MessageBroadcaster,
     models::{MessageQuery, MessageRow, MessageWithSender, NewMessage},
     repository,
-    seq::SeqGenerator,
 };
 
 const DEFAULT_LIMIT: i64 = 50;
@@ -104,48 +103,28 @@ where
             1 => validate_image_extra(&input.extra)?,
             2 => validate_video_extra(&input.extra)?,
             3 => validate_file_extra(&input.extra)?,
+            4 => validate_group_invitation_extra(&input.extra)?,
             _ => return Err(AppError::bad_request("unsupported message type")),
         }
 
-        let pool = context.postgres.pool();
-        let conversation_service = ConversationMessageService::new(context);
-        if !conversation_service
-            .is_member(input.conversation_id, input.sender_id)
-            .await?
-        {
-            return Err(AppError::not_found("conversation not found"));
-        }
-
-        let seq = SeqGenerator::next_seq(pool, input.conversation_id).await?;
-        let message = repository::insert_message(
-            pool,
+        let preview = build_preview(input.msg_type, &input.content);
+        let persisted = repository::persist_message(
+            context.postgres.pool(),
             NewMessage {
                 conversation_id: input.conversation_id,
                 sender_id: input.sender_id,
-                seq,
+                seq: 0,
                 r#type: input.msg_type,
                 content: input.content,
                 extra: input.extra,
             },
+            &preview,
         )
         .await?;
-        let payload = MessagePayload::from(message);
-        let preview = build_preview(payload.msg_type, &payload.content);
-
-        conversation_service
-            .update_last_message(payload.conversation_id, &preview, payload.created_at)
-            .await?;
-        conversation_service
-            .increment_unread(payload.conversation_id, payload.sender_id)
-            .await?;
-
-        let member_ids = conversation_service
-            .get_member_ids(payload.conversation_id)
-            .await?;
-        let unread_counts = conversation_service
-            .get_unread_counts(payload.conversation_id, &member_ids)
-            .await?;
-        let updates = unread_counts
+        let payload = MessagePayload::from(persisted.row);
+        let member_ids = persisted.member_ids;
+        let updates = persisted
+            .unread_counts
             .into_iter()
             .map(|(user_id, unread_count)| ConversationUpdate {
                 conversation_id: payload.conversation_id,
@@ -156,12 +135,14 @@ where
             })
             .collect::<Vec<_>>();
 
-        self.broadcaster
+        let _ = self
+            .broadcaster
             .broadcast_message(payload.clone(), &member_ids, Some(payload.sender_id))
-            .await?;
-        self.broadcaster
+            .await;
+        let _ = self
+            .broadcaster
             .broadcast_conversation_updates(updates.clone(), &member_ids)
-            .await?;
+            .await;
 
         Ok(SendMessageOutput {
             ack: MessageAck {
@@ -216,6 +197,7 @@ fn build_preview(msg_type: i16, content: &str) -> String {
         1 => "[图片]".to_string(),
         2 => "[视频]".to_string(),
         3 => "[文件]".to_string(),
+        4 => "[群聊邀请]".to_string(),
         _ => content.chars().take(100).collect(),
     }
 }
@@ -252,6 +234,17 @@ fn validate_file_extra(extra: &Option<Value>) -> AppResult<()> {
     Ok(())
 }
 
+fn validate_group_invitation_extra(extra: &Option<Value>) -> AppResult<()> {
+    let extra = extra
+        .as_ref()
+        .and_then(Value::as_object)
+        .ok_or(AppError::bad_request("invalid group invitation extra"))?;
+    for key in ["invitation_id", "group_id", "group_name", "inviter_name"] {
+        require_key(extra, key, "invalid group invitation extra")?;
+    }
+    Ok(())
+}
+
 fn require_key(
     object: &serde_json::Map<String, Value>,
     key: &str,
@@ -273,8 +266,8 @@ mod tests {
     use crate::{
         models::MessageQuery,
         service::{
-            build_preview, normalize_history_query, validate_file_extra, validate_image_extra,
-            validate_video_extra,
+            build_preview, normalize_history_query, validate_file_extra,
+            validate_group_invitation_extra, validate_image_extra, validate_video_extra,
         },
     };
 
@@ -313,6 +306,7 @@ mod tests {
         assert_eq!(build_preview(1, "hello"), "[图片]");
         assert_eq!(build_preview(2, "hello"), "[视频]");
         assert_eq!(build_preview(3, "hello"), "[文件]");
+        assert_eq!(build_preview(4, "hello"), "[群聊邀请]");
         assert_eq!(build_preview(0, "hello"), "hello");
     }
 
@@ -345,6 +339,15 @@ mod tests {
                 "file_name": "a.pdf",
                 "file_url": "/uploads/file/a.pdf",
                 "file_type": "pdf"
+            })))
+            .is_ok()
+        );
+        assert!(
+            validate_group_invitation_extra(&Some(json!({
+                "invitation_id": "invitation-id",
+                "group_id": "group-id",
+                "group_name": "测试群",
+                "inviter_name": "小雨"
             })))
             .is_ok()
         );

@@ -7,6 +7,7 @@ enum MessageType {
   IMAGE = 1;
   VIDEO = 2;
   FILE = 3;
+  GROUP_INVITATION = 4;
 }
 
 message ChatMessage {

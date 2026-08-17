@@ -117,7 +117,7 @@ class _MainShellPageState extends State<MainShellPage> {
     if (!mounted) {
       return;
     }
-    await Navigator.of(context).pushNamed(
+    final shouldRefresh = await Navigator.of(context).pushNamed(
       AppRoutes.chat,
       arguments: ChatRouteArguments(
         conversation: conversation.copyWith(unreadCount: 0),
@@ -126,6 +126,9 @@ class _MainShellPageState extends State<MainShellPage> {
         currentUserAvatar: sessionState.user?.avatar,
       ),
     );
+    if (shouldRefresh == true && mounted) {
+      await _conversationListCubit.refresh();
+    }
   }
 
   Future<void> _openFriendChat(FriendUser friend) async {

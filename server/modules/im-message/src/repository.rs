@@ -4,6 +4,138 @@ use uuid::Uuid;
 
 use crate::models::{MessageRow, MessageWithSenderRow, NewMessage};
 
+pub struct PersistedMessage {
+    pub row: MessageRow,
+    pub member_ids: Vec<i64>,
+    pub unread_counts: Vec<(i64, i32)>,
+}
+
+pub fn active_conversation_lock_sql() -> &'static str {
+    r#"
+        SELECT c.id
+        FROM conversations c
+        JOIN conversation_members sender
+          ON sender.conversation_id = c.id
+         AND sender.user_id = $2
+         AND sender.is_deleted = FALSE
+        WHERE c.id = $1
+          AND c.is_dissolved = FALSE
+        FOR UPDATE OF c
+    "#
+}
+
+pub async fn persist_message(
+    pool: &PgPool,
+    message: NewMessage,
+    preview: &str,
+) -> AppResult<PersistedMessage> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to start message transaction"))?;
+
+    let active_conversation = sqlx::query_scalar::<_, Uuid>(active_conversation_lock_sql())
+        .bind(message.conversation_id)
+        .bind(message.sender_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to lock conversation"))?;
+    if active_conversation.is_none() {
+        return Err(AppError::not_found("conversation not found"));
+    }
+
+    let seq = sqlx::query_scalar::<_, i64>(
+        r#"
+        INSERT INTO conversation_seq (conversation_id, current_seq)
+        VALUES ($1, 1)
+        ON CONFLICT (conversation_id)
+        DO UPDATE SET current_seq = conversation_seq.current_seq + 1
+        RETURNING current_seq
+        "#,
+    )
+    .bind(message.conversation_id)
+    .fetch_one(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to generate message sequence"))?;
+
+    let row = sqlx::query_as::<_, MessageRow>(insert_message_sql())
+        .bind(message.conversation_id)
+        .bind(message.sender_id)
+        .bind(seq)
+        .bind(message.r#type)
+        .bind(message.content)
+        .bind(message.extra)
+        .fetch_one(&mut *transaction)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to insert message"))?;
+
+    sqlx::query(
+        r#"
+        UPDATE conversations
+        SET last_message_preview = $2, last_message_at = $3, updated_at = NOW()
+        WHERE id = $1
+        "#,
+    )
+    .bind(row.conversation_id)
+    .bind(preview)
+    .bind(row.created_at)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to update conversation preview"))?;
+
+    sqlx::query(
+        r#"
+        UPDATE conversation_members
+        SET unread_count = unread_count + 1
+        WHERE conversation_id = $1
+          AND user_id <> $2
+          AND is_deleted = FALSE
+        "#,
+    )
+    .bind(row.conversation_id)
+    .bind(row.sender_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to increment unread count"))?;
+
+    let member_ids = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT user_id
+        FROM conversation_members
+        WHERE conversation_id = $1 AND is_deleted = FALSE
+        ORDER BY joined_at ASC
+        "#,
+    )
+    .bind(row.conversation_id)
+    .fetch_all(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to load conversation members"))?;
+    let unread_counts = sqlx::query_as::<_, (i64, i32)>(
+        r#"
+        SELECT user_id, unread_count
+        FROM conversation_members
+        WHERE conversation_id = $1
+          AND user_id = ANY($2)
+          AND is_deleted = FALSE
+        "#,
+    )
+    .bind(row.conversation_id)
+    .bind(&member_ids)
+    .fetch_all(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to load unread counts"))?;
+
+    transaction
+        .commit()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to commit message transaction"))?;
+    Ok(PersistedMessage {
+        row,
+        member_ids,
+        unread_counts,
+    })
+}
+
 pub fn find_before_sql() -> &'static str {
     r#"
     SELECT
@@ -65,7 +197,7 @@ pub async fn find_before(
 
 #[cfg(test)]
 mod tests {
-    use super::{find_before_sql, insert_message_sql};
+    use super::{active_conversation_lock_sql, find_before_sql, insert_message_sql};
 
     #[test]
     fn history_sql_uses_seq_pagination() {
@@ -83,5 +215,13 @@ mod tests {
         assert!(sql.contains("INSERT INTO messages"));
         assert!(sql.contains("(conversation_id, sender_id, seq, type, content, extra)"));
         assert!(sql.contains("VALUES ($1, $2, $3, $4, $5, $6)"));
+    }
+
+    #[test]
+    fn message_write_locks_only_active_conversation() {
+        let sql = active_conversation_lock_sql();
+        assert!(sql.contains("sender.is_deleted = FALSE"));
+        assert!(sql.contains("c.is_dissolved = FALSE"));
+        assert!(sql.contains("FOR UPDATE OF c"));
     }
 }

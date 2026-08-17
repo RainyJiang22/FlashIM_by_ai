@@ -5,6 +5,7 @@ use flash_core::SharedContext;
 use flash_user::router as build_user_router;
 use im_conversation::router as build_im_conversation_router;
 use im_friend::router_with_broadcaster as build_im_friend_router;
+use im_group::router_with_broadcaster as build_im_group_router;
 use im_message::router as build_im_message_router;
 use im_ws::router as build_im_ws_router;
 use im_ws::{broadcaster::WsBroadcaster, state::shared_ws_state};
@@ -29,6 +30,7 @@ pub fn build_router(state: SharedContext, auth_store: SharedAuthStore) -> Router
         .merge(build_im_ws_router())
         .merge(build_im_message_router())
         .merge(build_im_conversation_router())
+        .merge(build_im_group_router(friend_broadcaster.clone()))
         .merge(build_im_friend_router(friend_broadcaster));
 
     register_auth_routes(router)

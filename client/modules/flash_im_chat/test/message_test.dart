@@ -97,4 +97,24 @@ void main() {
     expect(local.type, MessageType.image);
     expect(local.status, MessageStatus.sending);
   });
+
+  test('group invitation parses card metadata and protocol type', () {
+    final message = Message.fromJson({
+      'id': 'invite-1',
+      'conversation_id': 'private-1',
+      'sender_id': 2,
+      'msg_type': 4,
+      'content': '邀请你加入群聊',
+      'extra': {
+        'invitation_id': 'invitation-1',
+        'group_id': 'group-1',
+        'group_name': '周末读书会',
+        'inviter_name': '小雨',
+      },
+    });
+
+    expect(message.type, MessageType.groupInvitation);
+    expect(message.groupInvitationExtra?.groupName, '周末读书会');
+    expect(Message.mapToProtoType(MessageType.groupInvitation), 4);
+  });
 }

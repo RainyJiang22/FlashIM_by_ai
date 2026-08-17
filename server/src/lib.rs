@@ -14,11 +14,19 @@ pub fn build_app(state: SharedContext, auth_store: SharedAuthStore) -> Router {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use async_trait::async_trait;
     use axum::{
         body::{Body, to_bytes},
         http::{Request, StatusCode, header},
     };
     use futures_util::{SinkExt, StreamExt};
+    use im_message::{
+        broadcast::MessageBroadcaster,
+        service::{
+            ConversationUpdate as DomainConversationUpdate, MessagePayload, MessageService,
+            SendMessageInput,
+        },
+    };
     use im_ws::{
         frame,
         proto::{
@@ -36,7 +44,7 @@ mod tests {
         models::auth::{LoginResponse, SmsResponse},
         services::user_service::find_or_create_account_by_phone,
     };
-    use flash_core::AppContext;
+    use flash_core::{AppContext, AppError, AppResult};
     use flash_user::model::{MessageResponse, UserProfileResponse};
 
     const TEST_PNG: &[u8] = &[
@@ -44,6 +52,29 @@ mod tests {
         0, 0, 0, 31, 21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 248, 207, 192, 240,
         31, 0, 5, 0, 1, 255, 137, 153, 61, 29, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
     ];
+
+    #[derive(Clone)]
+    struct FailingBroadcaster;
+
+    #[async_trait]
+    impl MessageBroadcaster for FailingBroadcaster {
+        async fn broadcast_message(
+            &self,
+            _message: MessagePayload,
+            _member_ids: &[i64],
+            _exclude_sender: Option<i64>,
+        ) -> AppResult<()> {
+            Err(AppError::internal_server_error("test broadcast failure"))
+        }
+
+        async fn broadcast_conversation_updates(
+            &self,
+            _updates: Vec<DomainConversationUpdate>,
+            _member_ids: &[i64],
+        ) -> AppResult<()> {
+            Err(AppError::internal_server_error("test broadcast failure"))
+        }
+    }
 
     fn build_test_app() -> (SharedContext, SharedAuthStore, Router) {
         let context = Arc::new(AppContext::new_for_tests("test-secret"));
@@ -256,7 +287,7 @@ mod tests {
         let pool = context.postgres.pool();
         let marker = format!("{:016x}", rand::random::<u64>());
         let mut user_ids = Vec::new();
-        for index in 0..4 {
+        for index in 0..5 {
             let account_id = sqlx::query_scalar::<_, i64>(
                 r#"
                 INSERT INTO accounts (primary_identifier)
@@ -363,8 +394,468 @@ mod tests {
                 .to_string(),
             ))
             .unwrap();
-        let invalid_response = app.oneshot(invalid_request).await.unwrap();
+        let invalid_response = app.clone().oneshot(invalid_request).await.unwrap();
         assert_eq!(invalid_response.status(), StatusCode::BAD_REQUEST);
+
+        let group_detail_request = Request::builder()
+            .method("GET")
+            .uri(format!("/groups/{conversation_id}"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let group_detail_response = app.clone().oneshot(group_detail_request).await.unwrap();
+        assert_eq!(group_detail_response.status(), StatusCode::OK);
+        let group_detail_body = to_bytes(group_detail_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let group_detail: serde_json::Value = serde_json::from_slice(&group_detail_body).unwrap();
+        assert_eq!(group_detail["member_count"], 3);
+        assert_eq!(group_detail["current_user_role"], "owner");
+
+        let broadcast_failure_output = MessageService::new(Arc::new(FailingBroadcaster))
+            .send(
+                &context,
+                SendMessageInput {
+                    conversation_id: conversation_id.parse::<sqlx::types::Uuid>().unwrap(),
+                    sender_id: owner_id,
+                    msg_type: 0,
+                    content: "广播失败不回滚消息".to_string(),
+                    extra: None,
+                },
+            )
+            .await
+            .expect("committed message should not fail when broadcast fails");
+        assert_eq!(
+            broadcast_failure_output.message.content,
+            "广播失败不回滚消息"
+        );
+
+        let rename_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{conversation_id}/name"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"name":"路由管理测试群"}"#))
+            .unwrap();
+        let rename_response = app.clone().oneshot(rename_request).await.unwrap();
+        assert_eq!(rename_response.status(), StatusCode::OK);
+
+        let settings_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{conversation_id}/settings"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"join_approval_required":true}"#))
+            .unwrap();
+        let settings_response = app.clone().oneshot(settings_request).await.unwrap();
+        assert_eq!(settings_response.status(), StatusCode::OK);
+
+        sqlx::query(
+            r#"
+            INSERT INTO friend_relations (user_id, friend_user_id)
+            SELECT $1, friend_id
+            FROM UNNEST($2::BIGINT[]) AS friend_id
+            "#,
+        )
+        .bind(user_ids[1])
+        .bind(&user_ids[3..5])
+        .execute(pool)
+        .await
+        .expect("member friendship should be inserted");
+        let member_token =
+            sign_token(context.as_ref(), user_ids[1]).expect("member token should sign");
+        let invitee_token =
+            sign_token(context.as_ref(), user_ids[3]).expect("invitee token should sign");
+
+        let direct_add_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{conversation_id}/members"))
+            .header(header::AUTHORIZATION, format!("Bearer {member_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({"member_ids": [user_ids[3]]}).to_string(),
+            ))
+            .unwrap();
+        let direct_add_response = app.clone().oneshot(direct_add_request).await.unwrap();
+        assert_eq!(direct_add_response.status(), StatusCode::FORBIDDEN);
+
+        let invalid_batch_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{conversation_id}/invitations"))
+            .header(header::AUTHORIZATION, format!("Bearer {member_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({"member_ids": [user_ids[3], user_ids[2]]}).to_string(),
+            ))
+            .unwrap();
+        let invalid_batch_response = app.clone().oneshot(invalid_batch_request).await.unwrap();
+        assert_eq!(invalid_batch_response.status(), StatusCode::BAD_REQUEST);
+        let pending_after_invalid = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM group_invitations WHERE conversation_id = $1 AND invitee_id = $2 AND status = 0",
+        )
+        .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+        .bind(user_ids[3])
+        .fetch_one(pool)
+        .await
+        .expect("pending invitation count should load");
+        assert_eq!(pending_after_invalid, 0);
+
+        let delivery_trigger = format!("group_invitation_delivery_failure_{marker}");
+        let delivery_function = format!("group_invitation_delivery_failure_fn_{marker}");
+        sqlx::query(&format!(
+            r#"
+            CREATE FUNCTION {delivery_function}() RETURNS trigger AS $function$
+            BEGIN
+                IF NEW.type = 4 AND EXISTS(
+                    SELECT 1 FROM conversation_members
+                    WHERE conversation_id = NEW.conversation_id
+                      AND user_id = {}
+                ) THEN
+                    RAISE EXCEPTION 'forced invitation delivery failure';
+                END IF;
+                RETURN NEW;
+            END;
+            $function$ LANGUAGE plpgsql
+            "#,
+            user_ids[4]
+        ))
+        .execute(pool)
+        .await
+        .expect("delivery failure function should be installed");
+        sqlx::query(&format!(
+            "CREATE TRIGGER {delivery_trigger} BEFORE INSERT ON messages FOR EACH ROW EXECUTE FUNCTION {delivery_function}()"
+        ))
+        .execute(pool)
+        .await
+        .expect("delivery failure trigger should be installed");
+
+        let invite_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{conversation_id}/invitations"))
+            .header(header::AUTHORIZATION, format!("Bearer {member_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({"member_ids": [user_ids[3], user_ids[4]]}).to_string(),
+            ))
+            .unwrap();
+        let invite_response = app.clone().oneshot(invite_request).await.unwrap();
+        sqlx::query(&format!("DROP TRIGGER {delivery_trigger} ON messages"))
+            .execute(pool)
+            .await
+            .expect("delivery failure trigger should be removed");
+        sqlx::query(&format!("DROP FUNCTION {delivery_function}()"))
+            .execute(pool)
+            .await
+            .expect("delivery failure function should be removed");
+        assert_eq!(invite_response.status(), StatusCode::OK);
+        let invite_body = to_bytes(invite_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let invite: serde_json::Value = serde_json::from_slice(&invite_body).unwrap();
+        let invitation_items = invite["invitations"].as_array().unwrap();
+        let delivered_invitation = invitation_items
+            .iter()
+            .find(|item| item["invitee_id"] == user_ids[3].to_string())
+            .unwrap();
+        assert_eq!(delivered_invitation["status"], "pending");
+        assert_eq!(delivered_invitation["delivered"], true);
+        let invitation_id = delivered_invitation["id"].as_str().unwrap();
+        let failed_invitation = invitation_items
+            .iter()
+            .find(|item| item["invitee_id"] == user_ids[4].to_string())
+            .unwrap();
+        assert!(failed_invitation["id"].is_null());
+        assert_eq!(failed_invitation["status"], "failed");
+        assert_eq!(failed_invitation["delivered"], false);
+        let failed_pending_count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM group_invitations WHERE conversation_id = $1 AND invitee_id = $2 AND status = 0",
+        )
+        .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+        .bind(user_ids[4])
+        .fetch_one(pool)
+        .await
+        .expect("failed invitation count should load");
+        assert_eq!(failed_pending_count, 0);
+        let persisted_card_count = sqlx::query_scalar::<_, i64>(
+            r#"
+            SELECT COUNT(*)
+            FROM messages
+            WHERE type = 4
+              AND extra->>'invitation_id' = $1
+            "#,
+        )
+        .bind(invitation_id)
+        .fetch_one(pool)
+        .await
+        .expect("invitation card count should load");
+        assert_eq!(persisted_card_count, 1);
+        let membership_before_accept = sqlx::query_scalar::<_, bool>(
+            r#"
+            SELECT EXISTS(
+                SELECT 1 FROM conversation_members
+                WHERE conversation_id = $1 AND user_id = $2 AND is_deleted = FALSE
+            )
+            "#,
+        )
+        .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+        .bind(user_ids[3])
+        .fetch_one(pool)
+        .await
+        .expect("membership should load");
+        assert!(!membership_before_accept);
+
+        let accept_request = Request::builder()
+            .method("POST")
+            .uri(format!("/group-invitations/{invitation_id}/accept"))
+            .header(header::AUTHORIZATION, format!("Bearer {invitee_token}"))
+            .body(Body::empty())
+            .unwrap();
+        let accept_response = app.clone().oneshot(accept_request).await.unwrap();
+        assert_eq!(accept_response.status(), StatusCode::OK);
+        let membership_after_accept = sqlx::query_scalar::<_, bool>(
+            r#"
+            SELECT EXISTS(
+                SELECT 1 FROM conversation_members
+                WHERE conversation_id = $1 AND user_id = $2 AND is_deleted = FALSE
+            )
+            "#,
+        )
+        .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+        .bind(user_ids[3])
+        .fetch_one(pool)
+        .await
+        .expect("membership should load");
+        assert!(membership_after_accept);
+
+        let remove_request = Request::builder()
+            .method("DELETE")
+            .uri(format!("/groups/{conversation_id}/members/{}", user_ids[2]))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let remove_response = app.clone().oneshot(remove_request).await.unwrap();
+        assert_eq!(remove_response.status(), StatusCode::OK);
+
+        let member_dissolve_request = Request::builder()
+            .method("DELETE")
+            .uri(format!("/groups/{conversation_id}"))
+            .header(header::AUTHORIZATION, format!("Bearer {member_token}"))
+            .body(Body::empty())
+            .unwrap();
+        let member_dissolve_response = app.clone().oneshot(member_dissolve_request).await.unwrap();
+        assert_eq!(member_dissolve_response.status(), StatusCode::FORBIDDEN);
+
+        let dissolve_request = Request::builder()
+            .method("DELETE")
+            .uri(format!("/groups/{conversation_id}"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let dissolve_response = app.clone().oneshot(dissolve_request).await.unwrap();
+        assert_eq!(dissolve_response.status(), StatusCode::OK);
+
+        let dissolved_detail_request = Request::builder()
+            .method("GET")
+            .uri(format!("/groups/{conversation_id}"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let dissolved_detail_response =
+            app.clone().oneshot(dissolved_detail_request).await.unwrap();
+        assert_eq!(dissolved_detail_response.status(), StatusCode::NOT_FOUND);
+
+        let concurrent_group_request = Request::builder()
+            .method("POST")
+            .uri("/conversations")
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({
+                    "type": "group",
+                    "name": "并发解散测试群",
+                    "member_ids": [user_ids[1], user_ids[2]],
+                })
+                .to_string(),
+            ))
+            .unwrap();
+        let concurrent_group_response =
+            app.clone().oneshot(concurrent_group_request).await.unwrap();
+        assert_eq!(concurrent_group_response.status(), StatusCode::OK);
+        let concurrent_group_body = to_bytes(concurrent_group_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let concurrent_group: serde_json::Value =
+            serde_json::from_slice(&concurrent_group_body).unwrap();
+        let concurrent_group_id = concurrent_group["id"].as_str().unwrap();
+
+        let concurrent_settings_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{concurrent_group_id}/settings"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"join_approval_required":true}"#))
+            .unwrap();
+        let concurrent_settings_response = app
+            .clone()
+            .oneshot(concurrent_settings_request)
+            .await
+            .unwrap();
+        assert_eq!(concurrent_settings_response.status(), StatusCode::OK);
+
+        let concurrent_invite_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{concurrent_group_id}/invitations"))
+            .header(header::AUTHORIZATION, format!("Bearer {member_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({"member_ids": [user_ids[3]]}).to_string(),
+            ))
+            .unwrap();
+        let concurrent_invite_response = app
+            .clone()
+            .oneshot(concurrent_invite_request)
+            .await
+            .unwrap();
+        assert_eq!(concurrent_invite_response.status(), StatusCode::OK);
+        let concurrent_invite_body = to_bytes(concurrent_invite_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let concurrent_invite: serde_json::Value =
+            serde_json::from_slice(&concurrent_invite_body).unwrap();
+        let concurrent_invitation_id = concurrent_invite["invitations"][0]["id"].as_str().unwrap();
+
+        let concurrent_accept_request = Request::builder()
+            .method("POST")
+            .uri(format!(
+                "/group-invitations/{concurrent_invitation_id}/accept"
+            ))
+            .header(header::AUTHORIZATION, format!("Bearer {invitee_token}"))
+            .body(Body::empty())
+            .unwrap();
+        let concurrent_dissolve_request = Request::builder()
+            .method("DELETE")
+            .uri(format!("/groups/{concurrent_group_id}"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let (concurrent_accept_response, concurrent_dissolve_response) = tokio::join!(
+            app.clone().oneshot(concurrent_accept_request),
+            app.clone().oneshot(concurrent_dissolve_request),
+        );
+        let concurrent_accept_status = concurrent_accept_response.unwrap().status();
+        assert!(matches!(
+            concurrent_accept_status,
+            StatusCode::OK | StatusCode::NOT_FOUND
+        ));
+        assert_eq!(
+            concurrent_dissolve_response.unwrap().status(),
+            StatusCode::OK
+        );
+        let concurrent_group_uuid = concurrent_group_id.parse::<sqlx::types::Uuid>().unwrap();
+        let active_after_concurrent_dissolve = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM conversation_members WHERE conversation_id = $1 AND is_deleted = FALSE",
+        )
+        .bind(concurrent_group_uuid)
+        .fetch_one(pool)
+        .await
+        .expect("active member count should load");
+        assert_eq!(active_after_concurrent_dissolve, 0);
+
+        let capacity_invitee_a = user_ids[3];
+        let capacity_invitee_b = user_ids[4];
+        let capacity_member_ids = sqlx::query_scalar::<_, i64>(
+            r#"
+            INSERT INTO accounts (primary_identifier)
+            SELECT $1 || '-' || value::TEXT
+            FROM generate_series(1, 198) AS value
+            RETURNING id
+            "#,
+        )
+        .bind(format!("group-capacity-test-{marker}"))
+        .fetch_all(pool)
+        .await
+        .expect("capacity accounts should be inserted");
+        let capacity_group_id = sqlx::query_scalar::<_, sqlx::types::Uuid>(
+            r#"
+            INSERT INTO conversations (type, name, owner_id, join_approval_required)
+            VALUES (1, '并发满员测试群', $1, TRUE)
+            RETURNING id
+            "#,
+        )
+        .bind(owner_id)
+        .fetch_one(pool)
+        .await
+        .expect("capacity group should be inserted");
+        let mut initial_capacity_members = Vec::with_capacity(199);
+        initial_capacity_members.push(owner_id);
+        initial_capacity_members.extend_from_slice(&capacity_member_ids);
+        sqlx::query(
+            r#"
+            INSERT INTO conversation_members (conversation_id, user_id, is_deleted)
+            SELECT $1, member_id, FALSE
+            FROM UNNEST($2::BIGINT[]) AS member_id
+            "#,
+        )
+        .bind(capacity_group_id)
+        .bind(&initial_capacity_members)
+        .execute(pool)
+        .await
+        .expect("capacity members should be inserted");
+        let capacity_invitations = sqlx::query_as::<_, (sqlx::types::Uuid, i64)>(
+            r#"
+            INSERT INTO group_invitations (conversation_id, inviter_id, invitee_id)
+            SELECT $1, $2, invitee_id
+            FROM UNNEST($3::BIGINT[]) AS invitee_id
+            RETURNING id, invitee_id
+            "#,
+        )
+        .bind(capacity_group_id)
+        .bind(owner_id)
+        .bind(&[capacity_invitee_a, capacity_invitee_b])
+        .fetch_all(pool)
+        .await
+        .expect("capacity invitations should be inserted");
+        let capacity_invitation_a = capacity_invitations
+            .iter()
+            .find(|(_, invitee_id)| *invitee_id == capacity_invitee_a)
+            .unwrap()
+            .0;
+        let capacity_invitation_b = capacity_invitations
+            .iter()
+            .find(|(_, invitee_id)| *invitee_id == capacity_invitee_b)
+            .unwrap()
+            .0;
+        let (accept_a, accept_b) = tokio::join!(
+            im_group::repository::accept_group_invitation(
+                pool,
+                capacity_invitation_a,
+                capacity_invitee_a,
+            ),
+            im_group::repository::accept_group_invitation(
+                pool,
+                capacity_invitation_b,
+                capacity_invitee_b,
+            ),
+        );
+        assert_eq!(
+            usize::from(accept_a.is_ok()) + usize::from(accept_b.is_ok()),
+            1,
+            "exactly one concurrent invitation may fill the final group slot"
+        );
+        let final_capacity_count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM conversation_members WHERE conversation_id = $1 AND is_deleted = FALSE",
+        )
+        .bind(capacity_group_id)
+        .fetch_one(pool)
+        .await
+        .expect("final capacity count should load");
+        assert_eq!(final_capacity_count, 200);
+        sqlx::query("DELETE FROM conversations WHERE id = $1")
+            .bind(capacity_group_id)
+            .execute(pool)
+            .await
+            .expect("capacity group should be cleaned up");
+        user_ids.extend(capacity_member_ids);
 
         sqlx::query("DELETE FROM accounts WHERE id = ANY($1)")
             .bind(&user_ids)

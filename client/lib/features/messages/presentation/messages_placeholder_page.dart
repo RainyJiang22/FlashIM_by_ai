@@ -5,6 +5,8 @@ import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'widgets/message_quick_actions_menu.dart';
+
 class MessagesPlaceholderPage extends StatelessWidget {
   const MessagesPlaceholderPage({
     super.key,
@@ -112,27 +114,15 @@ class _MessagesHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            PopupMenuButton<String>(
-              key: const Key('messages-create-group'),
-              tooltip: '更多',
-              onSelected: (value) {
-                if (value == 'create_group') {
-                  onCreateGroup();
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem<String>(
-                  value: 'create_group',
-                  child: Row(
-                    children: [
-                      Icon(Icons.group_add_rounded),
-                      SizedBox(width: 10),
-                      Text('发起群聊'),
-                    ],
-                  ),
+            MessageQuickActionsMenu(
+              actions: [
+                MessageQuickAction(
+                  id: 'create_group',
+                  label: '发起群聊',
+                  icon: Icons.group_add_rounded,
+                  onTap: onCreateGroup,
                 ),
               ],
-              icon: const Icon(Icons.add_circle_outline_rounded),
             ),
             StreamBuilder<WsConnectionState>(
               stream: wsClient.stateStream,

@@ -810,6 +810,7 @@ dependencies = [
  "futures-util",
  "im-conversation",
  "im-friend",
+ "im-group",
  "im-message",
  "im-ws",
  "jsonwebtoken",
@@ -1437,6 +1438,23 @@ dependencies = [
  "im-message",
  "serde",
  "sqlx",
+ "uuid",
+]
+
+[[package]]
+name = "im-group"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "chrono",
+ "flash_core",
+ "im-conversation",
+ "im-message",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
  "uuid",
 ]
 

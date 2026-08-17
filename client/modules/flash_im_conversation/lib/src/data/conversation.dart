@@ -66,6 +66,8 @@ class Conversation extends Equatable {
   final DateTime createdAt;
 
   Conversation copyWith({
+    String? name,
+    List<String>? memberAvatars,
     int? unreadCount,
     DateTime? lastMessageAt,
     String? lastMessagePreview,
@@ -77,10 +79,10 @@ class Conversation extends Equatable {
       type: type,
       unreadCount: unreadCount ?? this.unreadCount,
       createdAt: createdAt,
-      name: name,
+      name: name ?? this.name,
       avatar: avatar,
       ownerId: ownerId,
-      memberAvatars: memberAvatars,
+      memberAvatars: memberAvatars ?? this.memberAvatars,
       peerUserId: peerUserId,
       peerNickname: peerNickname ?? this.peerNickname,
       peerAvatar: peerAvatar ?? this.peerAvatar,

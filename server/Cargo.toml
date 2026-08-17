@@ -8,6 +8,7 @@ members = [
     "modules/im-conversation",
     "modules/im-message",
     "modules/im-friend",
+    "modules/im-group",
     "modules/app-storage",
 ]
 resolver = "2"
@@ -29,6 +30,7 @@ flash_user = { path = "modules/flash_user" }
 futures-util = "0.3.31"
 im-conversation = { path = "modules/im-conversation" }
 im-friend = { path = "modules/im-friend" }
+im-group = { path = "modules/im-group" }
 im-message = { path = "modules/im-message" }
 im-ws = { path = "modules/im-ws" }
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }

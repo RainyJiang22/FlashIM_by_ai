@@ -1,0 +1,47 @@
+{
+  "project": {
+    "kind": "rust",
+    "source_roots": [
+      "server/modules/im-group/src/models.rs",
+      "server/modules/im-group/src/repository.rs",
+      "server/modules/im-group/src/routes.rs",
+      "server/modules/im-group/src/service.rs",
+      "server/modules/im-conversation/src/lib.rs",
+      "server/modules/im-conversation/src/repository.rs",
+      "server/modules/im-message/src/service.rs",
+      "server/modules/im-message/src/repository.rs",
+      "server/modules/im-ws/src/dispatcher.rs",
+      "server/src/routes/mod.rs"
+    ]
+  },
+  "commands": {
+    "test": {
+      "command": ["/bin/zsh", "-c", "set -a; source .env; set +a; export JWT_SECRET=group-quality-gate-test; cargo test -p im-group -p im-conversation -p im-message -p im-ws -p falsh-im"],
+      "cwd": "server"
+    },
+    "coverage": {
+      "command": ["/bin/zsh", "-c", "set -a; source .env; set +a; export JWT_SECRET=group-quality-gate-test; cargo llvm-cov -p im-group -p im-conversation -p im-message -p im-ws -p falsh-im --lcov --output-path ../docs/features/im/group/v0.0.2/quality/server-attempt-5.lcov"],
+      "cwd": "server"
+    },
+    "static": [
+      {
+        "command": ["cargo", "fmt", "--all", "--check"],
+        "cwd": "server"
+      },
+      {
+        "command": ["cargo", "clippy", "-p", "im-group", "-p", "im-conversation", "-p", "im-message", "-p", "im-ws", "--all-targets", "--", "-D", "warnings"],
+        "cwd": "server"
+      },
+      {
+        "command": ["cargo", "clippy", "-p", "falsh-im", "--lib", "--no-deps", "--", "-D", "warnings"],
+        "cwd": "server"
+      }
+    ]
+  },
+  "coverage": {
+    "format": "lcov",
+    "path": "docs/features/im/group/v0.0.2/quality/server-attempt-5.lcov",
+    "scope": "changed",
+    "threshold": 80
+  }
+}

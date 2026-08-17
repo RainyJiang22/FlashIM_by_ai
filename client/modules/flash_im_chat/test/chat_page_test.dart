@@ -26,7 +26,10 @@ void main() {
               createdAt: DateTime(2026, 4, 2),
             ),
             currentUserId: '1',
-            onDetailsTap: () async => detailsTapped = true,
+            onDetailsTap: () async {
+              detailsTapped = true;
+              return null;
+            },
           ),
         ),
       ),
@@ -76,6 +79,41 @@ void main() {
         .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
         .last;
     expect(panel.constraints?.maxHeight, 112);
+  });
+
+  testWidgets('group details callback hot-updates the app bar title', (
+    tester,
+  ) async {
+    final original = Conversation(
+      id: 'group-1',
+      type: 1,
+      name: '旧群名',
+      unreadCount: 0,
+      createdAt: DateTime(2026, 8, 17),
+    );
+    await tester.pumpWidget(
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<MessageRepository>.value(
+            value: const _FakeMessageRepository(),
+          ),
+          RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+        ],
+        child: MaterialApp(
+          home: ChatPage(
+            conversation: original,
+            currentUserId: '1',
+            onDetailsTap: () async => original.copyWith(name: '新群名'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('旧群名'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('chat-details-action')));
+    await tester.pump();
+    expect(find.text('新群名'), findsOneWidget);
   });
 
   testWidgets('renders loaded message list', (tester) async {

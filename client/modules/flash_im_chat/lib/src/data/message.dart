@@ -5,7 +5,39 @@ import 'package:flash_im_core/flash_im_core.dart' as proto;
 
 enum MessageStatus { sending, sent, failed }
 
-enum MessageType { text, image, video, file }
+enum MessageType { text, image, video, file, groupInvitation }
+
+class GroupInvitationExtra extends Equatable {
+  const GroupInvitationExtra({
+    required this.invitationId,
+    required this.groupId,
+    required this.groupName,
+    required this.inviterName,
+  });
+
+  factory GroupInvitationExtra.fromJson(Map<String, dynamic> json) {
+    String requiredString(String key) {
+      final value = json[key];
+      if (value is String && value.trim().isNotEmpty) return value.trim();
+      throw FormatException('Group invitation field "$key" is required.');
+    }
+
+    return GroupInvitationExtra(
+      invitationId: requiredString('invitation_id'),
+      groupId: requiredString('group_id'),
+      groupName: requiredString('group_name'),
+      inviterName: requiredString('inviter_name'),
+    );
+  }
+
+  final String invitationId;
+  final String groupId;
+  final String groupName;
+  final String inviterName;
+
+  @override
+  List<Object?> get props => [invitationId, groupId, groupName, inviterName];
+}
 
 class VideoExtra extends Equatable {
   const VideoExtra({
@@ -161,10 +193,19 @@ class Message extends Equatable {
   bool get isImage => type == MessageType.image;
   bool get isVideo => type == MessageType.video;
   bool get isFile => type == MessageType.file;
+  bool get isGroupInvitation => type == MessageType.groupInvitation;
   VideoExtra? get videoExtra =>
       isVideo && extra != null ? VideoExtra.fromJson(extra!) : null;
   FileExtra? get fileExtra =>
       isFile && extra != null ? FileExtra.fromJson(extra!) : null;
+  GroupInvitationExtra? get groupInvitationExtra {
+    if (!isGroupInvitation || extra == null) return null;
+    try {
+      return GroupInvitationExtra.fromJson(extra!);
+    } on FormatException {
+      return null;
+    }
+  }
 
   Message copyWith({
     String? id,
@@ -196,6 +237,7 @@ class Message extends Equatable {
     1 => MessageType.image,
     2 => MessageType.video,
     3 => MessageType.file,
+    4 => MessageType.groupInvitation,
     _ => MessageType.text,
   };
 
@@ -204,6 +246,7 @@ class Message extends Equatable {
     MessageType.image => 1,
     MessageType.video => 2,
     MessageType.file => 3,
+    MessageType.groupInvitation => 4,
   };
 
   static Map<String, dynamic>? parseExtra(dynamic value) {

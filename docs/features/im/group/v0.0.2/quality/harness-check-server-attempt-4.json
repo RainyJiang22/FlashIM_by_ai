@@ -1,0 +1,416 @@
+{
+  "status": "PASS",
+  "project": {
+    "kind": "rust",
+    "root": "/Users/rainyjiang/AndroidStudioProjects/flash_im",
+    "config": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.2/quality/server-harness-attempt-1.json"
+  },
+  "changed_files": [
+    ".idea/workspace.xml",
+    "client/lib/app/app_router.dart",
+    "client/lib/app/flash_im_app.dart",
+    "client/lib/features/home/presentation/main_shell_page.dart",
+    "client/lib/features/messages/presentation/messages_placeholder_page.dart",
+    "client/lib/features/messages/presentation/widgets/message_quick_actions_menu.dart",
+    "client/modules/flash_im_chat/build/native_assets/macos/objective_c.dylib",
+    "client/modules/flash_im_chat/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill",
+    "client/modules/flash_im_chat/coverage/lcov.info",
+    "client/modules/flash_im_chat/lib/flash_im_chat.dart",
+    "client/modules/flash_im_chat/lib/src/data/message.dart",
+    "client/modules/flash_im_chat/lib/src/view/bubble/group_invitation_bubble.dart",
+    "client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart",
+    "client/modules/flash_im_chat/lib/src/view/chat_page.dart",
+    "client/modules/flash_im_chat/test/chat_page_test.dart",
+    "client/modules/flash_im_chat/test/message_bubble_test.dart",
+    "client/modules/flash_im_chat/test/message_test.dart",
+    "client/modules/flash_im_conversation/lib/src/data/conversation.dart",
+    "client/modules/flash_im_group/build/native_assets/macos/native_assets.json",
+    "client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill",
+    "client/modules/flash_im_group/build/unit_test_assets/AssetManifest.bin",
+    "client/modules/flash_im_group/build/unit_test_assets/FontManifest.json",
+    "client/modules/flash_im_group/build/unit_test_assets/NOTICES.Z",
+    "client/modules/flash_im_group/build/unit_test_assets/NativeAssetsManifest.json",
+    "client/modules/flash_im_group/build/unit_test_assets/fonts/MaterialIcons-Regular.otf",
+    "client/modules/flash_im_group/build/unit_test_assets/shaders/ink_sparkle.frag",
+    "client/modules/flash_im_group/build/unit_test_assets/shaders/stretch_effect.frag",
+    "client/modules/flash_im_group/coverage/lcov.info",
+    "client/modules/flash_im_group/lib/flash_im_group.dart",
+    "client/modules/flash_im_group/lib/src/data/group_detail.dart",
+    "client/modules/flash_im_group/lib/src/data/group_repository.dart",
+    "client/modules/flash_im_group/lib/src/logic/group_detail_cubit.dart",
+    "client/modules/flash_im_group/lib/src/logic/group_detail_state.dart",
+    "client/modules/flash_im_group/lib/src/view/group_details_page.dart",
+    "client/modules/flash_im_group/lib/src/view/group_member_picker_page.dart",
+    "client/modules/flash_im_group/lib/src/view/widgets/group_member_grid.dart",
+    "client/modules/flash_im_group/lib/src/view/widgets/group_member_tile.dart",
+    "client/modules/flash_im_group/lib/src/view/widgets/group_name_editor.dart",
+    "client/modules/flash_im_group/pubspec.lock",
+    "client/modules/flash_im_group/pubspec.yaml",
+    "client/modules/flash_im_group/test/group_detail_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_details_page_test.dart",
+    "client/modules/flash_im_group/test/group_member_picker_page_test.dart",
+    "client/modules/flash_im_group/test/group_repository_test.dart",
+    "client/modules/flash_im_group/test/test_fakes.dart",
+    "client/test/app/app_router_group_test.dart",
+    "client/test/features/main_shell/presentation/main_shell_page_test.dart",
+    "docs/features/im/core/v0.0.3/test/__pycache__/conversation_message.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/__pycache__/ws_chat_test.cpython-314.pyc",
+    "docs/features/im/core/v0.0.4_media/test/proto/__pycache__/ws_pb2.cpython-314.pyc",
+    "docs/features/im/group/v0.0.2/analysis.md",
+    "docs/features/im/group/v0.0.2/api/group_management/doc/00_link.md",
+    "docs/features/im/group/v0.0.2/api/group_management/request/group_management.py",
+    "docs/features/im/group/v0.0.2/client/design.md",
+    "docs/features/im/group/v0.0.2/client/tasks.md",
+    "docs/features/im/group/v0.0.2/quality/architecture-agent-attempt-1.md",
+    "docs/features/im/group/v0.0.2/quality/client-attempt-1/lcov.info",
+    "docs/features/im/group/v0.0.2/quality/client-harness-attempt-1.json",
+    "docs/features/im/group/v0.0.2/quality/harness-check-client-attempt-1.json",
+    "docs/features/im/group/v0.0.2/quality/harness-check-client-attempt-2.json",
+    "docs/features/im/group/v0.0.2/quality/harness-check-server-attempt-1.json",
+    "docs/features/im/group/v0.0.2/quality/harness-check-server-attempt-2.json",
+    "docs/features/im/group/v0.0.2/quality/harness-check-server-attempt-3.json",
+    "docs/features/im/group/v0.0.2/quality/merge_client_lcov.py",
+    "docs/features/im/group/v0.0.2/quality/server-attempt-2.lcov",
+    "docs/features/im/group/v0.0.2/quality/server-attempt-4.lcov",
+    "docs/features/im/group/v0.0.2/quality/server-harness-attempt-1.json",
+    "docs/features/im/group/v0.0.2/quality/test-agent-attempt-1.md",
+    "docs/features/im/group/v0.0.2/server/design.md",
+    "docs/features/im/group/v0.0.2/server/tasks.md",
+    "proto/message.proto",
+    "server/Cargo.lock",
+    "server/Cargo.toml",
+    "server/migrations/20260817000100_group_management.sql",
+    "server/modules/im-conversation/src/lib.rs",
+    "server/modules/im-conversation/src/repository.rs",
+    "server/modules/im-group/Cargo.toml",
+    "server/modules/im-group/src/lib.rs",
+    "server/modules/im-group/src/models.rs",
+    "server/modules/im-group/src/repository.rs",
+    "server/modules/im-group/src/routes.rs",
+    "server/modules/im-group/src/service.rs",
+    "server/modules/im-message/src/repository.rs",
+    "server/modules/im-message/src/service.rs",
+    "server/modules/im-ws/src/dispatcher.rs",
+    "server/src/lib.rs",
+    "server/src/routes/mod.rs"
+  ],
+  "test_files": [
+    "client/modules/flash_auth/test/flash_auth_test.dart",
+    "client/modules/flash_im_chat/test/chat_cubit_test.dart",
+    "client/modules/flash_im_chat/test/chat_input_test.dart",
+    "client/modules/flash_im_chat/test/chat_page_test.dart",
+    "client/modules/flash_im_chat/test/message_bubble_test.dart",
+    "client/modules/flash_im_chat/test/message_repository_test.dart",
+    "client/modules/flash_im_chat/test/message_test.dart",
+    "client/modules/flash_im_chat/test/video_player_page_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_api_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_test.dart",
+    "client/modules/flash_im_core/test/im_config_test.dart",
+    "client/modules/flash_im_core/test/proto_compile_test.dart",
+    "client/modules/flash_im_core/test/ws_client_test.dart",
+    "client/modules/flash_im_core/test/ws_status_indicator_test.dart",
+    "client/modules/flash_im_friend/test/contacts_page_test.dart",
+    "client/modules/flash_im_friend/test/friend_cubit_test.dart",
+    "client/modules/flash_im_friend/test/friend_models_test.dart",
+    "client/modules/flash_im_friend/test/friend_repository_test.dart",
+    "client/modules/flash_im_friend/test/friend_sort_test.dart",
+    "client/modules/flash_im_friend/test/new_friends_page_test.dart",
+    "client/modules/flash_im_group/test/create_group_cubit_test.dart",
+    "client/modules/flash_im_group/test/create_group_page_test.dart",
+    "client/modules/flash_im_group/test/group_detail_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_details_page_test.dart",
+    "client/modules/flash_im_group/test/group_list_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_member_picker_page_test.dart",
+    "client/modules/flash_im_group/test/group_repository_test.dart",
+    "client/modules/flash_im_group/test/my_groups_page_test.dart",
+    "client/modules/flash_im_group/test/test_fakes.dart",
+    "client/modules/flash_session/test/session_cubit_test.dart",
+    "client/modules/flash_session/test/session_repository_test.dart",
+    "client/modules/flash_shared/test/avatar_widget_test.dart",
+    "client/modules/flash_starter/test/app_starter_test.dart",
+    "client/test/.DS_Store",
+    "client/test/.env",
+    "client/test/app/app_router_group_test.dart",
+    "client/test/features/auth/cubit/app_session_cubit_test.dart",
+    "client/test/features/auth/data/auth_repository_test.dart",
+    "client/test/features/auth/presentation/login_page_test.dart",
+    "client/test/features/main_shell/presentation/main_shell_page_test.dart",
+    "client/test/features/mine/presentation/mine_page_test.dart",
+    "client/test/features/startup/presentation/startup_page_test.dart",
+    "client/test/login_for_test.dart",
+    "client/test/playground/auth/data/auth_api_test.dart",
+    "client/test/playground/auth/data/auth_repository_test.dart",
+    "client/test/playground/auth/presentation/auth_playground_page_test.dart",
+    "client/test/playground/conversation/data/conversation_api_test.dart",
+    "client/test/playground/conversation/data/conversation_repository_test.dart",
+    "client/test/playground/conversation/fixtures/conversation_list_fixture.json",
+    "client/test/playground/im_playground/data/chat_room_api_test.dart",
+    "client/test/playground/im_playground/data/chat_room_repository_test.dart",
+    "client/test/test_env.dart",
+    "client/test/widget_test.dart",
+    "docs/features/im/core/conversation/request/test_lnk.md",
+    "docs/features/im/core/conversation/roles/link_test_writer.md",
+    "docs/features/im/core/v0.0.3/test/__pycache__/conversation_message.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/__pycache__/ws_chat_test.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/conversation_message.py",
+    "docs/features/im/core/v0.0.3/test/ws_chat_test.py",
+    "docs/features/im/core/v0.0.4_media/test/assets/README.md",
+    "docs/features/im/core/v0.0.4_media/test/assets/sky_engine.zip",
+    "docs/features/im/core/v0.0.4_media/test/assets/test.mp4",
+    "docs/features/im/core/v0.0.4_media/test/assets/test.webp",
+    "docs/features/im/core/v0.0.4_media/test/assets/test_meta.json",
+    "docs/features/im/core/v0.0.4_media/test/assets/test_thumb.jpg",
+    "docs/features/im/core/v0.0.4_media/test/proto/__pycache__/ws_pb2.cpython-314.pyc",
+    "docs/features/im/core/v0.0.4_media/test/proto/message_pb2.py",
+    "docs/features/im/core/v0.0.4_media/test/proto/ws_pb2.py",
+    "docs/features/im/core/v0.0.4_media/test/send_message.py",
+    "docs/features/im/core/v0.0.4_media/test/test_upload.py",
+    "docs/features/session/api/request/test_lnk.md",
+    "docs/features/session/api/roles/link_test_writer.md",
+    "scripts/playground/ws_smoke_test.mjs",
+    "scripts/server/conversation_api_test_link.sh",
+    "scripts/server/session_api_test_link.sh"
+  ],
+  "commands": [
+    {
+      "command": "cargo test -p im-group -p im-conversation -p im-message -p im-ws -p falsh-im",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 14.438,
+      "stdout": "\nrunning 23 tests\ntest tests::conversation_messages_route_requires_authentication ... ok\ntest tests::conversation_detail_route_requires_authentication ... ok\ntest tests::conversations_route_requires_authentication ... ok\ntest tests::conversation_read_route_requires_authentication ... ok\ntest tests::create_group_conversation_route_requires_authentication ... ok\ntest tests::friend_frame_types_round_trip ... ok\ntest tests::im_websocket_rejects_invalid_auth_frame ... ok\ntest tests::im_websocket_accepts_valid_auth_frame ... ok\ntest tests::message_frame_types_round_trip ... ok\ntest tests::chat_room_websocket_requires_valid_token ... ok\ntest tests::friend_routes_require_authentication ... ok\ntest tests::missing_or_invalid_token_returns_401 ... ok\ntest tests::chat_room_websocket_supports_auth_ping_and_chat ... ok\ntest tests::update_profile_returns_updated_user ... ok\ntest tests::im_websocket_replies_pong_after_auth ... ok\ntest tests::upload_image_route_rejects_unsupported_content_type ... ok\ntest tests::upload_image_route_rejects_invalid_image_bytes ... ok\ntest tests::upload_video_and_file_routes_return_expected_shapes ... ok\ntest tests::upload_image_route_returns_urls_and_static_files_are_accessible ... ok\ntest tests::set_password_rejects_duplicate_setup ... ok\ntest tests::group_conversation_routes_round_trip_against_configured_database ... ok\ntest tests::change_password_rejects_wrong_old_password ... ok\ntest tests::auth_flow_returns_profile_for_valid_token ... ok\n\ntest result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.71s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 14 tests\ntest repository::tests::member_sql_filters_deleted_members ... ok\ntest repository::tests::group_creation_sql_keeps_friend_and_membership_constraints ... ok\ntest repository::tests::list_sql_orders_by_recent_messages_then_creation_time ... ok\ntest repository::tests::private_conversation_sql_requires_exact_two_members ... ok\ntest repository::tests::get_by_id_sql_matches_list_shape ... ok\ntest service::tests::pagination_defaults_to_twenty ... ok\ntest service::tests::pagination_clamps_limit_to_maximum ... ok\ntest service::tests::pagination_rejects_invalid_values ... ok\ntest service::tests::list_query_accepts_private_and_group_filters ... ok\ntest models::tests::group_row_maps_owner_and_member_avatars ... ok\ntest service::tests::group_input_trims_name_and_keeps_member_order ... ok\ntest service::tests::group_input_rejects_invalid_type_name_and_members ... ok\ntest service::tests::group_input_accepts_maximum_invited_members ... ok\ntest service::tests::group_service_round_trips_against_configured_database ... ok\n\ntest result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s\n\n\nrunning 4 tests\ntest repository::tests::group_queries_require_active_membership_and_active_group ... ok\ntest service::tests::member_ids_reject_empty_self_and_duplicates ... ok\ntest service::tests::group_name_trims_and_enforces_boundaries ... ok\ntest models::tests::detail_maps_owner_and_profile_fallbacks ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 9 tests\ntest service::tests::history_query_defaults_and_clamps_limit ... ok\ntest service::tests::build_preview_uses_media_placeholders ... ok\ntest seq::tests::seq_sql_uses_single_upsert ... ok\ntest service::tests::history_query_rejects_invalid_values ... ok\ntest repository::tests::insert_sql_writes_type_and_extra ... ok\ntest repository::tests::message_write_locks_only_active_conversation ... ok\ntest service::tests::media_extra_validation_accepts_expected_shapes ... ok\ntest repository::tests::history_sql_uses_seq_pagination ... ok\ntest service::tests::media_extra_validation_rejects_missing_fields ... ok\n\ntest result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n\nrunning 6 tests\ntest broadcaster::tests::proto_update_keeps_total_unread_field ... ok\ntest dispatcher::tests::client_cannot_forge_group_invitation_message ... ok\ntest dispatcher::tests::parse_extra_allows_empty_payload ... ok\ntest broadcaster::tests::proto_message_keeps_sender_profile_fields ... ok\ntest broadcaster::tests::proto_message_keeps_extra_payload ... ok\ntest dispatcher::tests::parse_extra_rejects_invalid_json ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.53s\n     Running unittests src/lib.rs (target/debug/deps/falsh_im-7c58a627e89c560d)\n     Running unittests src/main.rs (target/debug/deps/falsh_im-7de7115e658ef5c3)\n     Running unittests src/lib.rs (target/debug/deps/im_conversation-d1b1060255abe942)\n     Running unittests src/lib.rs (target/debug/deps/im_group-47bc879a60298c96)\n     Running unittests src/lib.rs (target/debug/deps/im_message-6cf8f4bcbeae0782)\n     Running unittests src/lib.rs (target/debug/deps/im_ws-a0f229669456ff10)\n   Doc-tests falsh_im\n   Doc-tests im_conversation\n   Doc-tests im_group\n   Doc-tests im_message\n   Doc-tests im_ws\n",
+      "error": null
+    },
+    {
+      "command": "cargo llvm-cov -p im-group -p im-conversation -p im-message -p im-ws -p falsh-im --lcov --output-path ../docs/features/im/group/v0.0.2/quality/server-attempt-4.lcov",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 238.926,
+      "stdout": "\nrunning 23 tests\ntest tests::conversation_read_route_requires_authentication ... ok\ntest tests::conversation_detail_route_requires_authentication ... ok\ntest tests::conversations_route_requires_authentication ... ok\ntest tests::conversation_messages_route_requires_authentication ... ok\ntest tests::friend_frame_types_round_trip ... ok\ntest tests::create_group_conversation_route_requires_authentication ... ok\ntest tests::friend_routes_require_authentication ... ok\ntest tests::chat_room_websocket_requires_valid_token ... ok\ntest tests::message_frame_types_round_trip ... ok\ntest tests::im_websocket_accepts_valid_auth_frame ... ok\ntest tests::chat_room_websocket_supports_auth_ping_and_chat ... ok\ntest tests::im_websocket_rejects_invalid_auth_frame ... ok\ntest tests::im_websocket_replies_pong_after_auth ... ok\ntest tests::missing_or_invalid_token_returns_401 ... ok\ntest tests::update_profile_returns_updated_user ... ok\ntest tests::upload_image_route_rejects_unsupported_content_type ... ok\ntest tests::upload_image_route_rejects_invalid_image_bytes ... ok\ntest tests::upload_video_and_file_routes_return_expected_shapes ... ok\ntest tests::upload_image_route_returns_urls_and_static_files_are_accessible ... ok\ntest tests::set_password_rejects_duplicate_setup ... ok\ntest tests::change_password_rejects_wrong_old_password ... ok\ntest tests::group_conversation_routes_round_trip_against_configured_database ... ok\ntest tests::auth_flow_returns_profile_for_valid_token ... ok\n\ntest result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.91s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 14 tests\ntest repository::tests::get_by_id_sql_matches_list_shape ... ok\ntest repository::tests::member_sql_filters_deleted_members ... ok\ntest repository::tests::group_creation_sql_keeps_friend_and_membership_constraints ... ok\ntest repository::tests::private_conversation_sql_requires_exact_two_members ... ok\ntest repository::tests::list_sql_orders_by_recent_messages_then_creation_time ... ok\ntest service::tests::group_input_accepts_maximum_invited_members ... ok\ntest service::tests::list_query_accepts_private_and_group_filters ... ok\ntest service::tests::group_input_rejects_invalid_type_name_and_members ... ok\ntest service::tests::group_input_trims_name_and_keeps_member_order ... ok\ntest models::tests::group_row_maps_owner_and_member_avatars ... ok\ntest service::tests::pagination_clamps_limit_to_maximum ... ok\ntest service::tests::pagination_defaults_to_twenty ... ok\ntest service::tests::pagination_rejects_invalid_values ... ok\ntest service::tests::group_service_round_trips_against_configured_database ... ok\n\ntest result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.49s\n\n\nrunning 4 tests\ntest models::tests::detail_maps_owner_and_profile_fallbacks ... ok\ntest repository::tests::group_queries_require_active_membership_and_active_group ... ok\ntest service::tests::member_ids_reject_empty_self_and_duplicates ... ok\ntest service::tests::group_name_trims_and_enforces_boundaries ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 9 tests\ntest repository::tests::message_write_locks_only_active_conversation ... ok\ntest repository::tests::history_sql_uses_seq_pagination ... ok\ntest repository::tests::insert_sql_writes_type_and_extra ... ok\ntest seq::tests::seq_sql_uses_single_upsert ... ok\ntest service::tests::history_query_defaults_and_clamps_limit ... ok\ntest service::tests::history_query_rejects_invalid_values ... ok\ntest service::tests::build_preview_uses_media_placeholders ... ok\ntest service::tests::media_extra_validation_rejects_missing_fields ... ok\ntest service::tests::media_extra_validation_accepts_expected_shapes ... ok\n\ntest result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 6 tests\ntest broadcaster::tests::proto_message_keeps_sender_profile_fields ... ok\ntest broadcaster::tests::proto_update_keeps_total_unread_field ... ok\ntest broadcaster::tests::proto_message_keeps_extra_payload ... ok\ntest dispatcher::tests::client_cannot_forge_group_invitation_message ... ok\ntest dispatcher::tests::parse_extra_allows_empty_payload ... ok\ntest dispatcher::tests::parse_extra_rejects_invalid_json ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "stderr": "info: cargo-llvm-cov currently setting cfg(coverage); you can opt-out it by passing --no-cfg-coverage\n   Compiling im-conversation v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-conversation)\n   Compiling im-ws v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-ws)\n   Compiling im-message v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-message)\n   Compiling im-friend v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-friend)\n   Compiling im-group v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-group)\n   Compiling falsh-im v0.3.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 35s\n     Running unittests src/lib.rs (target/llvm-cov-target/debug/deps/falsh_im-7c58a627e89c560d)\n     Running unittests src/main.rs (target/llvm-cov-target/debug/deps/falsh_im-7de7115e658ef5c3)\n     Running unittests src/lib.rs (target/llvm-cov-target/debug/deps/im_conversation-d1b1060255abe942)\n     Running unittests src/lib.rs (target/llvm-cov-target/debug/deps/im_group-47bc879a60298c96)\n     Running unittests src/lib.rs (target/llvm-cov-target/debug/deps/im_message-6cf8f4bcbeae0782)\n     Running unittests src/lib.rs (target/llvm-cov-target/debug/deps/im_ws-a0f229669456ff10)\n\n    Finished report saved to ../docs/features/im/group/v0.0.2/quality/server-attempt-4.lcov\n",
+      "error": null
+    },
+    {
+      "command": "cargo fmt --all --check",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 1.599,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "cargo clippy -p im-group -p im-conversation -p im-message -p im-ws --all-targets -- -D warnings",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 3.024,
+      "stdout": "",
+      "stderr": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.81s\n",
+      "error": null
+    },
+    {
+      "command": "cargo clippy -p falsh-im --lib --no-deps -- -D warnings",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 3.736,
+      "stdout": "",
+      "stderr": "    Checking im-message v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-message)\n    Checking im-friend v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-friend)\n    Checking im-group v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-group)\n    Checking im-ws v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-ws)\n    Checking falsh-im v0.3.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.59s\n",
+      "error": null
+    }
+  ],
+  "coverage": {
+    "status": "PASS",
+    "format": "lcov",
+    "scope": "changed",
+    "threshold_percent": 80.0,
+    "path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.2/quality/server-attempt-4.lcov",
+    "total": 1925,
+    "covered": 1618,
+    "percent": 84.05,
+    "files": [
+      {
+        "path": "server/modules/im-conversation/src/lib.rs",
+        "total": 3,
+        "covered": 3
+      },
+      {
+        "path": "server/modules/im-conversation/src/models.rs",
+        "total": 36,
+        "covered": 36
+      },
+      {
+        "path": "server/modules/im-conversation/src/repository.rs",
+        "total": 461,
+        "covered": 329
+      },
+      {
+        "path": "server/modules/im-conversation/src/routes.rs",
+        "total": 47,
+        "covered": 43
+      },
+      {
+        "path": "server/modules/im-conversation/src/service.rs",
+        "total": 343,
+        "covered": 284
+      },
+      {
+        "path": "server/modules/im-group/src/models.rs",
+        "total": 50,
+        "covered": 50
+      },
+      {
+        "path": "server/modules/im-group/src/repository.rs",
+        "total": 501,
+        "covered": 427
+      },
+      {
+        "path": "server/modules/im-group/src/routes.rs",
+        "total": 148,
+        "covered": 144
+      },
+      {
+        "path": "server/modules/im-group/src/service.rs",
+        "total": 256,
+        "covered": 244
+      },
+      {
+        "path": "server/modules/im-message/src/broadcast.rs",
+        "total": 4,
+        "covered": 0
+      },
+      {
+        "path": "server/modules/im-message/src/lib.rs",
+        "total": 3,
+        "covered": 3
+      },
+      {
+        "path": "server/modules/im-message/src/models.rs",
+        "total": 15,
+        "covered": 0
+      },
+      {
+        "path": "server/modules/im-message/src/repository.rs",
+        "total": 190,
+        "covered": 163
+      },
+      {
+        "path": "server/modules/im-message/src/routes.rs",
+        "total": 26,
+        "covered": 11
+      },
+      {
+        "path": "server/modules/im-message/src/seq.rs",
+        "total": 26,
+        "covered": 11
+      },
+      {
+        "path": "server/modules/im-message/src/service.rs",
+        "total": 227,
+        "covered": 202
+      },
+      {
+        "path": "server/modules/im-ws/src/broadcaster.rs",
+        "total": 127,
+        "covered": 112
+      },
+      {
+        "path": "server/modules/im-ws/src/dispatcher.rs",
+        "total": 69,
+        "covered": 36
+      },
+      {
+        "path": "server/modules/im-ws/src/frame.rs",
+        "total": 65,
+        "covered": 49
+      },
+      {
+        "path": "server/modules/im-ws/src/handler.rs",
+        "total": 132,
+        "covered": 96
+      },
+      {
+        "path": "server/modules/im-ws/src/lib.rs",
+        "total": 3,
+        "covered": 3
+      },
+      {
+        "path": "server/modules/im-ws/src/state.rs",
+        "total": 34,
+        "covered": 18
+      },
+      {
+        "path": "server/src/lib.rs",
+        "total": 1145,
+        "covered": 1138
+      },
+      {
+        "path": "server/src/main.rs",
+        "total": 11,
+        "covered": 0
+      },
+      {
+        "path": "server/src/routes/conversation.rs",
+        "total": 104,
+        "covered": 0
+      },
+      {
+        "path": "server/src/routes/health.rs",
+        "total": 6,
+        "covered": 0
+      },
+      {
+        "path": "server/src/routes/mod.rs",
+        "total": 20,
+        "covered": 20
+      },
+      {
+        "path": "server/src/routes/ws.rs",
+        "total": 47,
+        "covered": 20
+      },
+      {
+        "path": "server/src/services/chat_room_service.rs",
+        "total": 123,
+        "covered": 88
+      }
+    ],
+    "unmeasured_changed_files": [],
+    "note": null
+  },
+  "static_analysis": {
+    "status": "PASS",
+    "commands": [
+      {
+        "command": "cargo fmt --all --check",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 1.599,
+        "stdout": "",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "cargo clippy -p im-group -p im-conversation -p im-message -p im-ws --all-targets -- -D warnings",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 3.024,
+        "stdout": "",
+        "stderr": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.81s\n",
+        "error": null
+      },
+      {
+        "command": "cargo clippy -p falsh-im --lib --no-deps -- -D warnings",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 3.736,
+        "stdout": "",
+        "stderr": "    Checking im-message v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-message)\n    Checking im-friend v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-friend)\n    Checking im-group v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-group)\n    Checking im-ws v0.1.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server/modules/im-ws)\n    Checking falsh-im v0.3.0 (/Users/rainyjiang/AndroidStudioProjects/flash_im/server)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.59s\n",
+        "error": null
+      }
+    ],
+    "conclusion": null
+  },
+  "errors": [],
+  "generated_at": "2026-08-17T04:05:53Z"
+}

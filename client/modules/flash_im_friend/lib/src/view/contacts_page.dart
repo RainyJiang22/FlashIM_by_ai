@@ -275,6 +275,7 @@ class _AlphabeticalContactsListState extends State<_AlphabeticalContactsList> {
                 FriendSectionTitle(
                   title: hasFriends ? '好友' : '通讯录',
                   caption: hasFriends ? '${widget.friends.length} 位联系人' : null,
+                  hasFriends: hasFriends,
                 ),
                 if (!hasFriends)
                   const FriendCard(

@@ -13,11 +13,13 @@ class MessagesPlaceholderPage extends StatelessWidget {
     required this.conversationListCubit,
     required this.onConversationTap,
     required this.onCreateGroup,
+    required this.onAddContact,
   });
 
   final ConversationListCubit conversationListCubit;
   final ValueChanged<Conversation> onConversationTap;
   final VoidCallback onCreateGroup;
+  final VoidCallback onAddContact;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +48,7 @@ class MessagesPlaceholderPage extends StatelessWidget {
                     )
                   : UserAvatar(user: user, size: 48),
               onCreateGroup: onCreateGroup,
+              onAddContact: onAddContact,
             ),
             Expanded(
               child: ConversationListPage(
@@ -66,12 +69,14 @@ class _MessagesHeader extends StatelessWidget {
     required this.subtitle,
     required this.avatar,
     required this.onCreateGroup,
+    required this.onAddContact,
   });
 
   final String title;
   final String subtitle;
   final Widget avatar;
   final VoidCallback onCreateGroup;
+  final VoidCallback onAddContact;
 
   @override
   Widget build(BuildContext context) {
@@ -87,31 +92,31 @@ class _MessagesHeader extends StatelessWidget {
             avatar,
             const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: FlashPalette.ink,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: FlashPalette.secondaryInk,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  SizedBox(width: 10),
+                  StreamBuilder<WsConnectionState>(
+                    stream: wsClient.stateStream,
+                    initialData: wsClient.state,
+                    builder: (context, snapshot) {
+                      return _StatusBadge(
+                        state: snapshot.data ?? WsConnectionState.disconnected,
+                      );
+                    },
                   ),
                 ],
-              ),
+              )
             ),
             const SizedBox(width: 12),
             MessageQuickActionsMenu(
@@ -122,16 +127,13 @@ class _MessagesHeader extends StatelessWidget {
                   icon: Icons.group_add_rounded,
                   onTap: onCreateGroup,
                 ),
+                MessageQuickAction(
+                  id: 'add_contact',
+                  label: '添加联系人',
+                  icon: Icons.person_add_alt_1_rounded,
+                  onTap: onAddContact,
+                ),
               ],
-            ),
-            StreamBuilder<WsConnectionState>(
-              stream: wsClient.stateStream,
-              initialData: wsClient.state,
-              builder: (context, snapshot) {
-                return _StatusBadge(
-                  state: snapshot.data ?? WsConnectionState.disconnected,
-                );
-              },
             ),
           ],
         ),

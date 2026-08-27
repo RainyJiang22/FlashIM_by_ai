@@ -176,6 +176,14 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
+  Future<void> _addContact() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => AddFriendPage(onMessageFriend: _openFriendChat),
+      ),
+    );
+  }
+
   Future<void> _openMyGroups() async {
     final result = await Navigator.of(context).pushNamed(AppRoutes.myGroups);
     if (result is Conversation && mounted) {
@@ -189,6 +197,7 @@ class _MainShellPageState extends State<MainShellPage> {
         conversationListCubit: _conversationListCubit,
         onConversationTap: _openChat,
         onCreateGroup: _createGroup,
+        onAddContact: _addContact,
       ),
       ContactsPage(
         onMessageFriend: _openFriendChat,

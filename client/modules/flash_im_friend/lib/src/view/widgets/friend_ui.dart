@@ -69,11 +69,13 @@ class FriendSectionTitle extends StatelessWidget {
     required this.title,
     this.caption,
     this.trailing,
+    this.hasFriends = false,
   });
 
   final String title;
   final String? caption;
   final Widget? trailing;
+  final bool hasFriends;
 
   @override
   Widget build(BuildContext context) {
@@ -86,15 +88,17 @@ class FriendSectionTitle extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: FriendPalette.ink,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.1,
+                if (!hasFriends) ...[
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: FriendPalette.ink,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.1,
+                    ),
                   ),
-                ),
+                ],
                 if (caption?.trim().isNotEmpty == true) ...[
                   const SizedBox(height: 3),
                   Text(

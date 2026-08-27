@@ -24,69 +24,57 @@ class MessageQuickActionsMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       key: const Key('messages-quick-actions-anchor'),
-      alignmentOffset: const Offset(-128, 8),
+      alignmentOffset: const Offset(-164, 8),
       style: MenuStyle(
-        backgroundColor: const WidgetStatePropertyAll(FlashPalette.surface),
+        backgroundColor: const WidgetStatePropertyAll(Color(0xFF4A4A4A)),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-        elevation: const WidgetStatePropertyAll(0),
-        padding: const WidgetStatePropertyAll(EdgeInsets.all(6)),
+        elevation: const WidgetStatePropertyAll(10),
+        padding: const WidgetStatePropertyAll(EdgeInsets.zero),
         shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: FlashPalette.border),
-          ),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
-        shadowColor: const WidgetStatePropertyAll(Color(0x1A172E59)),
+        shadowColor: const WidgetStatePropertyAll(Color(0x3317233B)),
       ),
       menuChildren: actions
-          .map(
-            (action) => MenuItemButton(
-              key: Key('message-quick-action-${action.id}'),
-              onPressed: action.onTap,
-              leadingIcon: Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: FlashPalette.primarySoft,
-                  borderRadius: BorderRadius.circular(10),
+          .expand<Widget>(
+            (action) => [
+              MenuItemButton(
+                key: Key('message-quick-action-${action.id}'),
+                onPressed: action.onTap,
+                leadingIcon: Icon(action.icon, color: Colors.white, size: 28),
+                style: const ButtonStyle(
+                  minimumSize: WidgetStatePropertyAll(Size(210, 58)),
+                  padding: WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 20),
+                  ),
+                  shape: WidgetStatePropertyAll(RoundedRectangleBorder()),
+                  overlayColor: WidgetStatePropertyAll(Color(0x1AFFFFFF)),
                 ),
-                child: Icon(action.icon, color: FlashPalette.primary, size: 19),
-              ),
-              style: ButtonStyle(
-                minimumSize: const WidgetStatePropertyAll(Size(166, 48)),
-                padding: const WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(horizontal: 10),
-                ),
-                shape: WidgetStatePropertyAll(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                child: Text(
+                  action.label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-              child: Text(
-                action.label,
-                style: const TextStyle(
-                  color: FlashPalette.ink,
-                  fontWeight: FontWeight.w700,
+              if (action != actions.last)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(height: 1, color: Color(0x40FFFFFF)),
                 ),
-              ),
-            ),
+            ],
           )
           .toList(growable: false),
       builder: (context, controller, _) => IconButton(
         key: const Key('messages-create-group'),
         tooltip: '更多',
         onPressed: controller.isOpen ? controller.close : controller.open,
-        style: IconButton.styleFrom(
-          backgroundColor: FlashPalette.surface,
-          side: const BorderSide(color: FlashPalette.border),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
-          ),
-        ),
         icon: Icon(
           controller.isOpen ? Icons.close_rounded : Icons.add_rounded,
           color: FlashPalette.ink,
+          size: 28,
         ),
       ),
     );

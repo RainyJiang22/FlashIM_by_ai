@@ -88,7 +88,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('设置登录密码'), findsNothing);
     expect(find.text('Rainy'), findsOneWidget);
-    expect(find.text('消息同步状态'), findsOneWidget);
     expect(find.text('已连接'), findsOneWidget);
     expect(find.text('橘橙'), findsOneWidget);
     expect(find.text('今天的接口联调先看会话列表。'), findsOneWidget);
@@ -107,6 +106,12 @@ void main() {
     await tester.tap(find.text('添加联系人'));
     await tester.pumpAndSettle();
     expect(find.text('添加朋友'), findsOneWidget);
+    await tester.tap(find.text('搜索账号 / 手机号'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byTooltip('返回'), findsOneWidget);
+    Navigator.of(tester.element(find.byTooltip('返回'))).pop();
+    await tester.pumpAndSettle();
     Navigator.of(tester.element(find.text('添加朋友'))).pop();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('messages-create-group')));

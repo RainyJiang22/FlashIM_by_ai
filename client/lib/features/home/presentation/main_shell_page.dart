@@ -179,7 +179,10 @@ class _MainShellPageState extends State<MainShellPage> {
   Future<void> _addContact() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) => AddFriendPage(onMessageFriend: _openFriendChat),
+        builder: (_) => BlocProvider<FriendCubit>.value(
+          value: _friendCubit,
+          child: AddFriendPage(onMessageFriend: _openFriendChat),
+        ),
       ),
     );
   }

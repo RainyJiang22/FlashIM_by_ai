@@ -214,6 +214,28 @@ pub async fn get_conversation_by_id(
         .map_err(|_| AppError::internal_server_error("failed to get conversation"))
 }
 
+pub async fn delete_created_group(
+    pool: &PgPool,
+    owner_id: i64,
+    conversation_id: Uuid,
+) -> AppResult<()> {
+    sqlx::query(
+        r#"
+        DELETE FROM conversations
+        WHERE id = $1
+          AND owner_id = $2
+          AND type = 1
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(owner_id)
+    .execute(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to rollback group creation"))?;
+
+    Ok(())
+}
+
 pub async fn mark_read(pool: &PgPool, user_id: i64, conversation_id: Uuid) -> AppResult<bool> {
     let result = sqlx::query(
         r#"

@@ -117,4 +117,32 @@ void main() {
     expect(message.groupInvitationExtra?.groupName, '周末读书会');
     expect(Message.mapToProtoType(MessageType.groupInvitation), 4);
   });
+
+  test('group created maps from history and realtime protocol payloads', () {
+    final history = Message.fromJson({
+      'id': 'system-1',
+      'conversation_id': 'group-1',
+      'sender_id': 1,
+      'sender_name': '小雨',
+      'seq': 1,
+      'msg_type': 5,
+      'content': '小雨 创建了群聊',
+    });
+    final realtime = Message.fromChatMessage(
+      proto.ChatMessage(
+        id: 'system-1',
+        conversationId: 'group-1',
+        senderId: 1,
+        senderName: '小雨',
+        seq: 1,
+        type: 5,
+        content: '小雨 创建了群聊',
+      ),
+    );
+
+    expect(history.type, MessageType.groupCreated);
+    expect(history.isGroupCreated, isTrue);
+    expect(realtime.type, MessageType.groupCreated);
+    expect(Message.mapToProtoType(MessageType.groupCreated), 5);
+  });
 }

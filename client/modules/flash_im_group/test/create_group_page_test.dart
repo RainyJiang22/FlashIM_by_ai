@@ -46,7 +46,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('select-friend-3')));
     await tester.pump();
     expect(find.text('完成(2)'), findsOneWidget);
+
     await tester.tap(find.byKey(const ValueKey('selected-friend-avatar-3')));
+    await tester.pump();
+    expect(find.text('完成(2)'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('selected-friend-remove-3')));
     await tester.pump();
     expect(find.text('完成(1)'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('select-friend-3')));

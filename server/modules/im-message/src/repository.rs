@@ -10,6 +10,21 @@ pub struct PersistedMessage {
     pub unread_counts: Vec<(i64, i32)>,
 }
 
+pub async fn get_user_display_name(pool: &PgPool, user_id: i64) -> AppResult<Option<String>> {
+    sqlx::query_scalar::<_, Option<String>>(
+        r#"
+        SELECT nickname
+        FROM user_profiles
+        WHERE account_id = $1
+        "#,
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await
+    .map(|nickname| nickname.flatten())
+    .map_err(|_| AppError::internal_server_error("failed to load message sender"))
+}
+
 pub fn active_conversation_lock_sql() -> &'static str {
     r#"
         SELECT c.id

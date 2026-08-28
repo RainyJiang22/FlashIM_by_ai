@@ -136,4 +136,43 @@ void main() {
     expect(acceptedId, 'invitation-1');
     expect(find.text('已加入'), findsOneWidget);
   });
+
+  testWidgets('group created message is centered gray text without avatar', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 360,
+            child: MessageBubble(
+              message: Message(
+                id: 'system-1',
+                conversationId: 'group-1',
+                senderId: '1',
+                senderName: '小雨',
+                seq: 1,
+                content: 'https://example.com/raw-group-created-payload',
+                type: MessageType.groupCreated,
+                status: MessageStatus.sent,
+                createdAt: DateTime(2026, 8, 28),
+              ),
+              isMine: true,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('group-created-message')), findsOneWidget);
+    expect(find.byType(AvatarWidget), findsNothing);
+    expect(
+      find.text('https://example.com/raw-group-created-payload'),
+      findsNothing,
+    );
+    final text = tester.widget<Text>(find.text('小雨 创建了群聊'));
+    expect(text.textAlign, TextAlign.center);
+    expect(text.style?.color, FlashPalette.mutedInk);
+    expect(tester.getCenter(find.text('小雨 创建了群聊')).dx, closeTo(180, 0.1));
+  });
 }

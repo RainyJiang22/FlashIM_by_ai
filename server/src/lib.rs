@@ -357,6 +357,53 @@ mod tests {
         assert_eq!(created["member_avatars"].as_array().unwrap().len(), 3);
         let conversation_id = created["id"].as_str().unwrap();
 
+        let history_request = Request::builder()
+            .method("GET")
+            .uri(format!("/conversations/{conversation_id}/messages"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let history_response = app.clone().oneshot(history_request).await.unwrap();
+        assert_eq!(history_response.status(), StatusCode::OK);
+        let history_body = to_bytes(history_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let messages: Vec<serde_json::Value> = serde_json::from_slice(&history_body).unwrap();
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0]["seq"], 1);
+        assert_eq!(messages[0]["msg_type"], 5);
+        assert_eq!(messages[0]["sender_id"], owner_id.to_string());
+        assert_eq!(messages[0]["content"], "群成员0 创建了群聊");
+
+        let unread_counts = sqlx::query_as::<_, (i64, i32)>(
+            r#"
+            SELECT user_id, unread_count
+            FROM conversation_members
+            WHERE conversation_id = $1
+            ORDER BY user_id
+            "#,
+        )
+        .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+        .fetch_all(pool)
+        .await
+        .expect("group unread counts should load");
+        assert_eq!(
+            unread_counts
+                .iter()
+                .find(|(user_id, _)| *user_id == owner_id)
+                .map(|(_, count)| *count),
+            Some(0)
+        );
+        for member_id in &user_ids[1..3] {
+            assert_eq!(
+                unread_counts
+                    .iter()
+                    .find(|(user_id, _)| user_id == member_id)
+                    .map(|(_, count)| *count),
+                Some(1)
+            );
+        }
+
         let list_request = Request::builder()
             .method("GET")
             .uri("/conversations?type=1&limit=100&offset=0")
@@ -369,7 +416,11 @@ mod tests {
             .await
             .unwrap();
         let groups: Vec<serde_json::Value> = serde_json::from_slice(&list_body).unwrap();
-        assert!(groups.iter().any(|item| item["id"] == conversation_id));
+        let created_group = groups
+            .iter()
+            .find(|item| item["id"] == conversation_id)
+            .expect("created group should be listed");
+        assert_eq!(created_group["last_message_preview"], "群成员0 创建了群聊");
 
         let detail_request = Request::builder()
             .method("GET")

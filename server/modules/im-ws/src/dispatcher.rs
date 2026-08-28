@@ -101,11 +101,12 @@ mod tests {
     }
 
     #[test]
-    fn client_cannot_forge_group_invitation_message() {
+    fn client_cannot_forge_server_controlled_messages() {
         for message_type in 0..=3 {
             assert!(validate_client_message_type(message_type).is_ok());
         }
         assert!(validate_client_message_type(4).is_err());
+        assert!(validate_client_message_type(5).is_err());
         assert!(validate_client_message_type(-1).is_err());
     }
 }

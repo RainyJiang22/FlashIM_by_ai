@@ -41,6 +41,13 @@ void main() {
 
     await tester.tap(find.text('白露'));
     await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('selected-friend-avatar-3')));
+    await tester.pump();
+    expect(find.text('完成(1)'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('selected-friend-remove-3')),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const Key('group-member-picker-submit')));
     await tester.pumpAndSettle();
     expect(result?.single.accountId, 3);

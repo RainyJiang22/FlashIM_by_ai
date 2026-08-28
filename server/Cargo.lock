@@ -823,6 +823,7 @@ dependencies = [
  "tokio-tungstenite",
  "tower",
  "tower-http",
+ "uuid",
 ]
 
 [[package]]
@@ -1417,6 +1418,7 @@ dependencies = [
 name = "im-conversation"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "chrono",
  "flash_core",

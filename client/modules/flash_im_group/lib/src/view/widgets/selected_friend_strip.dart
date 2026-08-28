@@ -35,20 +35,68 @@ class SelectedFriendStrip extends StatelessWidget {
         itemBuilder: (context, index) {
           final friend = selected[index];
           final isLocked = lockedIds.contains(friend.accountId);
-          return Tooltip(
-            message: isLocked
-                ? '${friend.displayName}（固定成员）'
-                : '取消选择 ${friend.displayName}',
-            child: InkWell(
-              key: ValueKey('selected-friend-avatar-${friend.accountId}'),
-              onTap: isLocked ? null : () => onRemove(friend),
-              borderRadius: BorderRadius.circular(15),
-              child: AvatarWidget(
-                avatar: friend.avatar,
-                seed: friend.accountId.toString(),
-                size: 52,
-                borderRadius: BorderRadius.circular(15),
-              ),
+          return SizedBox(
+            width: 60,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: 0,
+                  bottom: 0,
+                  child: Tooltip(
+                    message: isLocked
+                        ? '${friend.displayName}（固定成员）'
+                        : friend.displayName,
+                    child: AvatarWidget(
+                      key: ValueKey(
+                        'selected-friend-avatar-${friend.accountId}',
+                      ),
+                      avatar: friend.avatar,
+                      seed: friend.accountId.toString(),
+                      size: 52,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                ),
+                if (!isLocked)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Tooltip(
+                      message: '取消选择 ${friend.displayName}',
+                      child: Semantics(
+                        button: true,
+                        label: '取消选择 ${friend.displayName}',
+                        child: GestureDetector(
+                          key: ValueKey(
+                            'selected-friend-remove-${friend.accountId}',
+                          ),
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => onRemove(friend),
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Center(
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFB8BDC5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close_rounded,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           );
         },

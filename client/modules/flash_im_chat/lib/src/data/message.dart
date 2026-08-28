@@ -5,7 +5,7 @@ import 'package:flash_im_core/flash_im_core.dart' as proto;
 
 enum MessageStatus { sending, sent, failed }
 
-enum MessageType { text, image, video, file, groupInvitation }
+enum MessageType { text, image, video, file, groupInvitation, groupCreated }
 
 class GroupInvitationExtra extends Equatable {
   const GroupInvitationExtra({
@@ -194,6 +194,7 @@ class Message extends Equatable {
   bool get isVideo => type == MessageType.video;
   bool get isFile => type == MessageType.file;
   bool get isGroupInvitation => type == MessageType.groupInvitation;
+  bool get isGroupCreated => type == MessageType.groupCreated;
   VideoExtra? get videoExtra =>
       isVideo && extra != null ? VideoExtra.fromJson(extra!) : null;
   FileExtra? get fileExtra =>
@@ -238,6 +239,7 @@ class Message extends Equatable {
     2 => MessageType.video,
     3 => MessageType.file,
     4 => MessageType.groupInvitation,
+    5 => MessageType.groupCreated,
     _ => MessageType.text,
   };
 
@@ -247,6 +249,7 @@ class Message extends Equatable {
     MessageType.video => 2,
     MessageType.file => 3,
     MessageType.groupInvitation => 4,
+    MessageType.groupCreated => 5,
   };
 
   static Map<String, dynamic>? parseExtra(dynamic value) {

@@ -35,6 +35,27 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.isGroupCreated) {
+      final creatorName = message.senderName.trim();
+      final displayText = creatorName.isEmpty ? '创建了群聊' : '$creatorName 创建了群聊';
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        child: Align(
+          alignment: Alignment.center,
+          child: Text(
+            displayText,
+            key: const Key('group-created-message'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: FlashPalette.mutedInk,
+              fontSize: 13,
+              height: 1.4,
+            ),
+          ),
+        ),
+      );
+    }
+
     final avatar = AvatarWidget(
       avatar: isMine
           ? (currentUserAvatar ?? message.senderAvatar)
@@ -65,6 +86,7 @@ class MessageBubble extends StatelessWidget {
         canAccept: !isMine,
         onAccept: onAcceptGroupInvitation,
       ),
+      MessageType.groupCreated => const SizedBox.shrink(),
     };
 
     return Padding(

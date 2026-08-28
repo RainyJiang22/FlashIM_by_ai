@@ -15,6 +15,7 @@ use crate::{
 const DEFAULT_LIMIT: i64 = 50;
 const MAX_LIMIT: i64 = 100;
 const DEFAULT_BEFORE_SEQ: i64 = i64::MAX;
+pub const GROUP_CREATED_MESSAGE_TYPE: i16 = 5;
 
 #[derive(Clone, Debug)]
 pub struct SendMessageInput {
@@ -94,6 +95,41 @@ where
         context: &SharedContext,
         input: SendMessageInput,
     ) -> AppResult<SendMessageOutput> {
+        let sender_id = input.sender_id;
+        self.send_with_excluded_sender(context, input, Some(sender_id))
+            .await
+    }
+
+    pub async fn send_group_created(
+        &self,
+        context: &SharedContext,
+        conversation_id: Uuid,
+        creator_id: i64,
+    ) -> AppResult<SendMessageOutput> {
+        let creator_name = repository::get_user_display_name(context.postgres.pool(), creator_id)
+            .await?
+            .filter(|name| !name.trim().is_empty())
+            .unwrap_or_else(|| format!("用户 {creator_id}"));
+        self.send_with_excluded_sender(
+            context,
+            SendMessageInput {
+                conversation_id,
+                sender_id: creator_id,
+                msg_type: GROUP_CREATED_MESSAGE_TYPE,
+                content: format!("{creator_name} 创建了群聊"),
+                extra: None,
+            },
+            None,
+        )
+        .await
+    }
+
+    async fn send_with_excluded_sender(
+        &self,
+        context: &SharedContext,
+        input: SendMessageInput,
+        excluded_sender: Option<i64>,
+    ) -> AppResult<SendMessageOutput> {
         if input.content.trim().is_empty() {
             return Err(AppError::bad_request("message content is empty"));
         }
@@ -104,6 +140,7 @@ where
             2 => validate_video_extra(&input.extra)?,
             3 => validate_file_extra(&input.extra)?,
             4 => validate_group_invitation_extra(&input.extra)?,
+            GROUP_CREATED_MESSAGE_TYPE => {}
             _ => return Err(AppError::bad_request("unsupported message type")),
         }
 
@@ -137,7 +174,7 @@ where
 
         let _ = self
             .broadcaster
-            .broadcast_message(payload.clone(), &member_ids, Some(payload.sender_id))
+            .broadcast_message(payload.clone(), &member_ids, excluded_sender)
             .await;
         let _ = self
             .broadcaster
@@ -266,8 +303,9 @@ mod tests {
     use crate::{
         models::MessageQuery,
         service::{
-            build_preview, normalize_history_query, validate_file_extra,
-            validate_group_invitation_extra, validate_image_extra, validate_video_extra,
+            GROUP_CREATED_MESSAGE_TYPE, build_preview, normalize_history_query,
+            validate_file_extra, validate_group_invitation_extra, validate_image_extra,
+            validate_video_extra,
         },
     };
 
@@ -307,6 +345,10 @@ mod tests {
         assert_eq!(build_preview(2, "hello"), "[视频]");
         assert_eq!(build_preview(3, "hello"), "[文件]");
         assert_eq!(build_preview(4, "hello"), "[群聊邀请]");
+        assert_eq!(
+            build_preview(GROUP_CREATED_MESSAGE_TYPE, "小雨 创建了群聊"),
+            "小雨 创建了群聊"
+        );
         assert_eq!(build_preview(0, "hello"), "hello");
     }
 

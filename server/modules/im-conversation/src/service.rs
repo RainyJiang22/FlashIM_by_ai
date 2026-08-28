@@ -117,6 +117,15 @@ pub async fn get_conversation_by_id(
     Ok(ConversationListItem::from(row))
 }
 
+pub async fn delete_created_group(
+    context: &SharedContext,
+    owner_id: i64,
+    conversation_id: Uuid,
+) -> AppResult<()> {
+    crate::repository::delete_created_group(context.postgres.pool(), owner_id, conversation_id)
+        .await
+}
+
 pub async fn mark_read(
     context: &SharedContext,
     user_id: i64,

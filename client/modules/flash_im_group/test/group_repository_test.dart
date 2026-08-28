@@ -20,6 +20,7 @@ void main() {
     await repository.dissolveGroup('group-1');
 
     expect(detail.isOwner, isTrue);
+    expect(detail.avatar, 'grid:identicon:1');
     expect(detail.members.single.accountId, 1);
     expect(adapter.requests.map((request) => request.method), [
       'GET',
@@ -86,6 +87,7 @@ class _RecordingAdapter implements HttpClientAdapter {
             'name': options.data is Map && options.data['name'] != null
                 ? options.data['name']
                 : '测试群聊',
+            'avatar': 'grid:identicon:1',
             'owner_id': '1',
             'join_approval_required':
                 options.data is Map &&

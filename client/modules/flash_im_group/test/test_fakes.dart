@@ -136,6 +136,7 @@ Conversation groupConversation(String id, String name) => Conversation(
   id: id,
   type: 1,
   name: name,
+  avatar: 'grid:identicon:1,identicon:2',
   memberAvatars: const ['identicon:1', 'identicon:2'],
   unreadCount: 0,
   createdAt: DateTime(2026, 8, 16),
@@ -148,6 +149,7 @@ GroupDetail groupDetail({
 }) => GroupDetail(
   conversationId: 'group-1',
   name: name,
+  avatar: 'grid:identicon:1,identicon:2',
   ownerId: 1,
   joinApprovalRequired: joinApprovalRequired,
   currentUserRole: isOwner ? 'owner' : 'member',

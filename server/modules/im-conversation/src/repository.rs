@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use flash_core::{AppError, AppResult};
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::models::ConversationListRow;
@@ -41,8 +41,11 @@ pub fn list_conversations_sql() -> &'static str {
             WHERE member.conversation_id = c.id
               AND member.is_deleted = FALSE
               AND c.type = 1
-            ORDER BY member.joined_at ASC
-            LIMIT 4
+            ORDER BY
+                (member.user_id = c.owner_id) DESC,
+                member.joined_at ASC,
+                member.user_id ASC
+            LIMIT 9
         ) group_member
     ) group_members ON TRUE
     WHERE me.user_id = $1
@@ -90,8 +93,11 @@ pub fn get_conversation_by_id_sql() -> &'static str {
             WHERE member.conversation_id = c.id
               AND member.is_deleted = FALSE
               AND c.type = 1
-            ORDER BY member.joined_at ASC
-            LIMIT 4
+            ORDER BY
+                (member.user_id = c.owner_id) DESC,
+                member.joined_at ASC,
+                member.user_id ASC
+            LIMIT 9
         ) group_member
     ) group_members ON TRUE
     WHERE me.user_id = $1
@@ -143,6 +149,63 @@ pub fn insert_group_members_sql() -> &'static str {
     "#
 }
 
+pub fn refresh_group_avatar_sql() -> &'static str {
+    r#"
+    WITH first_members AS (
+        SELECT
+            COALESCE(
+                NULLIF(BTRIM(profile.avatar_url), ''),
+                'identicon:' || member.user_id::TEXT
+            ) AS avatar,
+            ROW_NUMBER() OVER (
+                ORDER BY
+                    (member.user_id = conversation.owner_id) DESC,
+                    member.joined_at ASC,
+                    member.user_id ASC
+            ) AS position
+        FROM conversation_members member
+        JOIN conversations conversation ON conversation.id = member.conversation_id
+        LEFT JOIN user_profiles profile ON profile.account_id = member.user_id
+        WHERE member.conversation_id = $1
+          AND member.is_deleted = FALSE
+          AND conversation.type = 1
+          AND conversation.is_dissolved = FALSE
+        ORDER BY
+            (member.user_id = conversation.owner_id) DESC,
+            member.joined_at ASC,
+            member.user_id ASC
+        LIMIT 9
+    ),
+    avatar_grid AS (
+        SELECT
+            'grid:' || COALESCE(
+                STRING_AGG(avatar, ',' ORDER BY position),
+                ''
+            ) AS avatar
+        FROM first_members
+    )
+    UPDATE conversations conversation
+    SET avatar = avatar_grid.avatar, updated_at = NOW()
+    FROM avatar_grid
+    WHERE conversation.id = $1
+      AND conversation.type = 1
+      AND conversation.is_dissolved = FALSE
+    RETURNING conversation.avatar
+    "#
+}
+
+pub async fn refresh_group_avatar(
+    transaction: &mut Transaction<'_, Postgres>,
+    conversation_id: Uuid,
+) -> AppResult<String> {
+    sqlx::query_scalar::<_, String>(refresh_group_avatar_sql())
+        .bind(conversation_id)
+        .fetch_optional(&mut **transaction)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to refresh group avatar"))?
+        .ok_or(AppError::not_found("group not found"))
+}
+
 pub async fn create_group_conversation(
     pool: &PgPool,
     owner_id: i64,
@@ -184,6 +247,8 @@ pub async fn create_group_conversation(
         .execute(&mut *transaction)
         .await
         .map_err(|_| AppError::internal_server_error("failed to save group members"))?;
+
+    refresh_group_avatar(&mut transaction, conversation_id).await?;
 
     let conversation = sqlx::query_as::<_, ConversationListRow>(get_conversation_by_id_sql())
         .bind(owner_id)
@@ -458,7 +523,7 @@ pub async fn ensure_private_members(
 mod tests {
     use super::{
         create_group_conversation_sql, get_conversation_by_id_sql, group_friend_validation_sql,
-        insert_group_members_sql, list_conversations_sql,
+        insert_group_members_sql, list_conversations_sql, refresh_group_avatar_sql,
     };
 
     #[test]
@@ -471,6 +536,7 @@ mod tests {
         assert!(sql.contains("$4::SMALLINT IS NULL OR c.type = $4"));
         assert!(sql.contains("c.owner_id"));
         assert!(sql.contains("ARRAY_AGG(group_member.avatar_url"));
+        assert!(sql.contains("LIMIT 9"));
         assert!(sql.contains("LIMIT $2 OFFSET $3"));
     }
 
@@ -537,5 +603,17 @@ mod tests {
         assert!(conversation_sql.contains("VALUES (1, $1, $2)"));
         assert!(members_sql.contains("UNNEST($2::BIGINT[])"));
         assert!(members_sql.contains("is_deleted"));
+    }
+
+    #[test]
+    fn group_avatar_sql_builds_owner_first_nine_member_grid() {
+        let sql = refresh_group_avatar_sql();
+
+        assert!(sql.contains("'grid:'"));
+        assert!(sql.contains("STRING_AGG(avatar, ',' ORDER BY position)"));
+        assert!(sql.contains("member.user_id = conversation.owner_id"));
+        assert!(sql.contains("member.is_deleted = FALSE"));
+        assert!(sql.contains("LIMIT 9"));
+        assert!(sql.contains("SET avatar = avatar_grid.avatar"));
     }
 }

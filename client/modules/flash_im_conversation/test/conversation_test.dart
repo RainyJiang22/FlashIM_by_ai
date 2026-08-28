@@ -54,7 +54,7 @@ void main() {
       'id': 'group-1',
       'type': 1,
       'name': '橘橙、藤黄、月白',
-      'avatar': null,
+      'avatar': 'grid:identicon:1,identicon:2',
       'owner_id': 1,
       'member_avatars': ['identicon:1', '', 'identicon:2'],
       'unread_count': 0,
@@ -63,6 +63,8 @@ void main() {
 
     expect(conversation.isGroupChat, isTrue);
     expect(conversation.ownerId, '1');
+    expect(conversation.avatar, 'grid:identicon:1,identicon:2');
+    expect(conversation.groupAvatar, 'grid:identicon:1,identicon:2');
     expect(conversation.memberAvatars, ['identicon:1', 'identicon:2']);
     expect(
       () => conversation.memberAvatars.add('identicon:3'),
@@ -80,6 +82,7 @@ void main() {
     });
 
     expect(conversation.memberAvatars, isEmpty);
+    expect(conversation.groupAvatar, isNull);
   });
 
   test('avatarSeed prefers peer user id over avatar protocol value', () {
@@ -126,7 +129,7 @@ void main() {
       id: 'group-3',
       type: 1,
       name: '群聊',
-      memberAvatars: const ['identicon:1', 'identicon:2', 'identicon:3'],
+      avatar: 'grid:identicon:1,identicon:2,identicon:3',
       unreadCount: 0,
       createdAt: DateTime(2026, 8, 16),
     );
@@ -137,36 +140,8 @@ void main() {
       ),
     );
 
-    expect(find.byType(GroupAvatar), findsOneWidget);
+    expect(find.byType(GroupAvatarWidget), findsOneWidget);
     expect(find.byType(AvatarWidget), findsNWidgets(3));
-  });
-
-  testWidgets('group avatar covers empty, one, two and four member layouts', (
-    tester,
-  ) async {
-    Future<void> pump(List<String> avatars) {
-      return tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: GroupAvatar(avatars: avatars, seed: 'group-layout'),
-          ),
-        ),
-      );
-    }
-
-    await pump(const []);
-    expect(find.byType(AvatarWidget), findsOneWidget);
-    await pump(const ['identicon:1']);
-    expect(find.byType(AvatarWidget), findsOneWidget);
-    await pump(const ['identicon:1', 'identicon:2']);
-    expect(find.byType(AvatarWidget), findsNWidgets(2));
-    await pump(const [
-      'identicon:1',
-      'identicon:2',
-      'identicon:3',
-      'identicon:4',
-    ]);
-    expect(find.byType(AvatarWidget), findsNWidgets(4));
   });
 
   test('created_at is required', () {
@@ -197,6 +172,7 @@ void main() {
         'id': 'group-4',
         'type': 1,
         'name': '测试群',
+        'avatar': 'grid:identicon:1,identicon:2,identicon:3',
         'owner_id': '1',
         'member_avatars': <String>[],
         'unread_count': 0,

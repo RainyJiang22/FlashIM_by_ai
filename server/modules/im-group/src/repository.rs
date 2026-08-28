@@ -10,7 +10,7 @@ const INVALID_GROUP_MEMBERS: &str = "invalid group members";
 
 pub fn group_for_member_sql() -> &'static str {
     r#"
-    SELECT c.id, c.name, c.owner_id, c.join_approval_required
+    SELECT c.id, c.name, c.avatar, c.owner_id, c.join_approval_required
     FROM conversations c
     JOIN conversation_members member
       ON member.conversation_id = c.id
@@ -125,7 +125,7 @@ async fn lock_group_for_actor(
 ) -> AppResult<GroupSummaryRow> {
     sqlx::query_as::<_, GroupSummaryRow>(
         r#"
-        SELECT c.id, c.name, c.owner_id, c.join_approval_required
+        SELECT c.id, c.name, c.avatar, c.owner_id, c.join_approval_required
         FROM conversations c
         JOIN conversation_members actor
           ON actor.conversation_id = c.id
@@ -254,6 +254,12 @@ pub async fn add_group_members(
     .await
     .map_err(|_| AppError::internal_server_error("failed to add group members"))?;
 
+    im_conversation::service::refresh_group_avatar_in_transaction(
+        &mut transaction,
+        conversation_id,
+    )
+    .await?;
+
     transaction
         .commit()
         .await
@@ -294,6 +300,11 @@ pub async fn remove_group_member(
     if result.rows_affected() == 0 {
         return Err(AppError::not_found("group member not found"));
     }
+    im_conversation::service::refresh_group_avatar_in_transaction(
+        &mut transaction,
+        conversation_id,
+    )
+    .await?;
     transaction
         .commit()
         .await
@@ -483,6 +494,11 @@ pub async fn accept_group_invitation(
     .execute(&mut *transaction)
     .await
     .map_err(|_| AppError::internal_server_error("failed to accept group invitation"))?;
+    im_conversation::service::refresh_group_avatar_in_transaction(
+        &mut transaction,
+        invitation.conversation_id,
+    )
+    .await?;
     sqlx::query(
         "UPDATE group_invitations SET status = 1, handled_at = NOW() WHERE id = $1 AND status = 0",
     )

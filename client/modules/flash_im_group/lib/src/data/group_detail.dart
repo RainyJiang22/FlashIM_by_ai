@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
+import 'package:flash_shared/flash_shared.dart';
 
 class GroupMember extends Equatable {
   const GroupMember({
@@ -35,6 +36,7 @@ class GroupDetail extends Equatable {
   GroupDetail({
     required this.conversationId,
     required this.name,
+    required this.avatar,
     required this.ownerId,
     required this.joinApprovalRequired,
     required this.currentUserRole,
@@ -47,26 +49,32 @@ class GroupDetail extends Equatable {
     if (rawMembers is! List) {
       throw const FormatException('GroupDetail members is not a list.');
     }
+    final members = rawMembers
+        .map((dynamic item) {
+          if (item is! Map) {
+            throw const FormatException('GroupDetail member is invalid.');
+          }
+          return GroupMember.fromJson(Map<String, dynamic>.from(item));
+        })
+        .toList(growable: false);
+    final avatar = _string(json['avatar']).trim();
     return GroupDetail(
       conversationId: _requiredString(json, 'conversation_id'),
       name: _requiredString(json, 'name'),
+      avatar: avatar.isEmpty
+          ? encodeGroupAvatar(members.map((member) => member.avatar))
+          : avatar,
       ownerId: _requiredInt(json, 'owner_id'),
       joinApprovalRequired: json['join_approval_required'] == true,
       currentUserRole: _requiredString(json, 'current_user_role'),
       memberCount: _requiredInt(json, 'member_count'),
-      members: rawMembers
-          .map((dynamic item) {
-            if (item is! Map) {
-              throw const FormatException('GroupDetail member is invalid.');
-            }
-            return GroupMember.fromJson(Map<String, dynamic>.from(item));
-          })
-          .toList(growable: false),
+      members: members,
     );
   }
 
   final String conversationId;
   final String name;
+  final String avatar;
   final int ownerId;
   final bool joinApprovalRequired;
   final String currentUserRole;
@@ -78,13 +86,15 @@ class GroupDetail extends Equatable {
   Conversation applyToConversation(Conversation conversation) =>
       conversation.copyWith(
         name: name,
-        memberAvatars: members.map((member) => member.avatar).take(4).toList(),
+        avatar: avatar,
+        memberAvatars: members.map((member) => member.avatar).take(9).toList(),
       );
 
   @override
   List<Object?> get props => [
     conversationId,
     name,
+    avatar,
     ownerId,
     joinApprovalRequired,
     currentUserRole,

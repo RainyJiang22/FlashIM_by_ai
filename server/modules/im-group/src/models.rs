@@ -6,6 +6,7 @@ use uuid::Uuid;
 pub struct GroupSummaryRow {
     pub id: Uuid,
     pub name: Option<String>,
+    pub avatar: Option<String>,
     pub owner_id: i64,
     pub join_approval_required: bool,
 }
@@ -31,6 +32,7 @@ pub struct GroupMember {
 pub struct GroupDetail {
     pub conversation_id: Uuid,
     pub name: String,
+    pub avatar: String,
     pub owner_id: String,
     pub join_approval_required: bool,
     pub current_user_role: &'static str,
@@ -69,6 +71,17 @@ impl GroupDetail {
         Self {
             conversation_id: summary.id,
             name: summary.name.unwrap_or_else(|| "群聊".to_string()),
+            avatar: summary.avatar.unwrap_or_else(|| {
+                format!(
+                    "grid:{}",
+                    members
+                        .iter()
+                        .take(9)
+                        .map(|member| member.avatar.as_str())
+                        .collect::<Vec<_>>()
+                        .join(",")
+                )
+            }),
             owner_id: summary.owner_id.to_string(),
             join_approval_required: summary.join_approval_required,
             current_user_role,
@@ -134,6 +147,7 @@ mod tests {
             GroupSummaryRow {
                 id: Uuid::nil(),
                 name: Some("测试群".to_string()),
+                avatar: Some("grid:identicon:1".to_string()),
                 owner_id: 1,
                 join_approval_required: true,
             },
@@ -147,6 +161,7 @@ mod tests {
         );
 
         assert_eq!(detail.current_user_role, "owner");
+        assert_eq!(detail.avatar, "grid:identicon:1");
         assert_eq!(detail.members[0].nickname, "用户 1");
         assert!(detail.members[0].is_owner);
     }

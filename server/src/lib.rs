@@ -354,6 +354,13 @@ mod tests {
         let created: serde_json::Value = serde_json::from_slice(&create_body).unwrap();
         assert_eq!(created["type"], 1);
         assert_eq!(created["owner_id"], owner_id.to_string());
+        assert_eq!(
+            created["avatar"],
+            format!(
+                "grid:identicon:{},identicon:{},identicon:{}",
+                user_ids[0], user_ids[1], user_ids[2]
+            )
+        );
         assert_eq!(created["member_avatars"].as_array().unwrap().len(), 3);
         let conversation_id = created["id"].as_str().unwrap();
 
@@ -462,6 +469,7 @@ mod tests {
         let group_detail: serde_json::Value = serde_json::from_slice(&group_detail_body).unwrap();
         assert_eq!(group_detail["member_count"], 3);
         assert_eq!(group_detail["current_user_role"], "owner");
+        assert_eq!(group_detail["avatar"], created["avatar"]);
 
         let broadcast_failure_output = MessageService::new(Arc::new(FailingBroadcaster))
             .send(
@@ -677,6 +685,19 @@ mod tests {
         .await
         .expect("membership should load");
         assert!(membership_after_accept);
+        let avatar_after_accept =
+            sqlx::query_scalar::<_, String>("SELECT avatar FROM conversations WHERE id = $1")
+                .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+                .fetch_one(pool)
+                .await
+                .expect("group avatar should load after accepting invitation");
+        assert_eq!(
+            avatar_after_accept,
+            format!(
+                "grid:identicon:{},identicon:{},identicon:{},identicon:{}",
+                user_ids[0], user_ids[1], user_ids[2], user_ids[3]
+            )
+        );
 
         let remove_request = Request::builder()
             .method("DELETE")
@@ -686,6 +707,19 @@ mod tests {
             .unwrap();
         let remove_response = app.clone().oneshot(remove_request).await.unwrap();
         assert_eq!(remove_response.status(), StatusCode::OK);
+        let avatar_after_remove =
+            sqlx::query_scalar::<_, String>("SELECT avatar FROM conversations WHERE id = $1")
+                .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+                .fetch_one(pool)
+                .await
+                .expect("group avatar should load after removing member");
+        assert_eq!(
+            avatar_after_remove,
+            format!(
+                "grid:identicon:{},identicon:{},identicon:{}",
+                user_ids[0], user_ids[1], user_ids[3]
+            )
+        );
 
         let member_dissolve_request = Request::builder()
             .method("DELETE")

@@ -16,4 +16,3 @@ export 'src/logic/conversation_list_state.dart'
         ConversationListState;
 export 'src/view/conversation_list_page.dart' show ConversationListPage;
 export 'src/view/conversation_tile.dart' show ConversationTile;
-export 'src/view/group_avatar.dart' show GroupAvatar;

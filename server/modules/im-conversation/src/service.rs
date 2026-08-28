@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use flash_core::{AppError, AppResult, SharedContext};
+use sqlx::{Postgres, Transaction};
 use std::collections::HashSet;
 use uuid::Uuid;
 
@@ -7,6 +8,13 @@ use crate::models::{ConversationListItem, ConversationListQuery, CreateConversat
 
 const DEFAULT_LIMIT: i64 = 20;
 const MAX_LIMIT: i64 = 100;
+
+pub async fn refresh_group_avatar_in_transaction(
+    transaction: &mut Transaction<'_, Postgres>,
+    conversation_id: Uuid,
+) -> AppResult<String> {
+    crate::repository::refresh_group_avatar(transaction, conversation_id).await
+}
 
 pub fn normalize_pagination(query: ConversationListQuery) -> AppResult<(i64, i64)> {
     let limit = query.limit.unwrap_or(DEFAULT_LIMIT);
@@ -414,6 +422,11 @@ mod tests {
         .expect("group should be created");
         assert_eq!(created.r#type, 1);
         assert_eq!(created.owner_id, Some(owner_id.to_string()));
+        let expected_avatar = format!(
+            "grid:identicon:{},identicon:{},identicon:{}",
+            user_ids[0], user_ids[1], user_ids[2]
+        );
+        assert_eq!(created.avatar.as_deref(), Some(expected_avatar.as_str()));
         assert_eq!(created.member_avatars.len(), 3);
 
         let groups = super::list_conversations(

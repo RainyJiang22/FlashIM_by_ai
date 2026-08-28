@@ -83,7 +83,7 @@ mod tests {
             id: Uuid::nil(),
             r#type: 1,
             name: Some("测试群".to_string()),
-            avatar: None,
+            avatar: Some("grid:identicon:10001".to_string()),
             owner_id: Some(10001),
             member_avatars: vec!["identicon:10001".to_string()],
             peer_user_id: None,
@@ -97,6 +97,7 @@ mod tests {
 
         let item = ConversationListItem::from(row);
         assert_eq!(item.owner_id.as_deref(), Some("10001"));
+        assert_eq!(item.avatar.as_deref(), Some("grid:identicon:10001"));
         assert_eq!(item.member_avatars, ["identicon:10001"]);
         assert!(item.peer_user_id.is_none());
     }

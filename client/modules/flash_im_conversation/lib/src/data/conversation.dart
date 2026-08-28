@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flash_shared/flash_shared.dart';
 
 class Conversation extends Equatable {
   Conversation({
@@ -18,13 +19,19 @@ class Conversation extends Equatable {
   }) : memberAvatars = List<String>.unmodifiable(memberAvatars);
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
+    final memberAvatars = _parseStringList(json['member_avatars']);
+    final rawAvatar = json['avatar'] as String?;
     return Conversation(
       id: _readRequiredString(json, 'id'),
       type: (json['type'] as num?)?.toInt() ?? 0,
       name: json['name'] as String?,
-      avatar: json['avatar'] as String?,
+      avatar: rawAvatar?.trim().isNotEmpty == true
+          ? rawAvatar
+          : memberAvatars.isEmpty
+          ? null
+          : encodeGroupAvatar(memberAvatars),
       ownerId: json['owner_id']?.toString(),
-      memberAvatars: _parseStringList(json['member_avatars']),
+      memberAvatars: memberAvatars,
       peerUserId: json['peer_user_id']?.toString(),
       peerNickname: json['peer_nickname'] as String?,
       peerAvatar: json['peer_avatar'] as String?,
@@ -67,6 +74,7 @@ class Conversation extends Equatable {
 
   Conversation copyWith({
     String? name,
+    String? avatar,
     List<String>? memberAvatars,
     int? unreadCount,
     DateTime? lastMessageAt,
@@ -80,7 +88,7 @@ class Conversation extends Equatable {
       unreadCount: unreadCount ?? this.unreadCount,
       createdAt: createdAt,
       name: name ?? this.name,
-      avatar: avatar,
+      avatar: avatar ?? this.avatar,
       ownerId: ownerId,
       memberAvatars: memberAvatars ?? this.memberAvatars,
       peerUserId: peerUserId,
@@ -150,6 +158,12 @@ extension ConversationDisplay on Conversation {
       return userId;
     }
     return name?.trim().isNotEmpty == true ? name!.trim() : id;
+  }
+
+  String? get groupAvatar {
+    final value = avatar?.trim();
+    if (value != null && value.isNotEmpty) return value;
+    return memberAvatars.isEmpty ? null : encodeGroupAvatar(memberAvatars);
   }
 }
 

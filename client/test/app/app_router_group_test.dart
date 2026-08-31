@@ -169,6 +169,7 @@ class _GroupRepository implements GroupRepository {
   var detail = GroupDetail(
     conversationId: 'group-1',
     name: '旧群名',
+    avatar: 'grid:identicon:1',
     ownerId: 1,
     joinApprovalRequired: false,
     currentUserRole: 'owner',
@@ -195,15 +196,30 @@ class _GroupRepository implements GroupRepository {
   @override
   Future<GroupDetail> getDetail(String groupId) async => detail;
   @override
+  Future<GroupJoinRequestList> getJoinRequests() async =>
+      GroupJoinRequestList(pendingCount: 0, requests: []);
+  @override
+  Future<GroupJoinRequest> handleJoinRequest(
+    String groupId,
+    String requestId, {
+    required bool approved,
+  }) => throw UnimplementedError();
+  @override
   Future<void> inviteMembers(String groupId, List<int> inviteeIds) async {}
+  @override
+  Future<JoinGroupResult> joinGroup(String groupId, {String? message}) =>
+      throw UnimplementedError();
   @override
   Future<GroupDetail> removeMember(String groupId, int memberId) async =>
       detail;
+  @override
+  Future<List<GroupSearchItem>> searchGroups(String keyword) async => const [];
   @override
   Future<GroupDetail> updateName(String groupId, String name) async {
     detail = GroupDetail(
       conversationId: detail.conversationId,
       name: name,
+      avatar: detail.avatar,
       ownerId: detail.ownerId,
       joinApprovalRequired: detail.joinApprovalRequired,
       currentUserRole: detail.currentUserRole,

@@ -11,9 +11,12 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
+    broadcast::{GroupBroadcaster, GroupJoinRequestPayload},
     models::{
-        GroupDetail, GroupInvitationItem, GroupInvitationListResponse, GroupMemberIdsBody,
-        UpdateGroupNameBody, UpdateGroupSettingsBody,
+        GroupDetail, GroupInvitationItem, GroupInvitationListResponse, GroupJoinRequestItem,
+        GroupJoinRequestListResponse, GroupMemberIdsBody, GroupSearchItem, GroupSearchResponse,
+        HandleJoinRequestBody, JoinGroupBody, JoinGroupResponse, UpdateGroupNameBody,
+        UpdateGroupSettingsBody,
     },
     repository,
 };
@@ -39,13 +42,34 @@ fn normalize_member_ids(actor_id: i64, body: GroupMemberIdsBody) -> AppResult<Ve
     Ok(body.member_ids)
 }
 
+fn normalize_search_keyword(value: &str) -> AppResult<String> {
+    let keyword = value.trim().to_string();
+    if keyword.is_empty() || keyword.chars().count() > 100 {
+        return Err(AppError::bad_request("invalid group search keyword"));
+    }
+    Ok(keyword)
+}
+
+fn normalize_join_message(body: JoinGroupBody) -> AppResult<String> {
+    let message = body.message.unwrap_or_default().trim().to_string();
+    let message = if message.is_empty() {
+        "请求加入群聊".to_string()
+    } else {
+        message
+    };
+    if message.chars().count() > 200 {
+        return Err(AppError::bad_request("invalid join request message"));
+    }
+    Ok(message)
+}
+
 pub struct GroupService<B> {
     broadcaster: Arc<B>,
 }
 
 impl<B> GroupService<B>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     pub fn new(broadcaster: Arc<B>) -> Self {
         Self { broadcaster }
@@ -58,6 +82,119 @@ where
         conversation_id: Uuid,
     ) -> AppResult<GroupDetail> {
         load_detail(context, user_id, conversation_id).await
+    }
+
+    pub async fn search(
+        &self,
+        context: &SharedContext,
+        user_id: i64,
+        keyword: &str,
+    ) -> AppResult<GroupSearchResponse> {
+        let keyword = normalize_search_keyword(keyword)?;
+        let exact_id = Uuid::parse_str(&keyword).ok();
+        let groups =
+            repository::search_groups(context.postgres.pool(), user_id, &keyword, exact_id)
+                .await?
+                .into_iter()
+                .map(GroupSearchItem::from)
+                .collect();
+        Ok(GroupSearchResponse { groups })
+    }
+
+    pub async fn join(
+        &self,
+        context: &SharedContext,
+        applicant_id: i64,
+        conversation_id: Uuid,
+        body: JoinGroupBody,
+    ) -> AppResult<JoinGroupResponse> {
+        let message = normalize_join_message(body)?;
+        match repository::join_or_request(
+            context.postgres.pool(),
+            conversation_id,
+            applicant_id,
+            &message,
+        )
+        .await?
+        {
+            repository::JoinDecision::Joined { conversation_id } => {
+                let _ = MessageService::new(self.broadcaster.clone())
+                    .send_group_member_joined(context, conversation_id, applicant_id)
+                    .await;
+                let conversation = im_conversation::service::get_conversation_by_id(
+                    context,
+                    applicant_id,
+                    conversation_id,
+                )
+                .await?;
+                Ok(JoinGroupResponse {
+                    auto_approved: true,
+                    request_id: None,
+                    conversation: Some(conversation),
+                })
+            }
+            repository::JoinDecision::Pending(request) => {
+                let request_id = request.id;
+                let owner_id = request.owner_id;
+                let _ = self
+                    .broadcaster
+                    .broadcast_group_join_request(owner_id, to_join_request_payload(&request))
+                    .await;
+                Ok(JoinGroupResponse {
+                    auto_approved: false,
+                    request_id: Some(request_id),
+                    conversation: None,
+                })
+            }
+        }
+    }
+
+    pub async fn list_join_requests(
+        &self,
+        context: &SharedContext,
+        owner_id: i64,
+    ) -> AppResult<GroupJoinRequestListResponse> {
+        let requests = repository::list_join_requests(context.postgres.pool(), owner_id)
+            .await?
+            .iter()
+            .map(GroupJoinRequestItem::from_row)
+            .collect::<Vec<_>>();
+        let pending_count = requests
+            .iter()
+            .filter(|request| request.status == "pending")
+            .count();
+        Ok(GroupJoinRequestListResponse {
+            pending_count,
+            requests,
+        })
+    }
+
+    pub async fn handle_join_request(
+        &self,
+        context: &SharedContext,
+        owner_id: i64,
+        conversation_id: Uuid,
+        request_id: Uuid,
+        body: HandleJoinRequestBody,
+    ) -> AppResult<GroupJoinRequestItem> {
+        let handled = repository::handle_join_request(
+            context.postgres.pool(),
+            conversation_id,
+            request_id,
+            owner_id,
+            body.approved,
+        )
+        .await?;
+        if body.approved {
+            let _ = MessageService::new(self.broadcaster.clone())
+                .send_group_member_joined(context, conversation_id, handled.applicant_id)
+                .await;
+        }
+        let _ = self
+            .broadcaster
+            .broadcast_group_join_request(handled.applicant_id, to_join_request_payload(&handled))
+            .await;
+        Ok(GroupJoinRequestItem::from_row(&handled))
     }
 
     pub async fn update_name(
@@ -251,6 +388,25 @@ where
     }
 }
 
+fn to_join_request_payload(
+    request: &crate::models::GroupJoinRequestRow,
+) -> GroupJoinRequestPayload {
+    let item = GroupJoinRequestItem::from_row(request);
+    GroupJoinRequestPayload {
+        request_id: request.id,
+        conversation_id: request.conversation_id,
+        group_name: item.group_name,
+        group_avatar: item.group_avatar,
+        applicant_id: request.applicant_id,
+        applicant_name: item.applicant_name,
+        applicant_avatar: item.applicant_avatar,
+        message: request.message.clone(),
+        status: request.status,
+        created_at: request.created_at,
+        handled_at: request.handled_at,
+    }
+}
+
 async fn load_detail(
     context: &SharedContext,
     user_id: i64,
@@ -267,8 +423,11 @@ async fn load_detail(
 #[cfg(test)]
 mod tests {
     use crate::{
-        models::{GroupMemberIdsBody, UpdateGroupNameBody},
-        service::{normalize_group_name, normalize_member_ids},
+        models::{GroupMemberIdsBody, JoinGroupBody, UpdateGroupNameBody},
+        service::{
+            normalize_group_name, normalize_join_message, normalize_member_ids,
+            normalize_search_keyword,
+        },
     };
 
     #[test]
@@ -324,6 +483,30 @@ mod tests {
             )
             .unwrap(),
             [2, 3]
+        );
+    }
+
+    #[test]
+    fn search_and_join_input_boundaries_are_stable() {
+        assert_eq!(normalize_search_keyword("  群聊  ").unwrap(), "群聊");
+        assert!(normalize_search_keyword(" ").is_err());
+        assert!(normalize_search_keyword(&"群".repeat(101)).is_err());
+        assert_eq!(
+            normalize_join_message(JoinGroupBody { message: None }).unwrap(),
+            "请求加入群聊"
+        );
+        assert_eq!(
+            normalize_join_message(JoinGroupBody {
+                message: Some("  你好  ".to_string()),
+            })
+            .unwrap(),
+            "你好"
+        );
+        assert!(
+            normalize_join_message(JoinGroupBody {
+                message: Some("字".repeat(201)),
+            })
+            .is_err()
         );
     }
 }

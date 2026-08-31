@@ -7,6 +7,7 @@ export 'src/data/proto/friend.pb.dart'
         FriendRemovedEvent,
         FriendRequestEvent,
         FriendUser;
+export 'src/data/proto/group.pb.dart' show GroupJoinRequestNotification;
 export 'src/data/proto/message.pb.dart'
     show ChatMessage, ConversationUpdate, MessageAck, SendMessageRequest;
 export 'src/data/proto/ws.pb.dart' show WsFrame, WsFrameType;

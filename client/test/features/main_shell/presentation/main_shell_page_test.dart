@@ -5,6 +5,7 @@ import 'package:flash_im/app/app_router.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart' hide FriendUser;
 import 'package:flash_im_friend/flash_im_friend.dart';
+import 'package:flash_im_group/flash_im_group.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,6 +31,9 @@ void main() {
           ),
           RepositoryProvider<FriendRepository>.value(
             value: _FakeFriendRepository(),
+          ),
+          RepositoryProvider<GroupRepository>.value(
+            value: _FakeGroupRepository(),
           ),
         ],
         child: BlocProvider<SessionCubit>.value(
@@ -105,14 +109,14 @@ void main() {
     expect(actionTop.dy, greaterThan(triggerBottom.dy));
     await tester.tap(find.text('添加联系人'));
     await tester.pumpAndSettle();
-    expect(find.text('添加朋友'), findsOneWidget);
+    expect(find.text('加好友/群'), findsOneWidget);
     await tester.tap(find.text('搜索账号 / 手机号'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.byTooltip('返回'), findsOneWidget);
     Navigator.of(tester.element(find.byTooltip('返回'))).pop();
     await tester.pumpAndSettle();
-    Navigator.of(tester.element(find.text('添加朋友'))).pop();
+    Navigator.of(tester.element(find.text('加好友/群'))).pop();
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('messages-create-group')));
     await tester.pumpAndSettle();
@@ -259,6 +263,58 @@ class _FakeConversationRepository implements ConversationRepository {
   Future<void> markRead(String id) async {
     markReadIds.add(id);
   }
+}
+
+class _FakeGroupRepository implements GroupRepository {
+  @override
+  Future<GroupJoinRequestList> getJoinRequests() async =>
+      GroupJoinRequestList(pendingCount: 0, requests: []);
+
+  @override
+  Future<Conversation> acceptInvitation(String invitationId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<GroupDetail> addMembers(String groupId, List<int> memberIds) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> dissolveGroup(String groupId) => throw UnimplementedError();
+
+  @override
+  Future<GroupDetail> getDetail(String groupId) => throw UnimplementedError();
+
+  @override
+  Future<GroupJoinRequest> handleJoinRequest(
+    String groupId,
+    String requestId, {
+    required bool approved,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> inviteMembers(String groupId, List<int> inviteeIds) =>
+      throw UnimplementedError();
+
+  @override
+  Future<JoinGroupResult> joinGroup(String groupId, {String? message}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<GroupDetail> removeMember(String groupId, int memberId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<List<GroupSearchItem>> searchGroups(String keyword) async => const [];
+
+  @override
+  Future<GroupDetail> updateName(String groupId, String name) =>
+      throw UnimplementedError();
+
+  @override
+  Future<GroupDetail> updateSettings(
+    String groupId, {
+    required bool joinApprovalRequired,
+  }) => throw UnimplementedError();
 }
 
 class _FakeWsClient extends WsClient {

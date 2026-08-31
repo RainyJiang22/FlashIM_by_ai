@@ -1,0 +1,840 @@
+{
+  "status": "FAIL",
+  "project": {
+    "kind": "flutter",
+    "root": "/Users/rainyjiang/AndroidStudioProjects/flash_im",
+    "config": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.3/quality/client-harness-config.json"
+  },
+  "changed_files": [
+    ".idea/workspace.xml",
+    "client/lib/features/home/presentation/main_shell_page.dart",
+    "client/modules/flash_im_core/lib/flash_im_core.dart",
+    "client/modules/flash_im_core/lib/src/data/proto/group.pb.dart",
+    "client/modules/flash_im_core/lib/src/data/proto/group.pbenum.dart",
+    "client/modules/flash_im_core/lib/src/data/proto/group.pbjson.dart",
+    "client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart",
+    "client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart",
+    "client/modules/flash_im_core/lib/src/logic/ws_client.dart",
+    "client/modules/flash_im_core/test/ws_client_test.dart",
+    "client/modules/flash_im_friend/build/native_assets/macos/native_assets.json",
+    "client/modules/flash_im_friend/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill",
+    "client/modules/flash_im_friend/build/unit_test_assets/AssetManifest.bin",
+    "client/modules/flash_im_friend/build/unit_test_assets/FontManifest.json",
+    "client/modules/flash_im_friend/build/unit_test_assets/NOTICES.Z",
+    "client/modules/flash_im_friend/build/unit_test_assets/NativeAssetsManifest.json",
+    "client/modules/flash_im_friend/build/unit_test_assets/fonts/MaterialIcons-Regular.otf",
+    "client/modules/flash_im_friend/build/unit_test_assets/shaders/ink_sparkle.frag",
+    "client/modules/flash_im_friend/build/unit_test_assets/shaders/stretch_effect.frag",
+    "client/modules/flash_im_friend/coverage/lcov.info",
+    "client/modules/flash_im_friend/lib/src/view/add_friend_page.dart",
+    "client/modules/flash_im_friend/lib/src/view/contacts_page.dart",
+    "client/modules/flash_im_friend/test/contacts_page_test.dart",
+    "client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill",
+    "client/modules/flash_im_group/coverage/lcov.info",
+    "client/modules/flash_im_group/lib/flash_im_group.dart",
+    "client/modules/flash_im_group/lib/src/data/group_discovery.dart",
+    "client/modules/flash_im_group/lib/src/data/group_repository.dart",
+    "client/modules/flash_im_group/lib/src/logic/group_notification_cubit.dart",
+    "client/modules/flash_im_group/lib/src/logic/group_notification_state.dart",
+    "client/modules/flash_im_group/lib/src/logic/group_search_cubit.dart",
+    "client/modules/flash_im_group/lib/src/logic/group_search_state.dart",
+    "client/modules/flash_im_group/lib/src/view/group_details_page.dart",
+    "client/modules/flash_im_group/lib/src/view/group_notifications_page.dart",
+    "client/modules/flash_im_group/lib/src/view/search_group_page.dart",
+    "client/modules/flash_im_group/lib/src/view/widgets/group_join_request_tile.dart",
+    "client/modules/flash_im_group/lib/src/view/widgets/group_search_result_tile.dart",
+    "client/modules/flash_im_group/pubspec.lock",
+    "client/modules/flash_im_group/pubspec.yaml",
+    "client/modules/flash_im_group/test/group_details_page_test.dart",
+    "client/modules/flash_im_group/test/group_notification_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_notifications_page_test.dart",
+    "client/modules/flash_im_group/test/group_repository_test.dart",
+    "client/modules/flash_im_group/test/group_search_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_search_page_test.dart",
+    "client/modules/flash_im_group/test/test_fakes.dart",
+    "client/test/app/app_router_group_test.dart",
+    "client/test/features/main_shell/presentation/main_shell_page_test.dart",
+    "docs/features/im/core/v0.0.3/test/__pycache__/conversation_message.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/__pycache__/ws_chat_test.cpython-314.pyc",
+    "docs/features/im/core/v0.0.4_media/test/proto/__pycache__/ws_pb2.cpython-314.pyc",
+    "docs/features/im/group/v0.0.3/analysis.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/00_link.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/01_search_by_name.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/02_search_by_number.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/03_search_invalid.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/04_direct_join.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/05_join_existing_member.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/06_create_join_request.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/07_owner_pending_ws.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/08_duplicate_request.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/09_list_join_requests.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/10_handle_forbidden.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/11_approve_request.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/12_applicant_approved_ws.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/13_handle_again.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/14_join_message_too_long.md",
+    "docs/features/im/group/v0.0.3/api/group_join/doc/15_join_missing_group.md",
+    "docs/features/im/group/v0.0.3/api/group_join/request/group_join.py",
+    "docs/features/im/group/v0.0.3/client/design.md",
+    "docs/features/im/group/v0.0.3/client/tasks.md",
+    "docs/features/im/group/v0.0.3/quality/attempt-01/client.lcov",
+    "docs/features/im/group/v0.0.3/quality/attempt-02/client.lcov",
+    "docs/features/im/group/v0.0.3/quality/client-harness-config.json",
+    "docs/features/im/group/v0.0.3/quality/harness-check-client-attempt-01.json",
+    "docs/features/im/group/v0.0.3/quality/merge_client_lcov.py",
+    "docs/features/im/group/v0.0.3/quality/server-harness-config.json",
+    "docs/features/im/group/v0.0.3/server/design.md",
+    "docs/features/im/group/v0.0.3/server/tasks.md",
+    "proto/group.proto",
+    "proto/ws.proto",
+    "server/Cargo.lock",
+    "server/migrations/20260831000100_group_join_requests.sql",
+    "server/modules/im-group/Cargo.toml",
+    "server/modules/im-group/src/broadcast.rs",
+    "server/modules/im-group/src/lib.rs",
+    "server/modules/im-group/src/models.rs",
+    "server/modules/im-group/src/repository.rs",
+    "server/modules/im-group/src/routes.rs",
+    "server/modules/im-group/src/service.rs",
+    "server/modules/im-message/src/service.rs",
+    "server/modules/im-ws/Cargo.toml",
+    "server/modules/im-ws/build.rs",
+    "server/modules/im-ws/src/broadcaster.rs",
+    "server/modules/im-ws/src/dispatcher.rs",
+    "server/modules/im-ws/src/frame.rs",
+    "server/src/lib.rs"
+  ],
+  "test_files": [
+    "client/modules/flash_auth/test/flash_auth_test.dart",
+    "client/modules/flash_im_chat/test/chat_cubit_test.dart",
+    "client/modules/flash_im_chat/test/chat_input_test.dart",
+    "client/modules/flash_im_chat/test/chat_page_test.dart",
+    "client/modules/flash_im_chat/test/message_bubble_test.dart",
+    "client/modules/flash_im_chat/test/message_repository_test.dart",
+    "client/modules/flash_im_chat/test/message_test.dart",
+    "client/modules/flash_im_chat/test/video_player_page_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_api_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart",
+    "client/modules/flash_im_conversation/test/conversation_test.dart",
+    "client/modules/flash_im_core/test/im_config_test.dart",
+    "client/modules/flash_im_core/test/proto_compile_test.dart",
+    "client/modules/flash_im_core/test/ws_client_test.dart",
+    "client/modules/flash_im_core/test/ws_status_indicator_test.dart",
+    "client/modules/flash_im_friend/test/contacts_page_test.dart",
+    "client/modules/flash_im_friend/test/friend_cubit_test.dart",
+    "client/modules/flash_im_friend/test/friend_models_test.dart",
+    "client/modules/flash_im_friend/test/friend_repository_test.dart",
+    "client/modules/flash_im_friend/test/friend_sort_test.dart",
+    "client/modules/flash_im_friend/test/new_friends_page_test.dart",
+    "client/modules/flash_im_group/test/create_group_cubit_test.dart",
+    "client/modules/flash_im_group/test/create_group_page_test.dart",
+    "client/modules/flash_im_group/test/group_detail_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_details_page_test.dart",
+    "client/modules/flash_im_group/test/group_list_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_member_picker_page_test.dart",
+    "client/modules/flash_im_group/test/group_notification_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_notifications_page_test.dart",
+    "client/modules/flash_im_group/test/group_repository_test.dart",
+    "client/modules/flash_im_group/test/group_search_cubit_test.dart",
+    "client/modules/flash_im_group/test/group_search_page_test.dart",
+    "client/modules/flash_im_group/test/my_groups_page_test.dart",
+    "client/modules/flash_im_group/test/test_fakes.dart",
+    "client/modules/flash_session/test/session_cubit_test.dart",
+    "client/modules/flash_session/test/session_repository_test.dart",
+    "client/modules/flash_shared/test/avatar_widget_test.dart",
+    "client/modules/flash_shared/test/group_avatar_widget_test.dart",
+    "client/modules/flash_starter/test/app_starter_test.dart",
+    "client/test/.DS_Store",
+    "client/test/.env",
+    "client/test/app/app_router_group_test.dart",
+    "client/test/features/.DS_Store",
+    "client/test/features/auth/cubit/app_session_cubit_test.dart",
+    "client/test/features/auth/data/auth_repository_test.dart",
+    "client/test/features/auth/presentation/login_page_test.dart",
+    "client/test/features/main_shell/presentation/main_shell_page_test.dart",
+    "client/test/features/mine/presentation/mine_page_test.dart",
+    "client/test/features/startup/presentation/startup_page_test.dart",
+    "client/test/login_for_test.dart",
+    "client/test/playground/.DS_Store",
+    "client/test/playground/auth/data/auth_api_test.dart",
+    "client/test/playground/auth/data/auth_repository_test.dart",
+    "client/test/playground/auth/presentation/auth_playground_page_test.dart",
+    "client/test/playground/conversation/data/conversation_api_test.dart",
+    "client/test/playground/conversation/data/conversation_repository_test.dart",
+    "client/test/playground/conversation/fixtures/conversation_list_fixture.json",
+    "client/test/playground/im_playground/data/chat_room_api_test.dart",
+    "client/test/playground/im_playground/data/chat_room_repository_test.dart",
+    "client/test/test_env.dart",
+    "client/test/widget_test.dart",
+    "docs/features/im/core/conversation/request/test_lnk.md",
+    "docs/features/im/core/conversation/roles/link_test_writer.md",
+    "docs/features/im/core/v0.0.3/test/__pycache__/conversation_message.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/__pycache__/ws_chat_test.cpython-314.pyc",
+    "docs/features/im/core/v0.0.3/test/conversation_message.py",
+    "docs/features/im/core/v0.0.3/test/ws_chat_test.py",
+    "docs/features/im/core/v0.0.4_media/test/assets/README.md",
+    "docs/features/im/core/v0.0.4_media/test/assets/sky_engine.zip",
+    "docs/features/im/core/v0.0.4_media/test/assets/test.mp4",
+    "docs/features/im/core/v0.0.4_media/test/assets/test.webp",
+    "docs/features/im/core/v0.0.4_media/test/assets/test_meta.json",
+    "docs/features/im/core/v0.0.4_media/test/assets/test_thumb.jpg",
+    "docs/features/im/core/v0.0.4_media/test/proto/__pycache__/ws_pb2.cpython-314.pyc",
+    "docs/features/im/core/v0.0.4_media/test/proto/message_pb2.py",
+    "docs/features/im/core/v0.0.4_media/test/proto/ws_pb2.py",
+    "docs/features/im/core/v0.0.4_media/test/send_message.py",
+    "docs/features/im/core/v0.0.4_media/test/test_upload.py",
+    "docs/features/session/api/request/test_lnk.md",
+    "docs/features/session/api/roles/link_test_writer.md",
+    "scripts/playground/ws_smoke_test.mjs",
+    "scripts/server/conversation_api_test_link.sh",
+    "scripts/server/session_api_test_link.sh"
+  ],
+  "commands": [
+    {
+      "command": "flutter test --coverage",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 8.218,
+      "stdout": "Resolving dependencies...\nDownloading packages...\n  clock 1.1.2 (1.1.3 available)\n  matcher 0.12.19 (0.12.20 available)\n  material_color_utilities 0.13.0 (0.13.1 available)\n  meta 1.17.0 (1.19.0 available)\n  stack_trace 1.12.1 (1.12.2 available)\n  test_api 0.7.10 (0.7.13 available)\n  vector_math 2.2.0 (2.4.2 available)\n  vm_service 15.2.0 (15.3.0 available)\nGot dependencies!\n8 packages have newer versions incompatible with dependency constraints.\nTry `flutter pub outdated` for more information.\n00:00 +0: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart\n00:00 +0: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/im_config_test.dart: ImConfig builds ws url from http api base url\n00:00 +1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/im_config_test.dart: ImConfig builds wss url from https api base url\n00:00 +2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/proto_compile_test.dart: generated proto classes can be constructed\n00:00 +3: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/proto_compile_test.dart: message proto classes encode and decode\n00:00 +4: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: hides when authenticated\n00:00 +5: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: hides when authenticated\n00:00 +6: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: hides when authenticated\n00:00 +7: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: hides when authenticated\n00:00 +8: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: hides when authenticated\n00:00 +9: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: hides when authenticated\n00:00 +10: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: hides when authenticated\n00:00 +11: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: hides when authenticated\n00:01 +12: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_core/test/ws_status_indicator_test.dart: shows disconnected message and reconnects on tap\n00:02 +13: All tests passed!\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter test --coverage",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 24.68,
+      "stdout": "Resolving dependencies...\nDownloading packages...\n  _fe_analyzer_shared 93.0.0 (105.0.0 available)\n  analyzer 10.0.1 (14.1.0 available)\n  clock 1.1.2 (1.1.3 available)\n  glob 2.1.3 (2.2.0 available)\n  io 1.0.5 (1.1.0 available)\n  matcher 0.12.19 (0.12.20 available)\n  material_color_utilities 0.13.0 (0.13.1 available)\n  meta 1.17.0 (1.19.0 available)\n  mime 2.0.0 (2.1.0 available)\n  package_config 2.2.0 (3.0.0 available)\n  pool 1.5.2 (1.5.3 available)\n  pub_semver 2.2.0 (2.2.1 available)\n  source_maps 0.10.13 (0.10.14 available)\n  stack_trace 1.12.1 (1.12.2 available)\n  test 1.30.0 (1.31.2 available)\n  test_api 0.7.10 (0.7.13 available)\n  test_core 0.6.16 (0.6.19 available)\n  vector_math 2.2.0 (2.4.2 available)\n  vm_service 15.2.0 (15.3.0 available)\n  yaml 3.1.3 (3.1.4 available)\nGot dependencies!\n20 packages have newer versions incompatible with dependency constraints.\nTry `flutter pub outdated` for more information.\n00:00 +0: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_list_cubit_test.dart\n00:00 +0: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_list_cubit_test.dart: loads group pages with type filter and searches locally\n00:00 +1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_list_cubit_test.dart: load error is recoverable by refresh\n00:00 +2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_repository_test.dart: parses detail and sends management request contracts\n00:00 +3: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_repository_test.dart: rejects an invitation response with an undelivered item\n00:00 +4: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_repository_test.dart: parses search, join and approval request contracts\n00:00 +5: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_detail_cubit_test.dart: loads and updates group snapshot\n00:00 +6: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_detail_cubit_test.dart: member invitation and owner dissolve expose terminal state\n00:00 +7: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_detail_cubit_test.dart: request failure maps stable permission message\n00:00 +8: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_detail_cubit_test.dart: invitation delivery failure maps partial failure message\n00:01 +9: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_search_cubit_test.dart: latest search response wins when requests finish out of order\n00:01 +10: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_search_cubit_test.dart: join updates four-state flags and handled ws event reconciles them\n00:02 +11: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_details_page_test.dart\n00:08 +11: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_details_page_test.dart: owner sees member actions, edits name and dissolves group\n00:09 +12: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_details_page_test.dart: owner sees member actions, edits name and dissolves group\n00:12 +13: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_details_page_test.dart: owner sees member actions, edits name and dissolves group\n00:12 +14: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_details_page_test.dart: owner sees member actions, edits name and dissolves group\n00:13 +15: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_details_page_test.dart: owner sees member actions, edits name and dissolves group\n00:13 +16: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_details_page_test.dart: member sees approval state without owner danger actions\n00:14 +17: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/create_group_page_test.dart: selects two friends and returns created conversation\n00:16 +18: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/create_group_page_test.dart: selects two friends and returns created conversation\n00:16 +19: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/create_group_page_test.dart: selects two friends and returns created conversation\n00:16 +20: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/create_group_page_test.dart: selects two friends and returns created conversation\n00:16 +21: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/create_group_page_test.dart: selects two friends and returns created conversation\n00:16 +22: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/create_group_page_test.dart: selects two friends and returns created conversation\n00:17 +23: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_search_page_test.dart: debounces search and confirms direct join\n00:18 +24: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_search_page_test.dart: debounces search and confirms direct join\n00:18 +25: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_search_page_test.dart: debounces search and confirms direct join\n00:18 +26: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_search_page_test.dart: debounces search and confirms direct join\n00:18 +27: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_group/test/group_search_page_test.dart: debounces search and confirms direct join\n00:20 +28: All tests passed!\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter test --coverage",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 12.854,
+      "stdout": "00:00 +0: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/friend_sort_test.dart\n00:00 +0: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/friend_sort_test.dart: uses nickname pinyin initials for friend sections\n00:01 +1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:01 +2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:01 +3: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:01 +4: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:03 +5: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:05 +6: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:05 +7: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:05 +8: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:05 +9: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:05 +10: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:05 +11: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/modules/flash_im_friend/test/contacts_page_test.dart: shows implemented contact entries without unsupported shells\n00:07 +12: All tests passed!\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter test --coverage",
+      "status": "FAIL",
+      "returncode": 1,
+      "duration_seconds": 58.699,
+      "stdout": "viders are \"scoped\". So if you insert of provider inside a route, then\n  other routes will not be able to access that provider.\n\n- You used a `BuildContext` that is an ancestor of the provider you are trying to read.\n\n  Make sure that MainShellPage is under your MultiProvider/Provider<GroupRepository>.\n  This usually happens when you are creating a provider and trying to read it immediately.\n\n  For example, instead of:\n\n  ```\n  Widget build(BuildContext context) {\n    return Provider<Example>(\n      create: (_) => Example(),\n      // Will throw a ProviderNotFoundError, because `context` is associated\n      // to the widget that is the parent of `Provider<Example>`\n      child: Text(context.watch<Example>().toString()),\n    );\n  }\n  ```\n\n  consider using `builder` like so:\n\n  ```\n  Widget build(BuildContext context) {\n    return Provider<Example>(\n      create: (_) => Example(),\n      // we use `builder` to obtain a new `BuildContext` that has access to the provider\n      builder: (context, child) {\n        // No longer throws\n        return Text(context.watch<Example>().toString());\n      }\n    );\n  }\n  ```\n\nIf none of these solutions work, consider asking for help on StackOverflow:\nhttps://stackoverflow.com/questions/tagged/flutter\n\nThe relevant error-causing widget was:\n  MaterialApp\n  MaterialApp:file:///Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/startup/presentation/startup_page_test.dart:75:18\n\nWhen the exception was thrown, this was the stack:\n#0      Provider._inheritedElementOf (package:provider/src/provider.dart:377:7)\n#1      Provider.of (package:provider/src/provider.dart:327:30)\n#2      ReadContext.read (package:provider/src/provider.dart:683:21)\n#3      _MainShellPageState.initState (package:flash_im/features/home/presentation/main_shell_page.dart:44:27)\n#4      StatefulElement._firstBuild (package:flutter/src/widgets/framework.dart:5950:55)\n#5      ComponentElement.mount (package:flutter/src/widgets/framework.dart:5793:5)\n...     Normal element mounting (260 frames)\n#265    Element.inflateWidget (package:flutter/src/widgets/framework.dart:4587:20)\n#266    MultiChildRenderObjectElement.inflateWidget (package:flutter/src/widgets/framework.dart:7264:36)\n#267    Element.updateChild (package:flutter/src/widgets/framework.dart:4059:18)\n#268    Element.updateChildren (package:flutter/src/widgets/framework.dart:4255:32)\n#269    MultiChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7295:17)\n#270    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#271    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#272    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5982:11)\n#273    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#274    StatefulElement.update (package:flutter/src/widgets/framework.dart:6007:5)\n#275    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#276    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#277    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#278    ProxyElement.update (package:flutter/src/widgets/framework.dart:6149:5)\n#279    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#280    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#281    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#282    ProxyElement.update (package:flutter/src/widgets/framework.dart:6149:5)\n#283    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)\n#284    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#285    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#286    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5982:11)\n#287    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#288    StatefulElement.update (package:flutter/src/widgets/framework.dart:6007:5)\n#289    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#290    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#291    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#292    ProxyElement.update (package:flutter/src/widgets/framework.dart:6149:5)\n#293    _InheritedNotifierElement.update (package:flutter/src/widgets/inherited_notifier.dart:108:11)\n#294    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#295    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#296    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5982:11)\n#297    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#298    StatefulElement.update (package:flutter/src/widgets/framework.dart:6007:5)\n#299    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#300    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#301    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5982:11)\n#302    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#303    StatefulElement.update (package:flutter/src/widgets/framework.dart:6007:5)\n#304    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#305    SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7122:14)\n#306    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#307    SingleChildRenderObjectElement.update (package:flutter/src/widgets/framework.dart:7122:14)\n#308    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#309    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#310    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#311    ProxyElement.update (package:flutter/src/widgets/framework.dart:6149:5)\n#312    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#313    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#314    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#315    ProxyElement.update (package:flutter/src/widgets/framework.dart:6149:5)\n#316    Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)\n#317    ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)\n#318    StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5982:11)\n#319    Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)\n#320    BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2750:15)\n#321    BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2807:11)\n#322    BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3111:18)\n#323    AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2131:19)\n#324    RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:495:5)\n#325    SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)\n#326    SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)\n#327    AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)\n#330    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)\n#331    AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)\n#332    WidgetTester.pump.<anonymous closure> (package:flutter_test/src/widget_tester.dart:652:53)\n#335    TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)\n#336    WidgetTester.pump (package:flutter_test/src/widget_tester.dart:652:27)\n#337    main.<anonymous closure> (file:///Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/startup/presentation/startup_page_test.dart:82:18)\n<asynchronous suspension>\n#338    testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)\n<asynchronous suspension>\n#339    TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)\n<asynchronous suspension>\n<asynchronous suspension>\n(elided 5 frames from dart:async and package:stack_trace)\n\n════════════════════════════════════════════════════════════════════════════════════════════════════\n══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════\nThe following TestFailure was thrown running a test:\nExpected: exactly one matching candidate\n  Actual: _TextWidgetFinder:<Found 0 widgets with text \"消息\": []>\n   Which: means none were found but one was expected\n\nWhen the exception was thrown, this was the stack:\n#4      main.<anonymous closure> (file:///Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/startup/presentation/startup_page_test.dart:85:5)\n<asynchronous suspension>\n#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)\n<asynchronous suspension>\n#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)\n<asynchronous suspension>\n<asynchronous suspension>\n(elided one frame from package:stack_trace)\n\nThis was caught by the test expectation on the following line:\n  file:///Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/startup/presentation/startup_page_test.dart line 85\nThe test description was:\n  startup page routes to home shell\n════════════════════════════════════════════════════════════════════════════════════════════════════\n══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════\nThe following message was thrown:\nMultiple exceptions (2) were detected during the running of the current test, and at least one was\nunexpected.\n════════════════════════════════════════════════════════════════════════════════════════════════════\n00:34 +22 -1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/main_shell/presentation/main_shell_page_test.dart: main shell shows password setup prompt and switches tabs\n00:34 +22 -1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/startup/presentation/startup_page_test.dart: startup page routes to home shell [E]\n  Test failed. See exception logs above.\n  The test description was: startup page routes to home shell\n  \n00:35 +23 -1: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/features/main_shell/presentation/main_shell_page_test.dart: main shell shows password setup prompt and switches tabs\n00:40 +24 -2: loading /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/login_for_test.dart [E]\n  Failed to load \"/Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/login_for_test.dart\":\n  DioException [connection error]: The connection errored: Connection refused This indicates an error which most likely cannot be solved by the library.\n  Error: SocketException: Connection refused (OS Error: Connection refused, errno = 61), address = 127.0.0.1, port = 50483\n  package:dio/src/dio_mixin.dart 523:7                                                                                   DioMixin.fetch\n  ===== asynchronous gap ===========================\n  test/login_for_test.dart 22:20                                                                                         main\n  ===== asynchronous gap ===========================\n  /var/folders/ll/m1_n17gj4p72g97jdnqyvr8c0000gn/T/flutter_tools.4MtPIg/flutter_test_listener.JoTd3n/listener.dart 21:3  _testMain\n  \n00:40 +24 -2: /Users/rainyjiang/AndroidStudioProjects/flash_im/client/test/widget_test.dart: main app restores cached session into home shell\n00:48 +25 -2: Some tests failed.\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "python3 docs/features/im/group/v0.0.3/quality/merge_client_lcov.py",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 0.067,
+      "stdout": "",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed lib test",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 0.388,
+      "stdout": "Formatted 20 files (0 changed) in 0.04 seconds.\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 9.193,
+      "stdout": "Resolving dependencies...\nDownloading packages...\n  clock 1.1.2 (1.1.3 available)\n  matcher 0.12.19 (0.12.20 available)\n  material_color_utilities 0.13.0 (0.13.1 available)\n  meta 1.17.0 (1.19.0 available)\n  stack_trace 1.12.1 (1.12.2 available)\n  test_api 0.7.10 (0.7.13 available)\n  vector_math 2.2.0 (2.4.2 available)\n  vm_service 15.2.0 (15.3.0 available)\nGot dependencies!\n8 packages have newer versions incompatible with dependency constraints.\nTry `flutter pub outdated` for more information.\nAnalyzing flash_im_core...                                      \nNo issues found! (ran in 5.2s)\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed lib test",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 0.381,
+      "stdout": "Formatted 42 files (0 changed) in 0.12 seconds.\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 5.237,
+      "stdout": "Resolving dependencies...\nDownloading packages...\n  _fe_analyzer_shared 93.0.0 (105.0.0 available)\n  analyzer 10.0.1 (14.1.0 available)\n  clock 1.1.2 (1.1.3 available)\n  glob 2.1.3 (2.2.0 available)\n  io 1.0.5 (1.1.0 available)\n  matcher 0.12.19 (0.12.20 available)\n  material_color_utilities 0.13.0 (0.13.1 available)\n  meta 1.17.0 (1.19.0 available)\n  mime 2.0.0 (2.1.0 available)\n  package_config 2.2.0 (3.0.0 available)\n  pool 1.5.2 (1.5.3 available)\n  pub_semver 2.2.0 (2.2.1 available)\n  source_maps 0.10.13 (0.10.14 available)\n  stack_trace 1.12.1 (1.12.2 available)\n  test 1.30.0 (1.31.2 available)\n  test_api 0.7.10 (0.7.13 available)\n  test_core 0.6.16 (0.6.19 available)\n  vector_math 2.2.0 (2.4.2 available)\n  vm_service 15.2.0 (15.3.0 available)\n  yaml 3.1.3 (3.1.4 available)\nGot dependencies!\n20 packages have newer versions incompatible with dependency constraints.\nTry `flutter pub outdated` for more information.\nAnalyzing flash_im_group...                                     \nNo issues found! (ran in 2.9s)\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed lib test",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 0.347,
+      "stdout": "Formatted 22 files (0 changed) in 0.10 seconds.\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 3.867,
+      "stdout": "Analyzing flash_im_friend...                                    \nNo issues found! (ran in 2.8s)\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "dart format --output=none --set-exit-if-changed lib/features/home/presentation/main_shell_page.dart test/features/main_shell/presentation/main_shell_page_test.dart test/app/app_router_group_test.dart",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 0.377,
+      "stdout": "Formatted 3 files (0 changed) in 0.06 seconds.\n",
+      "stderr": "",
+      "error": null
+    },
+    {
+      "command": "flutter analyze --no-fatal-warnings --no-fatal-infos",
+      "status": "PASS",
+      "returncode": 0,
+      "duration_seconds": 9.353,
+      "stdout": "Analyzing client...                                             \n\n   info • Don't use 'BuildContext's across async gaps • modules/flash_session/lib/src/view/edit_profile_page.dart:103:13 • use_build_context_synchronously\n   info • Don't use 'BuildContext's across async gaps • modules/flash_session/lib/src/view/edit_profile_page.dart:106:9 • use_build_context_synchronously\n   info • Don't use 'BuildContext's across async gaps • modules/flash_session/lib/src/view/edit_profile_page.dart:110:18 • use_build_context_synchronously\n   info • Unnecessary use of multiple underscores • modules/flash_session/lib/src/view/widget/user_card.dart:22:29 • unnecessary_underscores\n   info • Unnecessary use of multiple underscores • modules/flash_session/lib/src/view/widget/user_card.dart:22:33 • unnecessary_underscores\n\n",
+      "stderr": "5 issues found. (ran in 7.2s)\n",
+      "error": null
+    }
+  ],
+  "coverage": {
+    "status": "FAIL",
+    "format": "lcov",
+    "scope": "changed",
+    "threshold_percent": 80.0,
+    "path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.3/quality/attempt-02/client.lcov",
+    "total": 1244,
+    "covered": 969,
+    "percent": 77.89,
+    "files": [
+      {
+        "path": "client/modules/flash_im_core/lib/src/data/im_config.dart",
+        "total": 10,
+        "covered": 10
+      },
+      {
+        "path": "client/modules/flash_im_core/lib/src/data/proto/friend.pb.dart",
+        "total": 240,
+        "covered": 89
+      },
+      {
+        "path": "client/modules/flash_im_core/lib/src/data/proto/group.pb.dart",
+        "total": 132,
+        "covered": 40
+      },
+      {
+        "path": "client/modules/flash_im_core/lib/src/data/proto/message.pb.dart",
+        "total": 115,
+        "covered": 111
+      },
+      {
+        "path": "client/modules/flash_im_core/lib/src/data/proto/ws.pb.dart",
+        "total": 113,
+        "covered": 63
+      },
+      {
+        "path": "client/modules/flash_im_core/lib/src/logic/ws_client.dart",
+        "total": 150,
+        "covered": 129
+      },
+      {
+        "path": "client/modules/flash_im_core/lib/src/view/ws_status_indicator.dart",
+        "total": 25,
+        "covered": 22
+      },
+      {
+        "path": "client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart",
+        "total": 5,
+        "covered": 1
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/data/group_repository.dart",
+        "total": 78,
+        "covered": 69
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/data/group_detail.dart",
+        "total": 67,
+        "covered": 52
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/data/group_discovery.dart",
+        "total": 119,
+        "covered": 110
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/create_group_cubit.dart",
+        "total": 50,
+        "covered": 48
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/create_group_state.dart",
+        "total": 34,
+        "covered": 34
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_detail_cubit.dart",
+        "total": 70,
+        "covered": 55
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_detail_state.dart",
+        "total": 18,
+        "covered": 17
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_list_cubit.dart",
+        "total": 28,
+        "covered": 25
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_list_state.dart",
+        "total": 27,
+        "covered": 27
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_notification_cubit.dart",
+        "total": 43,
+        "covered": 37
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_notification_state.dart",
+        "total": 15,
+        "covered": 15
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_search_cubit.dart",
+        "total": 63,
+        "covered": 46
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/logic/group_search_state.dart",
+        "total": 17,
+        "covered": 17
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/create_group_page.dart",
+        "total": 69,
+        "covered": 69
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/group_details_page.dart",
+        "total": 126,
+        "covered": 79
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/group_notifications_page.dart",
+        "total": 43,
+        "covered": 21
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/group_member_picker_page.dart",
+        "total": 76,
+        "covered": 64
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/my_groups_page.dart",
+        "total": 39,
+        "covered": 35
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/private_chat_details_page.dart",
+        "total": 21,
+        "covered": 21
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/search_group_page.dart",
+        "total": 110,
+        "covered": 67
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/group_feedback_view.dart",
+        "total": 10,
+        "covered": 10
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/selectable_friend_tile.dart",
+        "total": 16,
+        "covered": 16
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/selected_friend_strip.dart",
+        "total": 38,
+        "covered": 38
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/group_member_grid.dart",
+        "total": 18,
+        "covered": 17
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/group_name_editor.dart",
+        "total": 28,
+        "covered": 27
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/group_join_request_tile.dart",
+        "total": 35,
+        "covered": 35
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/group_search_result_tile.dart",
+        "total": 37,
+        "covered": 32
+      },
+      {
+        "path": "client/modules/flash_im_group/lib/src/view/widgets/group_member_tile.dart",
+        "total": 41,
+        "covered": 40
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/data/friend_user.dart",
+        "total": 47,
+        "covered": 31
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/widgets/friend_sort.dart",
+        "total": 52,
+        "covered": 35
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/data/friend_repository.dart",
+        "total": 45,
+        "covered": 18
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/data/friend_request.dart",
+        "total": 50,
+        "covered": 30
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/logic/friend_cubit.dart",
+        "total": 207,
+        "covered": 59
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/logic/friend_state.dart",
+        "total": 31,
+        "covered": 30
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/contacts_page.dart",
+        "total": 193,
+        "covered": 139
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/add_friend_page.dart",
+        "total": 39,
+        "covered": 32
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/friend_search_page.dart",
+        "total": 90,
+        "covered": 2
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/widgets/friend_ui.dart",
+        "total": 65,
+        "covered": 53
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/friend_profile_page.dart",
+        "total": 134,
+        "covered": 97
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/new_friends_page.dart",
+        "total": 75,
+        "covered": 55
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/widgets/friend_alphabet_index.dart",
+        "total": 72,
+        "covered": 33
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/widgets/friend_avatar_tile.dart",
+        "total": 21,
+        "covered": 21
+      },
+      {
+        "path": "client/modules/flash_im_friend/lib/src/view/send_friend_request_page.dart",
+        "total": 44,
+        "covered": 0
+      },
+      {
+        "path": "client/lib/playground/demos/auth/domain/auth_profile.dart",
+        "total": 1,
+        "covered": 1
+      },
+      {
+        "path": "client/lib/playground/demos/im_playground/data/chat_room_api.dart",
+        "total": 68,
+        "covered": 51
+      },
+      {
+        "path": "client/lib/playground/demos/im_playground/data/chat_room_repository.dart",
+        "total": 63,
+        "covered": 53
+      },
+      {
+        "path": "client/lib/playground/demos/im_playground/data/models/chat_room_socket_frame.dart",
+        "total": 11,
+        "covered": 11
+      },
+      {
+        "path": "client/lib/playground/demos/im_playground/domain/chat_room_event.dart",
+        "total": 8,
+        "covered": 6
+      },
+      {
+        "path": "client/lib/playground/demos/im_playground/domain/chat_room_message.dart",
+        "total": 1,
+        "covered": 1
+      },
+      {
+        "path": "client/lib/core/network/dio_factory.dart",
+        "total": 9,
+        "covered": 7
+      },
+      {
+        "path": "client/lib/playground/demos/auth/data/auth_api.dart",
+        "total": 21,
+        "covered": 21
+      },
+      {
+        "path": "client/lib/playground/demos/auth/data/models/auth_profile_dto.dart",
+        "total": 7,
+        "covered": 7
+      },
+      {
+        "path": "client/lib/playground/demos/auth/data/models/auth_session_dto.dart",
+        "total": 5,
+        "covered": 5
+      },
+      {
+        "path": "client/lib/playground/demos/auth/data/models/sms_code_dto.dart",
+        "total": 5,
+        "covered": 5
+      },
+      {
+        "path": "client/lib/playground/demos/auth/data/auth_repository.dart",
+        "total": 33,
+        "covered": 30
+      },
+      {
+        "path": "client/lib/playground/demos/auth/data/auth_session_store.dart",
+        "total": 10,
+        "covered": 0
+      },
+      {
+        "path": "client/lib/playground/demos/auth/domain/auth_session.dart",
+        "total": 1,
+        "covered": 1
+      },
+      {
+        "path": "client/lib/playground/demos/auth/domain/sms_code_info.dart",
+        "total": 1,
+        "covered": 1
+      },
+      {
+        "path": "client/lib/playground/demos/conversation/data/conversation_api.dart",
+        "total": 9,
+        "covered": 9
+      },
+      {
+        "path": "client/lib/playground/demos/conversation/data/conversation_repository.dart",
+        "total": 13,
+        "covered": 13
+      },
+      {
+        "path": "client/lib/playground/demos/conversation/data/models/conversation_dto.dart",
+        "total": 6,
+        "covered": 6
+      },
+      {
+        "path": "client/lib/playground/demos/conversation/domain/conversation_entity.dart",
+        "total": 1,
+        "covered": 1
+      },
+      {
+        "path": "client/lib/playground/demos/auth/presentation/auth_playground_page.dart",
+        "total": 267,
+        "covered": 196
+      },
+      {
+        "path": "client/lib/core/config/playground_api_config.dart",
+        "total": 1,
+        "covered": 0
+      },
+      {
+        "path": "client/lib/playground/demos/auth/presentation/widgets/auth_login_mode_switch.dart",
+        "total": 39,
+        "covered": 38
+      },
+      {
+        "path": "client/lib/playground/demos/auth/presentation/auth_profile_page.dart",
+        "total": 128,
+        "covered": 20
+      },
+      {
+        "path": "client/lib/app/app_router.dart",
+        "total": 106,
+        "covered": 86
+      },
+      {
+        "path": "client/lib/features/home/presentation/main_shell_page.dart",
+        "total": 176,
+        "covered": 141
+      },
+      {
+        "path": "client/lib/features/mine/presentation/dialogs/password_setup_prompt_dialog.dart",
+        "total": 8,
+        "covered": 8
+      },
+      {
+        "path": "client/lib/features/mine/presentation/mine_page.dart",
+        "total": 37,
+        "covered": 24
+      },
+      {
+        "path": "client/lib/features/messages/presentation/messages_placeholder_page.dart",
+        "total": 78,
+        "covered": 77
+      },
+      {
+        "path": "client/lib/features/home/presentation/widgets/home_navigation_bar.dart",
+        "total": 25,
+        "covered": 22
+      },
+      {
+        "path": "client/lib/features/messages/presentation/widgets/message_quick_actions_menu.dart",
+        "total": 23,
+        "covered": 23
+      },
+      {
+        "path": "client/lib/features/mine/presentation/widgets/mine_error_view.dart",
+        "total": 8,
+        "covered": 0
+      },
+      {
+        "path": "client/lib/features/mine/presentation/widgets/mine_info_card.dart",
+        "total": 61,
+        "covered": 61
+      },
+      {
+        "path": "client/lib/app/session_app_starter_controller.dart",
+        "total": 16,
+        "covered": 14
+      },
+      {
+        "path": "client/lib/app/flash_im_app.dart",
+        "total": 103,
+        "covered": 88
+      },
+      {
+        "path": "client/lib/core/config/app_config.dart",
+        "total": 1,
+        "covered": 1
+      },
+      {
+        "path": "client/lib/core/config/local_config_store.dart",
+        "total": 2,
+        "covered": 1
+      }
+    ],
+    "unmeasured_changed_files": [],
+    "note": "覆盖率 77.89% 低于门槛 80.00%"
+  },
+  "static_analysis": {
+    "status": "PASS",
+    "commands": [
+      {
+        "command": "dart format --output=none --set-exit-if-changed lib test",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 0.388,
+        "stdout": "Formatted 20 files (0 changed) in 0.04 seconds.\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "flutter analyze",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 9.193,
+        "stdout": "Resolving dependencies...\nDownloading packages...\n  clock 1.1.2 (1.1.3 available)\n  matcher 0.12.19 (0.12.20 available)\n  material_color_utilities 0.13.0 (0.13.1 available)\n  meta 1.17.0 (1.19.0 available)\n  stack_trace 1.12.1 (1.12.2 available)\n  test_api 0.7.10 (0.7.13 available)\n  vector_math 2.2.0 (2.4.2 available)\n  vm_service 15.2.0 (15.3.0 available)\nGot dependencies!\n8 packages have newer versions incompatible with dependency constraints.\nTry `flutter pub outdated` for more information.\nAnalyzing flash_im_core...                                      \nNo issues found! (ran in 5.2s)\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "dart format --output=none --set-exit-if-changed lib test",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 0.381,
+        "stdout": "Formatted 42 files (0 changed) in 0.12 seconds.\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "flutter analyze",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 5.237,
+        "stdout": "Resolving dependencies...\nDownloading packages...\n  _fe_analyzer_shared 93.0.0 (105.0.0 available)\n  analyzer 10.0.1 (14.1.0 available)\n  clock 1.1.2 (1.1.3 available)\n  glob 2.1.3 (2.2.0 available)\n  io 1.0.5 (1.1.0 available)\n  matcher 0.12.19 (0.12.20 available)\n  material_color_utilities 0.13.0 (0.13.1 available)\n  meta 1.17.0 (1.19.0 available)\n  mime 2.0.0 (2.1.0 available)\n  package_config 2.2.0 (3.0.0 available)\n  pool 1.5.2 (1.5.3 available)\n  pub_semver 2.2.0 (2.2.1 available)\n  source_maps 0.10.13 (0.10.14 available)\n  stack_trace 1.12.1 (1.12.2 available)\n  test 1.30.0 (1.31.2 available)\n  test_api 0.7.10 (0.7.13 available)\n  test_core 0.6.16 (0.6.19 available)\n  vector_math 2.2.0 (2.4.2 available)\n  vm_service 15.2.0 (15.3.0 available)\n  yaml 3.1.3 (3.1.4 available)\nGot dependencies!\n20 packages have newer versions incompatible with dependency constraints.\nTry `flutter pub outdated` for more information.\nAnalyzing flash_im_group...                                     \nNo issues found! (ran in 2.9s)\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "dart format --output=none --set-exit-if-changed lib test",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 0.347,
+        "stdout": "Formatted 22 files (0 changed) in 0.10 seconds.\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "flutter analyze",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 3.867,
+        "stdout": "Analyzing flash_im_friend...                                    \nNo issues found! (ran in 2.8s)\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "dart format --output=none --set-exit-if-changed lib/features/home/presentation/main_shell_page.dart test/features/main_shell/presentation/main_shell_page_test.dart test/app/app_router_group_test.dart",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 0.377,
+        "stdout": "Formatted 3 files (0 changed) in 0.06 seconds.\n",
+        "stderr": "",
+        "error": null
+      },
+      {
+        "command": "flutter analyze --no-fatal-warnings --no-fatal-infos",
+        "status": "PASS",
+        "returncode": 0,
+        "duration_seconds": 9.353,
+        "stdout": "Analyzing client...                                             \n\n   info • Don't use 'BuildContext's across async gaps • modules/flash_session/lib/src/view/edit_profile_page.dart:103:13 • use_build_context_synchronously\n   info • Don't use 'BuildContext's across async gaps • modules/flash_session/lib/src/view/edit_profile_page.dart:106:9 • use_build_context_synchronously\n   info • Don't use 'BuildContext's across async gaps • modules/flash_session/lib/src/view/edit_profile_page.dart:110:18 • use_build_context_synchronously\n   info • Unnecessary use of multiple underscores • modules/flash_session/lib/src/view/widget/user_card.dart:22:29 • unnecessary_underscores\n   info • Unnecessary use of multiple underscores • modules/flash_session/lib/src/view/widget/user_card.dart:22:33 • unnecessary_underscores\n\n",
+        "stderr": "5 issues found. (ran in 7.2s)\n",
+        "error": null
+      }
+    ],
+    "conclusion": null
+  },
+  "errors": [],
+  "generated_at": "2026-08-31T03:29:00Z"
+}

@@ -7,9 +7,14 @@ import 'friend_search_page.dart';
 import 'widgets/friend_ui.dart';
 
 class AddFriendPage extends StatelessWidget {
-  const AddFriendPage({super.key, required this.onMessageFriend});
+  const AddFriendPage({
+    super.key,
+    required this.onMessageFriend,
+    required this.onSearchGroups,
+  });
 
   final ValueChanged<FriendUser> onMessageFriend;
+  final VoidCallback onSearchGroups;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,7 @@ class AddFriendPage extends StatelessWidget {
         backgroundColor: FriendPalette.background,
         surfaceTintColor: Colors.transparent,
         foregroundColor: FriendPalette.ink,
-        title: const Text('添加朋友'),
+        title: const Text('加好友/群'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -120,6 +125,66 @@ class AddFriendPage extends StatelessWidget {
                             SizedBox(height: 5),
                             Text(
                               '找到后可查看资料并发送验证消息',
+                              style: TextStyle(
+                                color: FriendPalette.secondaryInk,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: FriendPalette.mutedInk,
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FriendCard(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                key: const Key('add-friend-search-groups'),
+                onTap: onSearchGroups,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 14, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: FriendPalette.warningSoft,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(
+                          Icons.group_add_rounded,
+                          color: FriendPalette.warning,
+                          size: 25,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '搜索群聊',
+                              style: TextStyle(
+                                color: FriendPalette.ink,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              '通过群名或群号申请加入群聊',
                               style: TextStyle(
                                 color: FriendPalette.secondaryInk,
                                 fontSize: 13,

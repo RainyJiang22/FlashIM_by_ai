@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:fixnum/fixnum.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_im_core/src/data/proto/ws.pb.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -199,6 +200,38 @@ void main() {
     await requestSub.cancel();
     await acceptedSub.cancel();
     await removedSub.cancel();
+    await client.dispose();
+  });
+
+  test('dispatches group join request frames to stream', () async {
+    final channel = _FakeWebSocketChannel();
+    final client = WsClient(
+      config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+      tokenProvider: () => 'jwt-token',
+      channelFactory: (_) => channel,
+    );
+    final events = <GroupJoinRequestNotification>[];
+    final subscription = client.groupJoinRequestStream.listen(events.add);
+
+    await client.connect();
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.GROUP_JOIN_REQUEST,
+        payload: GroupJoinRequestNotification(
+          requestId: 'r1',
+          conversationId: 'g1',
+          applicantId: Int64(10002),
+          status: 0,
+        ).writeToBuffer(),
+      ),
+    );
+    await _flushMicrotasks();
+
+    expect(events.single.requestId, 'r1');
+    expect(events.single.conversationId, 'g1');
+    expect(events.single.applicantId, Int64(10002));
+
+    await subscription.cancel();
     await client.dispose();
   });
 

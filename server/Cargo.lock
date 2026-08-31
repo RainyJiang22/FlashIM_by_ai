@@ -1485,6 +1485,7 @@ dependencies = [
  "flash_core",
  "futures-util",
  "im-friend",
+ "im-group",
  "im-message",
  "prost",
  "prost-build",

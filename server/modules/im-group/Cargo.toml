@@ -5,6 +5,7 @@ edition = "2024"
 publish = false
 
 [dependencies]
+async-trait = "0.1.89"
 axum = "0.8.9"
 chrono = { version = "0.4.42", features = ["serde"] }
 flash_core = { path = "../flash_core" }
@@ -16,5 +17,4 @@ sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "postgres", "mac
 uuid = { version = "1", features = ["serde", "v4"] }
 
 [dev-dependencies]
-async-trait = "0.1.89"
 tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread"] }

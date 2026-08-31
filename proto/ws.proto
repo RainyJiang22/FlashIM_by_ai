@@ -13,6 +13,7 @@ enum WsFrameType {
   FRIEND_REQUEST = 7;
   FRIEND_ACCEPTED = 8;
   FRIEND_REMOVED = 9;
+  GROUP_JOIN_REQUEST = 10;
 }
 
 message WsFrame {

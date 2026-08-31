@@ -33,7 +33,8 @@ pub async fn dispatch_frame(
         | WsFrameType::ConversationUpdate
         | WsFrameType::FriendRequest
         | WsFrameType::FriendAccepted
-        | WsFrameType::FriendRemoved => Ok(DispatchOutcome::Ignore),
+        | WsFrameType::FriendRemoved
+        | WsFrameType::GroupJoinRequest => Ok(DispatchOutcome::Ignore),
     }
 }
 

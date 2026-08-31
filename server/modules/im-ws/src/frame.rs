@@ -4,7 +4,8 @@ use prost::Message as ProstMessage;
 
 use crate::proto::{
     AuthRequest, AuthResult, ChatMessage, ConversationUpdate, FriendAcceptedEvent,
-    FriendRemovedEvent, FriendRequestEvent, MessageAck, WsFrame, WsFrameType,
+    FriendRemovedEvent, FriendRequestEvent, GroupJoinRequestNotification, MessageAck, WsFrame,
+    WsFrameType,
 };
 
 #[derive(Debug)]
@@ -98,4 +99,8 @@ pub fn friend_accepted_frame(event: FriendAcceptedEvent) -> Vec<u8> {
 
 pub fn friend_removed_frame(event: FriendRemovedEvent) -> Vec<u8> {
     encode_frame(WsFrameType::FriendRemoved, event.encode_to_vec())
+}
+
+pub fn group_join_request_frame(event: GroupJoinRequestNotification) -> Vec<u8> {
+    encode_frame(WsFrameType::GroupJoinRequest, event.encode_to_vec())
 }

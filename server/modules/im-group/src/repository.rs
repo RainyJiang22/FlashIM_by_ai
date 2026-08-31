@@ -2,11 +2,14 @@ use flash_core::{AppError, AppResult};
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
-use crate::models::{GroupInvitationRow, GroupMemberRow, GroupSummaryRow};
+use crate::models::{
+    GroupInvitationRow, GroupJoinRequestRow, GroupMemberRow, GroupSearchRow, GroupSummaryRow,
+};
 
 const GROUP_NOT_FOUND: &str = "group not found";
 const GROUP_OPERATION_NOT_ALLOWED: &str = "group operation is not allowed";
 const INVALID_GROUP_MEMBERS: &str = "invalid group members";
+const GROUP_JOIN_REQUEST_NOT_FOUND: &str = "group join request not found";
 
 pub fn group_for_member_sql() -> &'static str {
     r#"
@@ -60,6 +63,318 @@ pub async fn list_group_members(
     .fetch_all(pool)
     .await
     .map_err(|_| AppError::internal_server_error("failed to list group members"))
+}
+
+pub async fn search_groups(
+    pool: &PgPool,
+    user_id: i64,
+    keyword: &str,
+    exact_id: Option<Uuid>,
+) -> AppResult<Vec<GroupSearchRow>> {
+    sqlx::query_as::<_, GroupSearchRow>(
+        r#"
+        SELECT
+            c.id AS conversation_id,
+            c.name,
+            c.avatar,
+            (
+                SELECT COUNT(*)::BIGINT
+                FROM conversation_members members
+                WHERE members.conversation_id = c.id
+                  AND members.is_deleted = FALSE
+            ) AS member_count,
+            c.join_approval_required,
+            EXISTS (
+                SELECT 1
+                FROM conversation_members current_member
+                WHERE current_member.conversation_id = c.id
+                  AND current_member.user_id = $1
+                  AND current_member.is_deleted = FALSE
+            ) AS is_member,
+            EXISTS (
+                SELECT 1
+                FROM group_join_requests pending
+                WHERE pending.conversation_id = c.id
+                  AND pending.applicant_id = $1
+                  AND pending.status = 0
+            ) AS has_pending_request
+        FROM conversations c
+        WHERE c.type = 1
+          AND c.is_dissolved = FALSE
+          AND (
+              ($2::UUID IS NOT NULL AND c.id = $2)
+              OR ($2::UUID IS NULL AND COALESCE(c.name, '') ILIKE '%' || $3 || '%')
+          )
+        ORDER BY c.created_at DESC
+        LIMIT 50
+        "#,
+    )
+    .bind(user_id)
+    .bind(exact_id)
+    .bind(keyword)
+    .fetch_all(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to search groups"))
+}
+
+pub enum JoinDecision {
+    Joined { conversation_id: Uuid },
+    Pending(GroupJoinRequestRow),
+}
+
+async fn lock_public_group(
+    transaction: &mut Transaction<'_, Postgres>,
+    conversation_id: Uuid,
+) -> AppResult<GroupSummaryRow> {
+    sqlx::query_as::<_, GroupSummaryRow>(
+        r#"
+        SELECT c.id, c.name, c.avatar, c.owner_id, c.join_approval_required
+        FROM conversations c
+        WHERE c.id = $1
+          AND c.type = 1
+          AND c.is_dissolved = FALSE
+        FOR UPDATE
+        "#,
+    )
+    .bind(conversation_id)
+    .fetch_optional(&mut **transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to lock group"))?
+    .ok_or(AppError::not_found(GROUP_NOT_FOUND))
+}
+
+async fn is_active_member(
+    transaction: &mut Transaction<'_, Postgres>,
+    conversation_id: Uuid,
+    user_id: i64,
+) -> AppResult<bool> {
+    sqlx::query_scalar::<_, bool>(
+        r#"
+        SELECT EXISTS (
+            SELECT 1
+            FROM conversation_members
+            WHERE conversation_id = $1
+              AND user_id = $2
+              AND is_deleted = FALSE
+        )
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(user_id)
+    .fetch_one(&mut **transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to verify group membership"))
+}
+
+async fn upsert_group_member(
+    transaction: &mut Transaction<'_, Postgres>,
+    conversation_id: Uuid,
+    user_id: i64,
+) -> AppResult<()> {
+    sqlx::query(
+        r#"
+        INSERT INTO conversation_members (
+            conversation_id, user_id, unread_count, last_read_seq, is_deleted, joined_at
+        )
+        VALUES ($1, $2, 0, 0, FALSE, NOW())
+        ON CONFLICT (conversation_id, user_id)
+        DO UPDATE SET
+            unread_count = 0,
+            last_read_seq = 0,
+            is_deleted = FALSE,
+            joined_at = NOW()
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(user_id)
+    .execute(&mut **transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to add group member"))?;
+    Ok(())
+}
+
+fn join_request_row_sql() -> &'static str {
+    r#"
+    SELECT
+        request.id,
+        request.conversation_id,
+        conversation.owner_id,
+        conversation.name AS group_name,
+        conversation.avatar AS group_avatar,
+        request.applicant_id,
+        profile.nickname AS applicant_name,
+        profile.avatar_url AS applicant_avatar,
+        request.message,
+        request.status,
+        request.created_at,
+        request.handled_at
+    FROM group_join_requests request
+    JOIN conversations conversation ON conversation.id = request.conversation_id
+    LEFT JOIN user_profiles profile ON profile.account_id = request.applicant_id
+    "#
+}
+
+async fn load_join_request_in_transaction(
+    transaction: &mut Transaction<'_, Postgres>,
+    request_id: Uuid,
+) -> AppResult<GroupJoinRequestRow> {
+    let sql = format!("{} WHERE request.id = $1", join_request_row_sql());
+    sqlx::query_as::<_, GroupJoinRequestRow>(&sql)
+        .bind(request_id)
+        .fetch_optional(&mut **transaction)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to load group join request"))?
+        .ok_or(AppError::not_found(GROUP_JOIN_REQUEST_NOT_FOUND))
+}
+
+pub async fn join_or_request(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    applicant_id: i64,
+    message: &str,
+) -> AppResult<JoinDecision> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to start join transaction"))?;
+    let group = lock_public_group(&mut transaction, conversation_id).await?;
+    if is_active_member(&mut transaction, conversation_id, applicant_id).await? {
+        return Err(AppError::bad_request("already a group member"));
+    }
+    if active_member_count(&mut transaction, conversation_id).await? >= 200 {
+        return Err(AppError::conflict("group member limit reached"));
+    }
+
+    if !group.join_approval_required {
+        upsert_group_member(&mut transaction, conversation_id, applicant_id).await?;
+        im_conversation::service::refresh_group_avatar_in_transaction(
+            &mut transaction,
+            conversation_id,
+        )
+        .await?;
+        sqlx::query(
+            r#"
+            UPDATE group_join_requests
+            SET status = 1, handled_at = NOW()
+            WHERE conversation_id = $1
+              AND applicant_id = $2
+              AND status = 0
+            "#,
+        )
+        .bind(conversation_id)
+        .bind(applicant_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to resolve group join request"))?;
+        transaction
+            .commit()
+            .await
+            .map_err(|_| AppError::internal_server_error("failed to commit join transaction"))?;
+        return Ok(JoinDecision::Joined { conversation_id });
+    }
+
+    let inserted = sqlx::query_scalar::<_, Uuid>(
+        r#"
+        INSERT INTO group_join_requests (conversation_id, applicant_id, message)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (conversation_id, applicant_id) WHERE status = 0
+        DO NOTHING
+        RETURNING id
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(applicant_id)
+    .bind(message)
+    .fetch_optional(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to create group join request"))?
+    .ok_or(AppError::conflict("group join request already pending"))?;
+    let request = load_join_request_in_transaction(&mut transaction, inserted).await?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to commit join transaction"))?;
+    Ok(JoinDecision::Pending(request))
+}
+
+pub async fn list_join_requests(
+    pool: &PgPool,
+    owner_id: i64,
+) -> AppResult<Vec<GroupJoinRequestRow>> {
+    let sql = format!(
+        "{} WHERE conversation.owner_id = $1 AND conversation.type = 1 AND conversation.is_dissolved = FALSE ORDER BY (request.status = 0) DESC, request.created_at DESC",
+        join_request_row_sql()
+    );
+    sqlx::query_as::<_, GroupJoinRequestRow>(&sql)
+        .bind(owner_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to list group join requests"))
+}
+
+pub async fn handle_join_request(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    request_id: Uuid,
+    owner_id: i64,
+    approved: bool,
+) -> AppResult<GroupJoinRequestRow> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to start approval transaction"))?;
+    let group = lock_public_group(&mut transaction, conversation_id).await?;
+    if group.owner_id != owner_id {
+        return Err(AppError::forbidden(GROUP_OPERATION_NOT_ALLOWED));
+    }
+
+    let request = sqlx::query_as::<_, GroupJoinRequestRow>(&format!(
+        "{} WHERE request.id = $1 AND request.conversation_id = $2 FOR UPDATE OF request",
+        join_request_row_sql()
+    ))
+    .bind(request_id)
+    .bind(conversation_id)
+    .fetch_optional(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to lock group join request"))?
+    .ok_or(AppError::not_found(GROUP_JOIN_REQUEST_NOT_FOUND))?;
+    if request.status != 0 {
+        return Err(AppError::bad_request("group join request already handled"));
+    }
+
+    if approved {
+        if is_active_member(&mut transaction, conversation_id, request.applicant_id).await? {
+            return Err(AppError::bad_request("already a group member"));
+        }
+        if active_member_count(&mut transaction, conversation_id).await? >= 200 {
+            return Err(AppError::conflict("group member limit reached"));
+        }
+        upsert_group_member(&mut transaction, conversation_id, request.applicant_id).await?;
+        im_conversation::service::refresh_group_avatar_in_transaction(
+            &mut transaction,
+            conversation_id,
+        )
+        .await?;
+    }
+
+    sqlx::query(
+        r#"
+        UPDATE group_join_requests
+        SET status = $2, handled_at = NOW()
+        WHERE id = $1
+        "#,
+    )
+    .bind(request_id)
+    .bind(if approved { 1_i16 } else { 2_i16 })
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to handle group join request"))?;
+    let handled = load_join_request_in_transaction(&mut transaction, request_id).await?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to commit approval transaction"))?;
+    Ok(handled)
 }
 
 pub async fn update_group_name(

@@ -4,6 +4,7 @@ use im_friend::broadcast::{
     FriendAcceptedPayload, FriendBroadcaster, FriendRemovedPayload, FriendRequestPayload,
     FriendUserPayload,
 };
+use im_group::broadcast::{GroupBroadcaster, GroupJoinRequestPayload};
 use im_message::{
     broadcast::MessageBroadcaster,
     service::{ConversationUpdate as DomainConversationUpdate, MessagePayload},
@@ -13,11 +14,11 @@ use sqlx::PgPool;
 use crate::{
     frame::{
         chat_message_frame, conversation_update_frame, friend_accepted_frame, friend_removed_frame,
-        friend_request_frame,
+        friend_request_frame, group_join_request_frame,
     },
     proto::{
         ChatMessage, ConversationUpdate, FriendAcceptedEvent, FriendRemovedEvent,
-        FriendRequestEvent, FriendUser,
+        FriendRequestEvent, FriendUser, GroupJoinRequestNotification,
     },
     state::WsState,
 };
@@ -114,6 +115,36 @@ impl FriendBroadcaster for WsBroadcaster {
             friend_removed_frame(FriendRemovedEvent {
                 friend: Some(to_proto_friend_user(event.friend)),
                 removed_at: event.removed_at.to_rfc3339(),
+            }),
+        );
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl GroupBroadcaster for WsBroadcaster {
+    async fn broadcast_group_join_request(
+        &self,
+        to_user_id: i64,
+        event: GroupJoinRequestPayload,
+    ) -> AppResult<()> {
+        self.state.send_to_user(
+            to_user_id,
+            group_join_request_frame(GroupJoinRequestNotification {
+                request_id: event.request_id.to_string(),
+                conversation_id: event.conversation_id.to_string(),
+                group_name: event.group_name,
+                group_avatar: event.group_avatar,
+                applicant_id: event.applicant_id,
+                applicant_name: event.applicant_name,
+                applicant_avatar: event.applicant_avatar,
+                message: event.message,
+                status: event.status as i32,
+                created_at: event.created_at.to_rfc3339(),
+                handled_at: event
+                    .handled_at
+                    .map(|value| value.to_rfc3339())
+                    .unwrap_or_default(),
             }),
         );
         Ok(())

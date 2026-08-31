@@ -4,57 +4,103 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(group):补充群聊功能，增加修改群名、邀请验证设置、成员列表、添加/删除成员及解散群聊">
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="refactor(group):补充群聊头像显示逻辑">
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/group.pb.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/group.pbenum.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/group.pbjson.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/native_assets/macos/native_assets.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/unit_test_assets/AssetManifest.bin" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/unit_test_assets/FontManifest.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/unit_test_assets/NOTICES.Z" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/unit_test_assets/NativeAssetsManifest.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/unit_test_assets/fonts/MaterialIcons-Regular.otf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/unit_test_assets/shaders/ink_sparkle.frag" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/build/unit_test_assets/shaders/stretch_effect.frag" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/coverage/lcov.info" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/coverage/lcov.info" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_discovery.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/logic/group_notification_cubit.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/logic/group_notification_state.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/logic/group_search_cubit.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/logic/group_search_state.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_notifications_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/search_group_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/widgets/group_join_request_tile.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/widgets/group_search_result_tile.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_notification_cubit_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_notifications_page_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_search_cubit_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_search_page_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/analysis.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/00_link.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/01_search_by_name.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/02_search_by_number.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/03_search_invalid.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/04_direct_join.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/05_join_existing_member.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/06_create_join_request.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/07_owner_pending_ws.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/08_duplicate_request.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/09_list_join_requests.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/10_handle_forbidden.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/11_approve_request.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/12_applicant_approved_ws.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/13_handle_again.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/14_join_message_too_long.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/doc/15_join_missing_group.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/api/group_join/request/group_join.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/client/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/client/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/attempt-01/client.lcov" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/attempt-02/client.lcov" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/client-harness-config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/harness-check-client-attempt-01.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/harness-check-client-attempt-02.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/merge_client_lcov.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/server-harness-config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/server/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/server/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proto/group.proto" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/migrations/20260831000100_group_join_requests.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/modules/im-group/src/broadcast.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/architecture-agent-attempt-3.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/architecture-agent-attempt-4.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/architecture-agent-attempt-5.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/client-attempt-1/lcov.info" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/client-harness-attempt-1.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/final-summary.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/harness-check-client-attempt-1.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/harness-check-client-attempt-2.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/harness-check-client-attempt-3.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/harness-check-client-attempt-4.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/harness-check-client-attempt-5.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/harness-check-client-attempt-6.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/merge_client_lcov.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/server-attempt-1/coverage.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/server-attempt-2/coverage.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/server-attempt-3/coverage.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/server-attempt-3/workspace-coverage.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/server-attempt-4/coverage.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/server-attempt-4/summary.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/server-attempt-5/coverage.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/server-attempt-5/summary.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/test-agent-attempt-3.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/test-agent-attempt-4.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.1/quality/test-agent-attempt-5.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/architecture-agent-attempt-1.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/architecture-agent-attempt-2.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/architecture-agent-attempt-3.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/client-attempt-1/lcov.info" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/client-harness-attempt-1.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/final-summary.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-client-attempt-1.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-client-attempt-2.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-client-attempt-3.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-client-attempt-4.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-client-final.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-server-attempt-1.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-server-attempt-2.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-server-attempt-3.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-server-attempt-4.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-server-attempt-5.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/harness-check-server-final.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/merge_client_lcov.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/server-attempt-2.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/server-attempt-4.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/server-attempt-5.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/server-harness-attempt-1.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/test-agent-attempt-1.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/test-agent-attempt-2.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.2/quality/test-agent-attempt-3.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/add_friend_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/add_friend_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/test/contacts_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/test/contacts_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/flash_im_group.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/flash_im_group.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_repository_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/test_fakes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/test_fakes.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/ws.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/ws.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-group/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/models.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/models.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/repository.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/build.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/build.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,18 +151,18 @@
     &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.1&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.3&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/features/im/group/v0.0.3" />
       <recent name="$PROJECT_DIR$/docs/features/im/group/v0.0.1" />
       <recent name="$PROJECT_DIR$/docs/features/im/friend/v0.0.1" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test" />
       <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/client" />
-      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/server" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/docs/features/archiver" />
@@ -412,7 +458,15 @@
       <option name="project" value="LOCAL" />
       <updated>1786943659464</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="refactor(group):补充群聊头像显示逻辑">
+      <option name="closed" value="true" />
+      <created>1787908165061</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1787908165061</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -429,7 +483,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="feat(client): client 烟花秀" />
     <MESSAGE value="feat(playground): build conversation list flow from API to chat-style view" />
     <MESSAGE value="feat(login):添加后端模拟认证接口以及相关文档" />
     <MESSAGE value="refactor(login):调整前端模拟认证ui" />
@@ -454,14 +507,15 @@
     <MESSAGE value="feat(friend): 好友系统服务端实现" />
     <MESSAGE value="fix(friend):好友通讯录ui调整" />
     <MESSAGE value="feat(group):补充群聊功能，增加修改群名、邀请验证设置、成员列表、添加/删除成员及解散群聊" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(group):补充群聊功能，增加修改群名、邀请验证设置、成员列表、添加/删除成员及解散群聊" />
+    <MESSAGE value="refactor(group):补充群聊头像显示逻辑" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactor(group):补充群聊头像显示逻辑" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart</url>
-          <line>28</line>
+          <line>30</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

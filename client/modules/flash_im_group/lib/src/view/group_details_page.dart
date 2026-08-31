@@ -137,13 +137,23 @@ class _GroupDetailsView extends StatelessWidget {
                     onSave: context.read<GroupDetailCubit>().updateName,
                   ),
                   const Divider(height: 1, indent: 16),
+                  ListTile(
+                    key: const Key('group-number-row'),
+                    title: const Text('群号'),
+                    subtitle: Text(
+                      detail.conversationId,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 16),
                   SwitchListTile(
                     key: const Key('group-join-approval-switch'),
-                    title: const Text('邀请确认'),
+                    title: const Text('入群验证'),
                     subtitle: Text(
                       detail.joinApprovalRequired
-                          ? '群成员邀请好友时，对方同意后才能加入'
-                          : '群成员可以直接添加自己的好友',
+                          ? '成员邀请和用户主动申请均需确认后加入'
+                          : '成员邀请好友或用户主动申请时可直接加入',
                     ),
                     value: detail.joinApprovalRequired,
                     onChanged: detail.isOwner && !state.isSaving

@@ -10,6 +10,8 @@ void main() {
     final cubit = FriendCubit(repository: _ContactsRepository());
     FriendUser? messagedUser;
     var openedGroups = false;
+    var searchedGroups = false;
+    var openedGroupNotifications = false;
     await cubit.load();
 
     await tester.pumpWidget(
@@ -20,6 +22,9 @@ void main() {
             child: ContactsPage(
               onMessageFriend: (user) => messagedUser = user,
               onOpenGroups: () => openedGroups = true,
+              onSearchGroups: () => searchedGroups = true,
+              onOpenGroupNotifications: () => openedGroupNotifications = true,
+              groupNotificationCount: 2,
             ),
           ),
         ),
@@ -33,6 +38,8 @@ void main() {
     expect(find.text('阿青'), findsOneWidget);
     expect(find.text('扫一扫'), findsNothing);
     expect(find.text('群聊'), findsOneWidget);
+    expect(find.text('群通知'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
     expect(find.text('公众号'), findsNothing);
 
     final screenWidth = tester.getSize(find.byType(Scaffold).first).width;
@@ -46,6 +53,17 @@ void main() {
     await tester.tap(find.text('群聊'));
     expect(openedGroups, isTrue);
     expect(find.text('1'), findsOneWidget);
+
+    await tester.tap(find.text('群通知'));
+    expect(openedGroupNotifications, isTrue);
+
+    await tester.tap(find.byTooltip('添加朋友'));
+    await tester.pumpAndSettle();
+    expect(find.text('加好友/群'), findsOneWidget);
+    await tester.tap(find.text('搜索群聊'));
+    expect(searchedGroups, isTrue);
+    Navigator.of(tester.element(find.text('加好友/群'))).pop();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('阿青'));
     await tester.pumpAndSettle();

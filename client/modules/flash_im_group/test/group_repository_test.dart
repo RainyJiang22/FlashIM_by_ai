@@ -55,6 +55,31 @@ void main() {
       ),
     );
   });
+
+  test('parses search, join and approval request contracts', () async {
+    final adapter = _RecordingAdapter();
+    final dio = Dio()..httpClientAdapter = adapter;
+    final repository = DioGroupRepository(dio: dio);
+
+    final groups = await repository.searchGroups('项目');
+    final joined = await repository.joinGroup('group-1');
+    final requests = await repository.getJoinRequests();
+    final handled = await repository.handleJoinRequest(
+      'group-1',
+      'request-1',
+      approved: true,
+    );
+
+    expect(groups.single.name, '项目群');
+    expect(groups.single.joinApprovalRequired, isTrue);
+    expect(joined.autoApproved, isTrue);
+    expect(joined.conversation?.id, 'group-1');
+    expect(requests.pendingCount, 1);
+    expect(requests.requests.single.applicantId, 2);
+    expect(handled.status, GroupJoinRequestStatus.approved);
+    expect(adapter.requests.first.queryParameters, {'keyword': '项目'});
+    expect(adapter.requests.last.data, {'approved': true});
+  });
 }
 
 class _RecordingAdapter implements HttpClientAdapter {
@@ -70,7 +95,43 @@ class _RecordingAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     requests.add(options);
-    final payload = options.path.contains('/invitations')
+    final dynamic payload = options.path == '/groups/search'
+        ? {
+            'groups': [
+              {
+                'conversation_id': 'group-1',
+                'group_number': 'group-1',
+                'name': '项目群',
+                'avatar': 'grid:identicon:1',
+                'member_count': 2,
+                'join_approval_required': true,
+                'is_member': false,
+                'has_pending_request': false,
+              },
+            ],
+          }
+        : options.path == '/groups/group-1/join'
+        ? {
+            'auto_approved': true,
+            'request_id': null,
+            'conversation': {
+              'id': 'group-1',
+              'type': 1,
+              'name': '项目群',
+              'avatar': 'grid:identicon:1',
+              'owner_id': '1',
+              'unread_count': 0,
+              'created_at': '2026-08-31T00:00:00Z',
+            },
+          }
+        : options.path == '/groups/join-requests'
+        ? {
+            'pending_count': 1,
+            'requests': [_joinRequestPayload('pending')],
+          }
+        : options.path.contains('/join-requests/')
+        ? _joinRequestPayload('approved')
+        : options.path.contains('/invitations')
         ? {
             'invitations': [
               {
@@ -118,3 +179,17 @@ class _RecordingAdapter implements HttpClientAdapter {
   @override
   void close({bool force = false}) {}
 }
+
+Map<String, dynamic> _joinRequestPayload(String status) => {
+  'id': 'request-1',
+  'conversation_id': 'group-1',
+  'group_name': '项目群',
+  'group_avatar': 'grid:identicon:1',
+  'applicant_id': '2',
+  'applicant_name': '阿青',
+  'applicant_avatar': 'identicon:2',
+  'message': '请通过',
+  'status': status,
+  'created_at': '2026-08-31T00:00:00Z',
+  'handled_at': status == 'pending' ? null : '2026-08-31T00:01:00Z',
+};

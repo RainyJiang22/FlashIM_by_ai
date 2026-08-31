@@ -2,31 +2,40 @@ use std::sync::Arc;
 
 use axum::{
     Extension, Json, Router,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::HeaderMap,
     response::IntoResponse,
     routing::{delete, get, patch, post},
 };
 use flash_core::{AppResult, SharedContext, jwt::extract_user_id, response::utf8_json};
-use im_message::broadcast::{MessageBroadcaster, NoopBroadcaster};
+use im_message::broadcast::MessageBroadcaster;
 use uuid::Uuid;
 
 use crate::{
+    broadcast::{GroupBroadcaster, NoopGroupBroadcaster},
     models::{
-        GroupActionResponse, GroupMemberIdsBody, UpdateGroupNameBody, UpdateGroupSettingsBody,
+        GroupActionResponse, GroupMemberIdsBody, GroupSearchQuery, HandleJoinRequestBody,
+        JoinGroupBody, UpdateGroupNameBody, UpdateGroupSettingsBody,
     },
     service::GroupService,
 };
 
 pub fn router() -> Router<SharedContext> {
-    router_with_broadcaster(Arc::new(NoopBroadcaster))
+    router_with_broadcaster(Arc::new(NoopGroupBroadcaster))
 }
 
 pub fn router_with_broadcaster<B>(broadcaster: Arc<B>) -> Router<SharedContext>
 where
-    B: MessageBroadcaster + 'static,
+    B: GroupBroadcaster + MessageBroadcaster + 'static,
 {
     Router::new()
+        .route("/groups/search", get(search_groups::<B>))
+        .route("/groups/join-requests", get(list_join_requests::<B>))
+        .route("/groups/{id}/join", post(join_group::<B>))
+        .route(
+            "/groups/{id}/join-requests/{request_id}/handle",
+            post(handle_join_request::<B>),
+        )
         .route(
             "/groups/{id}",
             get(get_group::<B>).delete(dissolve_group::<B>),
@@ -46,6 +55,71 @@ where
         .layer(Extension(broadcaster))
 }
 
+async fn search_groups<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Query(query): Query<GroupSearchQuery>,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let response = GroupService::new(broadcaster)
+        .search(&context, user_id, &query.keyword)
+        .await?;
+    Ok(utf8_json(Json(response)))
+}
+
+async fn join_group<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Path(conversation_id): Path<Uuid>,
+    Json(body): Json<JoinGroupBody>,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let response = GroupService::new(broadcaster)
+        .join(&context, user_id, conversation_id, body)
+        .await?;
+    Ok(utf8_json(Json(response)))
+}
+
+async fn list_join_requests<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let response = GroupService::new(broadcaster)
+        .list_join_requests(&context, user_id)
+        .await?;
+    Ok(utf8_json(Json(response)))
+}
+
+async fn handle_join_request<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Path((conversation_id, request_id)): Path<(Uuid, Uuid)>,
+    Json(body): Json<HandleJoinRequestBody>,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let response = GroupService::new(broadcaster)
+        .handle_join_request(&context, user_id, conversation_id, request_id, body)
+        .await?;
+    Ok(utf8_json(Json(response)))
+}
+
 async fn get_group<B>(
     State(context): State<SharedContext>,
     Extension(broadcaster): Extension<Arc<B>>,
@@ -53,7 +127,7 @@ async fn get_group<B>(
     Path(conversation_id): Path<Uuid>,
 ) -> AppResult<impl IntoResponse>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let detail = GroupService::new(broadcaster)
@@ -70,7 +144,7 @@ async fn update_group_name<B>(
     Json(body): Json<UpdateGroupNameBody>,
 ) -> AppResult<impl IntoResponse>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let detail = GroupService::new(broadcaster)
@@ -87,7 +161,7 @@ async fn update_group_settings<B>(
     Json(body): Json<UpdateGroupSettingsBody>,
 ) -> AppResult<impl IntoResponse>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let detail = GroupService::new(broadcaster)
@@ -104,7 +178,7 @@ async fn add_group_members<B>(
     Json(body): Json<GroupMemberIdsBody>,
 ) -> AppResult<impl IntoResponse>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let detail = GroupService::new(broadcaster)
@@ -120,7 +194,7 @@ async fn remove_group_member<B>(
     Path((conversation_id, member_id)): Path<(Uuid, i64)>,
 ) -> AppResult<impl IntoResponse>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let detail = GroupService::new(broadcaster)
@@ -137,7 +211,7 @@ async fn invite_group_members<B>(
     Json(body): Json<GroupMemberIdsBody>,
 ) -> AppResult<impl IntoResponse>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let result = GroupService::new(broadcaster)
@@ -153,7 +227,7 @@ async fn accept_group_invitation<B>(
     Path(invitation_id): Path<Uuid>,
 ) -> AppResult<impl IntoResponse>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let conversation = GroupService::new(broadcaster)
@@ -169,7 +243,7 @@ async fn dissolve_group<B>(
     Path(conversation_id): Path<Uuid>,
 ) -> AppResult<impl IntoResponse>
 where
-    B: MessageBroadcaster,
+    B: GroupBroadcaster + MessageBroadcaster,
 {
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     GroupService::new(broadcaster)

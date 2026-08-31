@@ -30,7 +30,8 @@ mod tests {
     use im_ws::{
         frame,
         proto::{
-            AuthResult, ConversationUpdate, FriendRequestEvent, FriendUser, MessageAck, WsFrameType,
+            AuthResult, ConversationUpdate, FriendRequestEvent, FriendUser,
+            GroupJoinRequestNotification, MessageAck, WsFrameType,
         },
     };
     use std::{net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
@@ -950,6 +951,262 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn group_join_routes_round_trip_against_configured_database() {
+        let Ok(config) = flash_core::AppConfig::from_env() else {
+            return;
+        };
+        let context = Arc::new(
+            AppContext::from_config(config)
+                .await
+                .expect("configured test database should connect"),
+        );
+        let pool = context.postgres.pool();
+        let marker = format!("{:016x}", rand::random::<u64>());
+        let mut user_ids = Vec::new();
+        for index in 0..4 {
+            let account_id = sqlx::query_scalar::<_, i64>(
+                "INSERT INTO accounts (primary_identifier) VALUES ($1) RETURNING id",
+            )
+            .bind(format!("group-join-route-test-{marker}-{index}"))
+            .fetch_one(pool)
+            .await
+            .expect("join test account should be inserted");
+            sqlx::query(
+                "INSERT INTO user_profiles (account_id, nickname, avatar_url) VALUES ($1, $2, $3)",
+            )
+            .bind(account_id)
+            .bind(format!("入群用户{index}"))
+            .bind(format!("identicon:{account_id}"))
+            .execute(pool)
+            .await
+            .expect("join test profile should be inserted");
+            user_ids.push(account_id);
+        }
+
+        let owner_id = user_ids[0];
+        let group_name = format!("join-search-{marker}");
+        let group_id = sqlx::query_scalar::<_, sqlx::types::Uuid>(
+            r#"
+            INSERT INTO conversations (type, name, avatar, owner_id, join_approval_required)
+            VALUES (1, $1, $2, $3, FALSE)
+            RETURNING id
+            "#,
+        )
+        .bind(&group_name)
+        .bind(format!("grid:identicon:{owner_id}"))
+        .bind(owner_id)
+        .fetch_one(pool)
+        .await
+        .expect("join test group should be inserted");
+        sqlx::query(
+            "INSERT INTO conversation_members (conversation_id, user_id, is_deleted) VALUES ($1, $2, FALSE)",
+        )
+        .bind(group_id)
+        .bind(owner_id)
+        .execute(pool)
+        .await
+        .expect("join test owner membership should be inserted");
+
+        let owner_token = sign_token(context.as_ref(), owner_id).expect("owner token should sign");
+        let applicant_a_token =
+            sign_token(context.as_ref(), user_ids[1]).expect("applicant token should sign");
+        let applicant_b_token =
+            sign_token(context.as_ref(), user_ids[2]).expect("applicant token should sign");
+        let applicant_c_token =
+            sign_token(context.as_ref(), user_ids[3]).expect("applicant token should sign");
+        let auth_store: SharedAuthStore = Arc::new(InMemoryStore::new());
+        let app = build_app(context.clone(), auth_store);
+
+        let search_request = Request::builder()
+            .method("GET")
+            .uri(format!("/groups/search?keyword={group_name}"))
+            .header(header::AUTHORIZATION, format!("Bearer {applicant_a_token}"))
+            .body(Body::empty())
+            .unwrap();
+        let search_response = app.clone().oneshot(search_request).await.unwrap();
+        assert_eq!(search_response.status(), StatusCode::OK);
+        let search_body = to_bytes(search_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let search: serde_json::Value = serde_json::from_slice(&search_body).unwrap();
+        let search_item = &search["groups"][0];
+        assert_eq!(search_item["conversation_id"], group_id.to_string());
+        assert_eq!(search_item["is_member"], false);
+        assert_eq!(search_item["has_pending_request"], false);
+        assert_eq!(search_item["join_approval_required"], false);
+
+        let direct_join_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{group_id}/join"))
+            .header(header::AUTHORIZATION, format!("Bearer {applicant_a_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from("{}"))
+            .unwrap();
+        let direct_join_response = app.clone().oneshot(direct_join_request).await.unwrap();
+        assert_eq!(direct_join_response.status(), StatusCode::OK);
+        let direct_join_body = to_bytes(direct_join_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let direct_join: serde_json::Value = serde_json::from_slice(&direct_join_body).unwrap();
+        assert_eq!(direct_join["auto_approved"], true);
+        assert_eq!(direct_join["conversation"]["id"], group_id.to_string());
+
+        let settings_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{group_id}/settings"))
+            .header(header::AUTHORIZATION, format!("Bearer {owner_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"join_approval_required":true}"#))
+            .unwrap();
+        let settings_response = app.clone().oneshot(settings_request).await.unwrap();
+        assert_eq!(settings_response.status(), StatusCode::OK);
+
+        let pending_join_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{group_id}/join"))
+            .header(header::AUTHORIZATION, format!("Bearer {applicant_b_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"message":"请通过"}"#))
+            .unwrap();
+        let pending_join_response = app.clone().oneshot(pending_join_request).await.unwrap();
+        assert_eq!(pending_join_response.status(), StatusCode::OK);
+        let pending_join_body = to_bytes(pending_join_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let pending_join: serde_json::Value = serde_json::from_slice(&pending_join_body).unwrap();
+        assert_eq!(pending_join["auto_approved"], false);
+        let request_id = pending_join["request_id"].as_str().unwrap();
+
+        let duplicate_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{group_id}/join"))
+            .header(header::AUTHORIZATION, format!("Bearer {applicant_b_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from("{}"))
+            .unwrap();
+        let duplicate_response = app.clone().oneshot(duplicate_request).await.unwrap();
+        assert_eq!(duplicate_response.status(), StatusCode::CONFLICT);
+
+        let list_request = Request::builder()
+            .method("GET")
+            .uri("/groups/join-requests")
+            .header(header::AUTHORIZATION, format!("Bearer {owner_token}"))
+            .body(Body::empty())
+            .unwrap();
+        let list_response = app.clone().oneshot(list_request).await.unwrap();
+        assert_eq!(list_response.status(), StatusCode::OK);
+        let list_body = to_bytes(list_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let list: serde_json::Value = serde_json::from_slice(&list_body).unwrap();
+        assert_eq!(list["pending_count"], 1);
+        assert!(
+            list["requests"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|item| { item["id"] == request_id && item["message"] == "请通过" })
+        );
+
+        let forbidden_handle_request = Request::builder()
+            .method("POST")
+            .uri(format!(
+                "/groups/{group_id}/join-requests/{request_id}/handle"
+            ))
+            .header(header::AUTHORIZATION, format!("Bearer {applicant_a_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"approved":true}"#))
+            .unwrap();
+        let forbidden_response = app.clone().oneshot(forbidden_handle_request).await.unwrap();
+        assert_eq!(forbidden_response.status(), StatusCode::FORBIDDEN);
+
+        let approve_request = Request::builder()
+            .method("POST")
+            .uri(format!(
+                "/groups/{group_id}/join-requests/{request_id}/handle"
+            ))
+            .header(header::AUTHORIZATION, format!("Bearer {owner_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"approved":true}"#))
+            .unwrap();
+        let approve_response = app.clone().oneshot(approve_request).await.unwrap();
+        assert_eq!(approve_response.status(), StatusCode::OK);
+        let approve_body = to_bytes(approve_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let approved: serde_json::Value = serde_json::from_slice(&approve_body).unwrap();
+        assert_eq!(approved["status"], "approved");
+
+        let rejected_join_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{group_id}/join"))
+            .header(header::AUTHORIZATION, format!("Bearer {applicant_c_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"message":"先拒绝"}"#))
+            .unwrap();
+        let rejected_join_response = app.clone().oneshot(rejected_join_request).await.unwrap();
+        let rejected_join_body = to_bytes(rejected_join_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let rejected_join: serde_json::Value = serde_json::from_slice(&rejected_join_body).unwrap();
+        let rejected_request_id = rejected_join["request_id"].as_str().unwrap();
+        let reject_request = Request::builder()
+            .method("POST")
+            .uri(format!(
+                "/groups/{group_id}/join-requests/{rejected_request_id}/handle"
+            ))
+            .header(header::AUTHORIZATION, format!("Bearer {owner_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"approved":false}"#))
+            .unwrap();
+        let reject_response = app.clone().oneshot(reject_request).await.unwrap();
+        assert_eq!(reject_response.status(), StatusCode::OK);
+        let reject_body = to_bytes(reject_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let rejected: serde_json::Value = serde_json::from_slice(&reject_body).unwrap();
+        assert_eq!(rejected["status"], "rejected");
+
+        let reapply_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{group_id}/join"))
+            .header(header::AUTHORIZATION, format!("Bearer {applicant_c_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from("{}"))
+            .unwrap();
+        let reapply_response = app.clone().oneshot(reapply_request).await.unwrap();
+        assert_eq!(reapply_response.status(), StatusCode::OK);
+
+        let joined_member_count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM conversation_members WHERE conversation_id = $1 AND is_deleted = FALSE",
+        )
+        .bind(group_id)
+        .fetch_one(pool)
+        .await
+        .expect("joined member count should load");
+        assert_eq!(joined_member_count, 3);
+        let joined_message_count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM messages WHERE conversation_id = $1 AND type = 5 AND content LIKE '%加入了群聊'",
+        )
+        .bind(group_id)
+        .fetch_one(pool)
+        .await
+        .expect("join system messages should load");
+        assert_eq!(joined_message_count, 2);
+
+        sqlx::query("DELETE FROM conversations WHERE id = $1")
+            .bind(group_id)
+            .execute(pool)
+            .await
+            .expect("join test group should be cleaned up");
+        sqlx::query("DELETE FROM accounts WHERE id = ANY($1)")
+            .bind(&user_ids)
+            .execute(pool)
+            .await
+            .expect("join test accounts should be cleaned up");
+    }
+
+    #[tokio::test]
     async fn conversation_messages_route_requires_authentication() {
         let (_, _, app) = build_test_app();
 
@@ -1221,6 +1478,28 @@ mod tests {
         let (frame_type, payload) = frame::decode_frame(&request_frame).unwrap();
 
         assert_eq!(frame_type, WsFrameType::FriendRequest);
+        assert!(!payload.is_empty());
+    }
+
+    #[test]
+    fn group_join_request_frame_round_trip() {
+        let event = GroupJoinRequestNotification {
+            request_id: "00000000-0000-0000-0000-000000000001".to_string(),
+            conversation_id: "00000000-0000-0000-0000-000000000002".to_string(),
+            group_name: "测试群".to_string(),
+            group_avatar: "grid:identicon:10001".to_string(),
+            applicant_id: 10002,
+            applicant_name: "小雨".to_string(),
+            applicant_avatar: "identicon:10002".to_string(),
+            message: "请求加入群聊".to_string(),
+            status: 0,
+            created_at: "2026-08-31T08:00:00Z".to_string(),
+            handled_at: String::new(),
+        };
+        let request_frame = frame::group_join_request_frame(event);
+        let (frame_type, payload) = frame::decode_frame(&request_frame).unwrap();
+
+        assert_eq!(frame_type, WsFrameType::GroupJoinRequest);
         assert!(!payload.is_empty());
     }
 

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package im;
+
+message GroupJoinRequestNotification {
+  string request_id = 1;
+  string conversation_id = 2;
+  string group_name = 3;
+  string group_avatar = 4;
+  int64 applicant_id = 5;
+  string applicant_name = 6;
+  string applicant_avatar = 7;
+  string message = 8;
+  int32 status = 9;
+  string created_at = 10;
+  string handled_at = 11;
+}

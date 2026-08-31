@@ -7,6 +7,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../data/im_config.dart';
 import '../data/proto/friend.pb.dart';
+import '../data/proto/group.pb.dart';
 import '../data/proto/message.pb.dart';
 import '../data/proto/ws.pb.dart';
 
@@ -44,6 +45,8 @@ class WsClient {
       StreamController<FriendAcceptedEvent>.broadcast();
   final _friendRemovedController =
       StreamController<FriendRemovedEvent>.broadcast();
+  final _groupJoinRequestController =
+      StreamController<GroupJoinRequestNotification>.broadcast();
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _channelSubscription;
@@ -67,6 +70,8 @@ class WsClient {
       _friendAcceptedController.stream;
   Stream<FriendRemovedEvent> get friendRemovedStream =>
       _friendRemovedController.stream;
+  Stream<GroupJoinRequestNotification> get groupJoinRequestStream =>
+      _groupJoinRequestController.stream;
   WsConnectionState get state => _state;
 
   Future<void> connect() async {
@@ -161,6 +166,7 @@ class WsClient {
     await _friendRequestController.close();
     await _friendAcceptedController.close();
     await _friendRemovedController.close();
+    await _groupJoinRequestController.close();
   }
 
   void _handleMessage(dynamic message) {
@@ -200,6 +206,11 @@ class WsClient {
       case WsFrameType.FRIEND_REMOVED:
         _friendRemovedController.add(
           FriendRemovedEvent.fromBuffer(frame.payload),
+        );
+        _frameController.add(frame);
+      case WsFrameType.GROUP_JOIN_REQUEST:
+        _groupJoinRequestController.add(
+          GroupJoinRequestNotification.fromBuffer(frame.payload),
         );
         _frameController.add(frame);
       case WsFrameType.PING:

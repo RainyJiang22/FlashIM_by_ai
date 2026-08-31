@@ -18,10 +18,16 @@ class ContactsPage extends StatelessWidget {
     super.key,
     required this.onMessageFriend,
     required this.onOpenGroups,
+    required this.onSearchGroups,
+    required this.onOpenGroupNotifications,
+    required this.groupNotificationCount,
   });
 
   final ValueChanged<FriendUser> onMessageFriend;
   final VoidCallback onOpenGroups;
+  final VoidCallback onSearchGroups;
+  final VoidCallback onOpenGroupNotifications;
+  final int groupNotificationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +61,10 @@ class ContactsPage extends StatelessWidget {
               ),
               onAdd: () => _pushWithCubit(
                 context,
-                AddFriendPage(onMessageFriend: onMessageFriend),
+                AddFriendPage(
+                  onMessageFriend: onMessageFriend,
+                  onSearchGroups: onSearchGroups,
+                ),
               ),
             ),
             Expanded(
@@ -75,6 +84,8 @@ class ContactsPage extends StatelessWidget {
                     state: state,
                     onMessageFriend: onMessageFriend,
                     onOpenGroups: onOpenGroups,
+                    onOpenGroupNotifications: onOpenGroupNotifications,
+                    groupNotificationCount: groupNotificationCount,
                   );
                 },
               ),
@@ -180,11 +191,15 @@ class _ContactsBody extends StatelessWidget {
     required this.state,
     required this.onMessageFriend,
     required this.onOpenGroups,
+    required this.onOpenGroupNotifications,
+    required this.groupNotificationCount,
   });
 
   final FriendState state;
   final ValueChanged<FriendUser> onMessageFriend;
   final VoidCallback onOpenGroups;
+  final VoidCallback onOpenGroupNotifications;
+  final int groupNotificationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -197,6 +212,8 @@ class _ContactsBody extends StatelessWidget {
       onMessageFriend: onMessageFriend,
       onOpenNewFriends: () => _pushWithCubit(context, const NewFriendsPage()),
       onOpenGroups: onOpenGroups,
+      onOpenGroupNotifications: onOpenGroupNotifications,
+      groupNotificationCount: groupNotificationCount,
     );
   }
 }
@@ -209,6 +226,8 @@ class _AlphabeticalContactsList extends StatefulWidget {
     required this.onMessageFriend,
     required this.onOpenNewFriends,
     required this.onOpenGroups,
+    required this.onOpenGroupNotifications,
+    required this.groupNotificationCount,
   });
 
   final List<FriendUser> friends;
@@ -217,6 +236,8 @@ class _AlphabeticalContactsList extends StatefulWidget {
   final ValueChanged<FriendUser> onMessageFriend;
   final VoidCallback onOpenNewFriends;
   final VoidCallback onOpenGroups;
+  final VoidCallback onOpenGroupNotifications;
+  final int groupNotificationCount;
 
   @override
   State<_AlphabeticalContactsList> createState() =>
@@ -268,6 +289,11 @@ class _AlphabeticalContactsListState extends State<_AlphabeticalContactsList> {
                 _NewFriendsEntry(
                   count: widget.pendingRequestCount,
                   onTap: widget.onOpenNewFriends,
+                ),
+                const SizedBox(height: 10),
+                _GroupNotificationsEntry(
+                  count: widget.groupNotificationCount,
+                  onTap: widget.onOpenGroupNotifications,
                 ),
                 const SizedBox(height: 10),
                 _GroupsEntry(onTap: widget.onOpenGroups),
@@ -487,6 +513,33 @@ class _GroupsEntry extends StatelessWidget {
         ),
         title: const Text('群聊', style: TextStyle(fontWeight: FontWeight.w700)),
         subtitle: const Text('查看我加入的群聊'),
+        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+      ),
+    );
+  }
+}
+
+class _GroupNotificationsEntry extends StatelessWidget {
+  const _GroupNotificationsEntry({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FriendCard(
+      emphasized: count > 0,
+      child: ListTile(
+        key: const Key('contacts-group-notifications-entry'),
+        onTap: onTap,
+        leading: FriendIconBadge(
+          icon: Icons.notifications_rounded,
+          color: FriendPalette.primary,
+          backgroundColor: FriendPalette.primarySoft,
+          count: count,
+        ),
+        title: const Text('群通知', style: TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: const Text('查看和处理入群申请'),
         trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
       ),
     );

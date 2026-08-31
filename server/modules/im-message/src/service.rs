@@ -124,6 +124,30 @@ where
         .await
     }
 
+    pub async fn send_group_member_joined(
+        &self,
+        context: &SharedContext,
+        conversation_id: Uuid,
+        member_id: i64,
+    ) -> AppResult<SendMessageOutput> {
+        let member_name = repository::get_user_display_name(context.postgres.pool(), member_id)
+            .await?
+            .filter(|name| !name.trim().is_empty())
+            .unwrap_or_else(|| format!("用户 {member_id}"));
+        self.send_with_excluded_sender(
+            context,
+            SendMessageInput {
+                conversation_id,
+                sender_id: member_id,
+                msg_type: GROUP_CREATED_MESSAGE_TYPE,
+                content: format!("{member_name} 加入了群聊"),
+                extra: None,
+            },
+            None,
+        )
+        .await
+    }
+
     async fn send_with_excluded_sender(
         &self,
         context: &SharedContext,

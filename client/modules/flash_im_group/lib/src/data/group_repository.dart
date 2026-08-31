@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 
 import 'group_detail.dart';
+import 'group_discovery.dart';
 
 abstract interface class GroupRepository {
   Future<GroupDetail> getDetail(String groupId);
@@ -22,6 +23,18 @@ abstract interface class GroupRepository {
   Future<Conversation> acceptInvitation(String invitationId);
 
   Future<void> dissolveGroup(String groupId);
+
+  Future<List<GroupSearchItem>> searchGroups(String keyword);
+
+  Future<JoinGroupResult> joinGroup(String groupId, {String? message});
+
+  Future<GroupJoinRequestList> getJoinRequests();
+
+  Future<GroupJoinRequest> handleJoinRequest(
+    String groupId,
+    String requestId, {
+    required bool approved,
+  });
 }
 
 class GroupRequestException implements Exception {
@@ -110,6 +123,62 @@ class DioGroupRepository implements GroupRepository {
   @override
   Future<void> dissolveGroup(String groupId) async {
     await _request(() => _dio.delete<dynamic>('/groups/$groupId'));
+  }
+
+  @override
+  Future<List<GroupSearchItem>> searchGroups(String keyword) async {
+    final response = await _request(
+      () => _dio.get<dynamic>(
+        '/groups/search',
+        queryParameters: {'keyword': keyword},
+      ),
+    );
+    final groups = _requiredMap(response.data)['groups'];
+    if (groups is! List) {
+      throw const FormatException('Group search response is invalid.');
+    }
+    return groups
+        .map((dynamic item) {
+          if (item is! Map) {
+            throw const FormatException('Group search item is invalid.');
+          }
+          return GroupSearchItem.fromJson(Map<String, dynamic>.from(item));
+        })
+        .toList(growable: false);
+  }
+
+  @override
+  Future<JoinGroupResult> joinGroup(String groupId, {String? message}) async {
+    final response = await _request(
+      () => _dio.post<dynamic>(
+        '/groups/$groupId/join',
+        data: {'message': ?message},
+      ),
+    );
+    return JoinGroupResult.fromJson(_requiredMap(response.data));
+  }
+
+  @override
+  Future<GroupJoinRequestList> getJoinRequests() async {
+    final response = await _request(
+      () => _dio.get<dynamic>('/groups/join-requests'),
+    );
+    return GroupJoinRequestList.fromJson(_requiredMap(response.data));
+  }
+
+  @override
+  Future<GroupJoinRequest> handleJoinRequest(
+    String groupId,
+    String requestId, {
+    required bool approved,
+  }) async {
+    final response = await _request(
+      () => _dio.post<dynamic>(
+        '/groups/$groupId/join-requests/$requestId/handle',
+        data: {'approved': approved},
+      ),
+    );
+    return GroupJoinRequest.fromJson(_requiredMap(response.data));
   }
 
   Future<Response<dynamic>> _request(

@@ -44,6 +44,9 @@ void main() {
     expect(find.text('2 位群成员'), findsOneWidget);
     expect(find.text('添加'), findsOneWidget);
     expect(find.text('删除'), findsOneWidget);
+    expect(find.text('群号'), findsOneWidget);
+    expect(find.text('group-1'), findsOneWidget);
+    expect(find.text('入群验证'), findsOneWidget);
     expect(find.byKey(const Key('group-dissolve-button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('group-name-row')));

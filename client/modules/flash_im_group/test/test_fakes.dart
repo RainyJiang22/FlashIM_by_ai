@@ -173,14 +173,28 @@ GroupDetail groupDetail({
 );
 
 class FakeGroupRepository implements GroupRepository {
-  FakeGroupRepository({GroupDetail? detail, this.error})
-    : detail = detail ?? groupDetail();
+  FakeGroupRepository({
+    GroupDetail? detail,
+    this.error,
+    this.searchResults = const [],
+    this.joinResult = const JoinGroupResult(autoApproved: false),
+    GroupJoinRequestList? joinRequests,
+  }) : detail = detail ?? groupDetail(),
+       joinRequests =
+           joinRequests ?? GroupJoinRequestList(pendingCount: 0, requests: []);
 
   GroupDetail detail;
   final Object? error;
+  final List<GroupSearchItem> searchResults;
+  final JoinGroupResult joinResult;
+  final GroupJoinRequestList joinRequests;
   final List<List<int>> addedMemberIds = [];
   final List<List<int>> invitedMemberIds = [];
   final List<int> removedMemberIds = [];
+  final List<String> searchKeywords = [];
+  final List<({String groupId, String? message})> joinCalls = [];
+  final List<({String groupId, String requestId, bool approved})>
+  handleJoinRequestCalls = [];
   var dissolveCount = 0;
 
   void _throwIfNeeded() {
@@ -211,9 +225,54 @@ class FakeGroupRepository implements GroupRepository {
   }
 
   @override
+  Future<GroupJoinRequestList> getJoinRequests() async {
+    _throwIfNeeded();
+    return joinRequests;
+  }
+
+  @override
+  Future<GroupJoinRequest> handleJoinRequest(
+    String groupId,
+    String requestId, {
+    required bool approved,
+  }) async {
+    _throwIfNeeded();
+    handleJoinRequestCalls.add((
+      groupId: groupId,
+      requestId: requestId,
+      approved: approved,
+    ));
+    final request = joinRequests.requests.firstWhere(
+      (item) => item.id == requestId,
+    );
+    return GroupJoinRequest(
+      id: request.id,
+      conversationId: request.conversationId,
+      groupName: request.groupName,
+      groupAvatar: request.groupAvatar,
+      applicantId: request.applicantId,
+      applicantName: request.applicantName,
+      applicantAvatar: request.applicantAvatar,
+      message: request.message,
+      status: approved
+          ? GroupJoinRequestStatus.approved
+          : GroupJoinRequestStatus.rejected,
+      createdAt: request.createdAt,
+      handledAt: DateTime(2026, 8, 31),
+    );
+  }
+
+  @override
   Future<void> inviteMembers(String groupId, List<int> inviteeIds) async {
     _throwIfNeeded();
     invitedMemberIds.add(inviteeIds);
+  }
+
+  @override
+  Future<JoinGroupResult> joinGroup(String groupId, {String? message}) async {
+    _throwIfNeeded();
+    joinCalls.add((groupId: groupId, message: message));
+    return joinResult;
   }
 
   @override
@@ -221,6 +280,13 @@ class FakeGroupRepository implements GroupRepository {
     _throwIfNeeded();
     removedMemberIds.add(memberId);
     return detail;
+  }
+
+  @override
+  Future<List<GroupSearchItem>> searchGroups(String keyword) async {
+    _throwIfNeeded();
+    searchKeywords.add(keyword);
+    return searchResults;
   }
 
   @override

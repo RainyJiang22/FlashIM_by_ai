@@ -1,6 +1,7 @@
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_shared/flash_shared.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -147,18 +148,36 @@ class _GroupDetailsView extends StatelessWidget {
                     ),
                   ),
                   const Divider(height: 1, indent: 16),
-                  SwitchListTile(
-                    key: const Key('group-join-approval-switch'),
+                  ListTile(
                     title: const Text('入群验证'),
                     subtitle: Text(
                       detail.joinApprovalRequired
                           ? '成员邀请和用户主动申请均需确认后加入'
                           : '成员邀请好友或用户主动申请时可直接加入',
                     ),
-                    value: detail.joinApprovalRequired,
-                    onChanged: detail.isOwner && !state.isSaving
-                        ? context.read<GroupDetailCubit>().updateSettings
-                        : null,
+                    trailing: CupertinoSwitch(
+                      key: const Key('group-join-approval-switch'),
+                      value: detail.joinApprovalRequired,
+                      activeTrackColor: FlashPalette.primary,
+                      inactiveTrackColor: const Color(0xFFD5DCE7),
+                      thumbColor: FlashPalette.surface,
+                      inactiveThumbColor: FlashPalette.surface,
+                      trackOutlineColor:
+                          WidgetStateProperty.resolveWith<Color?>((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return Colors.transparent;
+                            }
+                            return states.contains(WidgetState.disabled)
+                                ? const Color(0xFFB6C0CF)
+                                : const Color(0xFFAAB5C5);
+                          }),
+                      trackOutlineWidth: const WidgetStatePropertyAll<double?>(
+                        1,
+                      ),
+                      onChanged: detail.isOwner && !state.isSaving
+                          ? context.read<GroupDetailCubit>().updateSettings
+                          : null,
+                    ),
                   ),
                 ],
               ),

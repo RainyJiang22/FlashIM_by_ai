@@ -129,7 +129,7 @@ class _MessagesHeader extends StatelessWidget {
                 ),
                 MessageQuickAction(
                   id: 'add_contact',
-                  label: '添加联系人',
+                  label: '添加群/联系人',
                   icon: Icons.person_add_alt_1_rounded,
                   onTap: onAddContact,
                 ),

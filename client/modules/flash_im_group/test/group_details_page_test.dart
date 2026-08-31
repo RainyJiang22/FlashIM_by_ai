@@ -1,5 +1,6 @@
 import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_im_group/flash_im_group.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,6 +49,19 @@ void main() {
     expect(find.text('group-1'), findsOneWidget);
     expect(find.text('入群验证'), findsOneWidget);
     expect(find.byKey(const Key('group-dissolve-button')), findsOneWidget);
+    final approvalSwitch = tester.widget<CupertinoSwitch>(
+      find.byKey(const Key('group-join-approval-switch')),
+    );
+    expect(approvalSwitch.value, isFalse);
+    expect(approvalSwitch.inactiveTrackColor, const Color(0xFFD5DCE7));
+    expect(
+      approvalSwitch.trackOutlineColor?.resolve(const <WidgetState>{}),
+      const Color(0xFFAAB5C5),
+    );
+
+    await tester.tap(find.byKey(const Key('group-join-approval-switch')));
+    await tester.pumpAndSettle();
+    expect(groupRepository.detail.joinApprovalRequired, isTrue);
 
     await tester.tap(find.byKey(const Key('group-name-row')));
     await tester.pumpAndSettle();
@@ -91,9 +105,9 @@ void main() {
     expect(find.text('添加'), findsOneWidget);
     expect(find.text('删除'), findsNothing);
     expect(find.byKey(const Key('group-dissolve-button')), findsNothing);
-    final switchTile = tester.widget<SwitchListTile>(
+    final approvalSwitch = tester.widget<CupertinoSwitch>(
       find.byKey(const Key('group-join-approval-switch')),
     );
-    expect(switchTile.onChanged, isNull);
+    expect(approvalSwitch.onChanged, isNull);
   });
 }

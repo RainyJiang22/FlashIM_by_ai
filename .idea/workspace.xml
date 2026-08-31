@@ -4,14 +4,11 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(group):搜索加群与入群审批">
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/attempt-01/client.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/attempt-02/client.lcov" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/client-harness-config.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/harness-check-client-attempt-01.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/harness-check-client-attempt-02.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/merge_client_lcov.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/features/im/group/v0.0.3/quality/server-harness-config.json" beforeDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="fix(group):加入群通知">
+      <change beforePath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -385,7 +382,15 @@
       <option name="project" value="LOCAL" />
       <updated>1788159506932</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="fix(group):加入群通知">
+      <option name="closed" value="true" />
+      <created>1788161842759</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1788161842759</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -402,7 +407,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="feat(login):添加后端模拟认证接口以及相关文档" />
     <MESSAGE value="refactor(login):调整前端模拟认证ui" />
     <MESSAGE value="feat(playground):整合JWT用户认证与聊天室" />
     <MESSAGE value="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
@@ -427,7 +431,8 @@
     <MESSAGE value="feat(group):补充群聊功能，增加修改群名、邀请验证设置、成员列表、添加/删除成员及解散群聊" />
     <MESSAGE value="refactor(group):补充群聊头像显示逻辑" />
     <MESSAGE value="feat(group):搜索加群与入群审批" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(group):搜索加群与入群审批" />
+    <MESSAGE value="fix(group):加入群通知" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix(group):加入群通知" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

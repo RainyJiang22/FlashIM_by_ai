@@ -37,7 +37,14 @@ class MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     if (message.isGroupCreated) {
       final creatorName = message.senderName.trim();
-      final displayText = creatorName.isEmpty ? '创建了群聊' : '$creatorName 创建了群聊';
+      final persistedText = message.content.trim();
+      final systemEvent = message.extra?['system_event'];
+      final isMemberJoined =
+          systemEvent == 'member_joined' || persistedText.endsWith('加入了群聊');
+      final actionText = isMemberJoined ? '加入了群聊' : '创建了群聊';
+      final displayText = creatorName.isEmpty
+          ? actionText
+          : '$creatorName $actionText';
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         child: Align(

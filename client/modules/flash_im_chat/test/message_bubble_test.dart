@@ -175,4 +175,34 @@ void main() {
     expect(text.style?.color, FlashPalette.mutedInk);
     expect(tester.getCenter(find.text('小雨 创建了群聊')).dx, closeTo(180, 0.1));
   });
+
+  testWidgets('member join system message keeps persisted join wording', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'system-joined-1',
+              conversationId: 'group-1',
+              senderId: '2',
+              senderName: '阿青',
+              seq: 2,
+              content: 'legacy-system-payload',
+              extra: const {'system_event': 'member_joined'},
+              type: MessageType.groupCreated,
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 8, 31),
+            ),
+            isMine: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('阿青 加入了群聊'), findsOneWidget);
+    expect(find.text('阿青 创建了群聊'), findsNothing);
+    expect(find.byType(AvatarWidget), findsNothing);
+  });
 }

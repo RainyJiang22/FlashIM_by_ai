@@ -117,7 +117,9 @@ where
                 sender_id: creator_id,
                 msg_type: GROUP_CREATED_MESSAGE_TYPE,
                 content: format!("{creator_name} 创建了群聊"),
-                extra: None,
+                extra: Some(serde_json::json!({
+                    "system_event": "group_created",
+                })),
             },
             None,
         )
@@ -141,7 +143,9 @@ where
                 sender_id: member_id,
                 msg_type: GROUP_CREATED_MESSAGE_TYPE,
                 content: format!("{member_name} 加入了群聊"),
-                extra: None,
+                extra: Some(serde_json::json!({
+                    "system_event": "member_joined",
+                })),
             },
             None,
         )

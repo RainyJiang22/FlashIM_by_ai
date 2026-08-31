@@ -382,6 +382,7 @@ mod tests {
         assert_eq!(messages[0]["msg_type"], 5);
         assert_eq!(messages[0]["sender_id"], owner_id.to_string());
         assert_eq!(messages[0]["content"], "群成员0 创建了群聊");
+        assert_eq!(messages[0]["extra"]["system_event"], "group_created");
 
         let unread_counts = sqlx::query_as::<_, (i64, i32)>(
             r#"
@@ -686,6 +687,7 @@ mod tests {
         .await
         .expect("membership should load");
         assert!(membership_after_accept);
+
         let avatar_after_accept =
             sqlx::query_scalar::<_, String>("SELECT avatar FROM conversations WHERE id = $1")
                 .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
@@ -1193,6 +1195,14 @@ mod tests {
         .await
         .expect("join system messages should load");
         assert_eq!(joined_message_count, 2);
+        let joined_event_count = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM messages WHERE conversation_id = $1 AND type = 5 AND extra->>'system_event' = 'member_joined'",
+        )
+        .bind(group_id)
+        .fetch_one(pool)
+        .await
+        .expect("join system events should load");
+        assert_eq!(joined_event_count, 2);
 
         sqlx::query("DELETE FROM conversations WHERE id = $1")
             .bind(group_id)

@@ -37,6 +37,8 @@ class WsFrameType extends $pb.ProtobufEnum {
       WsFrameType._(9, _omitEnumNames ? '' : 'FRIEND_REMOVED');
   static const WsFrameType GROUP_JOIN_REQUEST =
       WsFrameType._(10, _omitEnumNames ? '' : 'GROUP_JOIN_REQUEST');
+  static const WsFrameType GROUP_INFO_UPDATE =
+      WsFrameType._(11, _omitEnumNames ? '' : 'GROUP_INFO_UPDATE');
 
   static const $core.List<WsFrameType> values = <WsFrameType>[
     PING,
@@ -50,10 +52,11 @@ class WsFrameType extends $pb.ProtobufEnum {
     FRIEND_ACCEPTED,
     FRIEND_REMOVED,
     GROUP_JOIN_REQUEST,
+    GROUP_INFO_UPDATE,
   ];
 
   static final $core.List<WsFrameType?> _byValue =
-      $pb.ProtobufEnum.$_initByValueList(values, 10);
+      $pb.ProtobufEnum.$_initByValueList(values, 11);
   static WsFrameType? valueOf($core.int value) =>
       value < 0 || value >= _byValue.length ? null : _byValue[value];
 

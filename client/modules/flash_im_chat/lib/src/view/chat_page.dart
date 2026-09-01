@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_shared/flash_shared.dart';
@@ -86,6 +88,7 @@ class _ChatScaffold extends StatefulWidget {
 
 class _ChatScaffoldState extends State<_ChatScaffold> {
   late Conversation _displayConversation;
+  StreamSubscription<GroupInfoUpdateNotification>? _groupInfoSubscription;
 
   @override
   void initState() {
@@ -94,12 +97,28 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _groupInfoSubscription ??= context
+        .read<WsClient>()
+        .groupInfoUpdateStream
+        .where((event) => event.conversationId == widget.conversation.id)
+        .listen(_applyGroupInfoUpdate);
+  }
+
+  @override
+  void dispose() {
+    _groupInfoSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_displayConversation.displayName),
         actions: [
-          if (widget.onDetailsTap != null)
+          if (widget.onDetailsTap != null && !_displayConversation.isDissolved)
             IconButton(
               key: const Key('chat-details-action'),
               tooltip: '聊天详情',
@@ -114,6 +133,16 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
           color: FlashPalette.background,
           child: Column(
             children: [
+              if (_displayConversation.isGroupChat &&
+                  _displayConversation.announcement.trim().isNotEmpty)
+                _AnnouncementBanner(
+                  announcement: _displayConversation.announcement.trim(),
+                  onTap:
+                      widget.onDetailsTap != null &&
+                          !_displayConversation.isDissolved
+                      ? _openDetails
+                      : null,
+                ),
               Expanded(
                 child: _MessageList(
                   currentUserId: widget.currentUserId,
@@ -121,12 +150,31 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
                   onAcceptGroupInvitation: widget.onAcceptGroupInvitation,
                 ),
               ),
-              ChatInput(
-                onSend: context.read<ChatCubit>().sendText,
-                onSendImage: context.read<ChatCubit>().sendImageFromFile,
-                onSendVideo: context.read<ChatCubit>().sendVideoFromFile,
-                onSendFile: context.read<ChatCubit>().sendFileFromPicker,
-              ),
+              if (_displayConversation.isDissolved)
+                Container(
+                  key: const Key('dissolved-chat-readonly'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 15, 20, 18),
+                  color: FlashPalette.surface,
+                  child: const SafeArea(
+                    top: false,
+                    child: Text(
+                      '该群聊已解散',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: FlashPalette.secondaryInk,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ChatInput(
+                  onSend: context.read<ChatCubit>().sendText,
+                  onSendImage: context.read<ChatCubit>().sendImageFromFile,
+                  onSendVideo: context.read<ChatCubit>().sendVideoFromFile,
+                  onSendFile: context.read<ChatCubit>().sendFileFromPicker,
+                ),
             ],
           ),
         ),
@@ -140,6 +188,83 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
       return;
     }
     setState(() => _displayConversation = updated);
+  }
+
+  void _applyGroupInfoUpdate(GroupInfoUpdateNotification update) {
+    if (!mounted) return;
+    if (!update.membershipActive) {
+      Navigator.of(context).pop(true);
+      return;
+    }
+    setState(() {
+      _displayConversation = _displayConversation.copyWith(
+        type: 1,
+        name: update.name,
+        avatar: update.avatar,
+        ownerId: update.ownerId.toString(),
+        announcement: update.announcement,
+        isDissolved: update.isDissolved,
+      );
+    });
+  }
+}
+
+class _AnnouncementBanner extends StatelessWidget {
+  const _AnnouncementBanner({required this.announcement, this.onTap});
+
+  final String announcement;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      key: const Key('chat-announcement-banner'),
+      color: const Color(0xFFFFF9E6),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 52),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: Color(0xFFF2E8BF), width: 0.5),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.campaign_rounded,
+                color: Color(0xFFE6A700),
+                size: 24,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  announcement,
+                  key: const Key('chat-announcement-text'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: FlashPalette.secondaryInk,
+                    fontSize: 15,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+              if (onTap != null) ...[
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: FlashPalette.mutedInk,
+                  size: 22,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

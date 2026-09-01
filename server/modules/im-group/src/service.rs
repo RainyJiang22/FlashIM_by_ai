@@ -11,12 +11,14 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
-    broadcast::{GroupBroadcaster, GroupJoinRequestPayload},
+    broadcast::{
+        GroupBroadcaster, GroupInfoRecipient, GroupInfoUpdatePayload, GroupJoinRequestPayload,
+    },
     models::{
         GroupDetail, GroupInvitationItem, GroupInvitationListResponse, GroupJoinRequestItem,
         GroupJoinRequestListResponse, GroupMemberIdsBody, GroupSearchItem, GroupSearchResponse,
-        HandleJoinRequestBody, JoinGroupBody, JoinGroupResponse, UpdateGroupNameBody,
-        UpdateGroupSettingsBody,
+        HandleJoinRequestBody, JoinGroupBody, JoinGroupResponse, TransferGroupOwnerBody,
+        UpdateGroupAnnouncementBody, UpdateGroupNameBody, UpdateGroupSettingsBody,
     },
     repository,
 };
@@ -27,6 +29,14 @@ fn normalize_group_name(body: UpdateGroupNameBody) -> AppResult<String> {
         return Err(AppError::bad_request("invalid group name"));
     }
     Ok(name)
+}
+
+fn normalize_group_announcement(body: UpdateGroupAnnouncementBody) -> AppResult<String> {
+    let announcement = body.announcement.trim().to_string();
+    if announcement.is_empty() || announcement.chars().count() > 2000 {
+        return Err(AppError::bad_request("invalid group announcement"));
+    }
+    Ok(announcement)
 }
 
 fn normalize_member_ids(actor_id: i64, body: GroupMemberIdsBody) -> AppResult<Vec<i64>> {
@@ -121,6 +131,11 @@ where
                 let _ = MessageService::new(self.broadcaster.clone())
                     .send_group_member_joined(context, conversation_id, applicant_id)
                     .await;
+                if let Ok(detail) = load_detail(context, applicant_id, conversation_id).await {
+                    let _ = self
+                        .broadcast_group_info(&detail, &[], "members_added", false)
+                        .await;
+                }
                 let conversation = im_conversation::service::get_conversation_by_id(
                     context,
                     applicant_id,
@@ -189,6 +204,11 @@ where
             let _ = MessageService::new(self.broadcaster.clone())
                 .send_group_member_joined(context, conversation_id, handled.applicant_id)
                 .await;
+            if let Ok(detail) = load_detail(context, handled.applicant_id, conversation_id).await {
+                let _ = self
+                    .broadcast_group_info(&detail, &[], "members_added", false)
+                    .await;
+            }
         }
         let _ = self
             .broadcaster
@@ -205,9 +225,98 @@ where
         body: UpdateGroupNameBody,
     ) -> AppResult<GroupDetail> {
         let name = normalize_group_name(body)?;
+        let before = load_detail(context, owner_id, conversation_id).await?;
+        let owner_name = member_display_name(&before, owner_id);
         repository::update_group_name(context.postgres.pool(), conversation_id, owner_id, &name)
             .await?;
-        load_detail(context, owner_id, conversation_id).await
+        let detail = load_detail(context, owner_id, conversation_id).await?;
+        let _ = MessageService::new(self.broadcaster.clone())
+            .send_group_system_event(
+                context,
+                conversation_id,
+                owner_id,
+                format!("{owner_name} 将群名修改为「{name}」"),
+                "group_name_updated",
+            )
+            .await;
+        let _ = self
+            .broadcast_group_info(&detail, &[], "name_updated", false)
+            .await;
+        Ok(detail)
+    }
+
+    pub async fn update_announcement(
+        &self,
+        context: &SharedContext,
+        owner_id: i64,
+        conversation_id: Uuid,
+        body: UpdateGroupAnnouncementBody,
+    ) -> AppResult<GroupDetail> {
+        let announcement = normalize_group_announcement(body)?;
+        let before = load_detail(context, owner_id, conversation_id).await?;
+        let owner_name = member_display_name(&before, owner_id);
+        repository::update_group_announcement(
+            context.postgres.pool(),
+            conversation_id,
+            owner_id,
+            &announcement,
+        )
+        .await?;
+        let detail = load_detail(context, owner_id, conversation_id).await?;
+        let _ = MessageService::new(self.broadcaster.clone())
+            .send_group_system_event(
+                context,
+                conversation_id,
+                owner_id,
+                format!("{owner_name} 更新了群公告"),
+                "announcement_updated",
+            )
+            .await;
+        let _ = self
+            .broadcast_group_info(&detail, &[], "announcement_updated", false)
+            .await;
+        Ok(detail)
+    }
+
+    pub async fn transfer_owner(
+        &self,
+        context: &SharedContext,
+        owner_id: i64,
+        conversation_id: Uuid,
+        body: TransferGroupOwnerBody,
+    ) -> AppResult<GroupDetail> {
+        let before = load_detail(context, owner_id, conversation_id).await?;
+        if body.owner_id == owner_id {
+            return Err(AppError::bad_request("new owner must be another member"));
+        }
+        let old_owner_name = member_display_name(&before, owner_id);
+        let new_owner_name = before
+            .members
+            .iter()
+            .find(|member| member.account_id == body.owner_id.to_string())
+            .map(|member| member.nickname.clone())
+            .ok_or(AppError::bad_request("new owner must be an active member"))?;
+        repository::transfer_group_owner(
+            context.postgres.pool(),
+            conversation_id,
+            owner_id,
+            body.owner_id,
+        )
+        .await?;
+        let detail = load_detail(context, owner_id, conversation_id).await?;
+        let _ = MessageService::new(self.broadcaster.clone())
+            .send_group_system_event(
+                context,
+                conversation_id,
+                owner_id,
+                format!("{old_owner_name} 将群主转让给了 {new_owner_name}"),
+                "owner_transferred",
+            )
+            .await;
+        let _ = self
+            .broadcast_group_info(&detail, &[], "owner_transferred", false)
+            .await;
+        Ok(detail)
     }
 
     pub async fn update_settings(
@@ -243,7 +352,17 @@ where
         )
         .await?;
         let _ = self.notify_new_members(conversation_id, &member_ids).await;
-        load_detail(context, actor_id, conversation_id).await
+        let detail = load_detail(context, actor_id, conversation_id).await?;
+        let message_service = MessageService::new(self.broadcaster.clone());
+        for member_id in &member_ids {
+            let _ = message_service
+                .send_group_member_invited(context, conversation_id, actor_id, *member_id)
+                .await;
+        }
+        let _ = self
+            .broadcast_group_info(&detail, &[], "members_added", false)
+            .await;
+        Ok(detail)
     }
 
     pub async fn remove_member(
@@ -253,6 +372,14 @@ where
         conversation_id: Uuid,
         member_id: i64,
     ) -> AppResult<GroupDetail> {
+        let before = load_detail(context, owner_id, conversation_id).await?;
+        let owner_name = member_display_name(&before, owner_id);
+        let member_name = before
+            .members
+            .iter()
+            .find(|member| member.account_id == member_id.to_string())
+            .map(|member| member.nickname.clone())
+            .unwrap_or_else(|| format!("用户 {member_id}"));
         repository::remove_group_member(
             context.postgres.pool(),
             conversation_id,
@@ -260,7 +387,49 @@ where
             member_id,
         )
         .await?;
-        load_detail(context, owner_id, conversation_id).await
+        let detail = load_detail(context, owner_id, conversation_id).await?;
+        let _ = MessageService::new(self.broadcaster.clone())
+            .send_group_system_event(
+                context,
+                conversation_id,
+                owner_id,
+                format!("{member_name} 被 {owner_name} 移出群聊"),
+                "member_removed",
+            )
+            .await;
+        let _ = self
+            .broadcast_group_info(&detail, &[member_id], "member_removed", false)
+            .await;
+        Ok(detail)
+    }
+
+    pub async fn leave_group(
+        &self,
+        context: &SharedContext,
+        member_id: i64,
+        conversation_id: Uuid,
+    ) -> AppResult<()> {
+        let before = load_detail(context, member_id, conversation_id).await?;
+        let member_name = member_display_name(&before, member_id);
+        let owner_id = before
+            .owner_id
+            .parse::<i64>()
+            .map_err(|_| AppError::internal_server_error("invalid group owner"))?;
+        repository::leave_group(context.postgres.pool(), conversation_id, member_id).await?;
+        let detail = load_detail(context, owner_id, conversation_id).await?;
+        let _ = MessageService::new(self.broadcaster.clone())
+            .send_group_system_event(
+                context,
+                conversation_id,
+                owner_id,
+                format!("{member_name} 退出了群聊"),
+                "member_left",
+            )
+            .await;
+        let _ = self
+            .broadcast_group_info(&detail, &[member_id], "member_left", false)
+            .await;
+        Ok(())
     }
 
     pub async fn invite_members(
@@ -349,15 +518,24 @@ where
         invitee_id: i64,
         invitation_id: Uuid,
     ) -> AppResult<ConversationListItem> {
-        let conversation_id =
+        let accepted =
             repository::accept_group_invitation(context.postgres.pool(), invitation_id, invitee_id)
                 .await?;
+        let conversation_id = accepted.conversation_id;
         let conversation =
             im_conversation::service::get_conversation_by_id(context, invitee_id, conversation_id)
                 .await?;
         let _ = self
             .notify_new_members(conversation_id, &[invitee_id])
             .await;
+        let _ = MessageService::new(self.broadcaster.clone())
+            .send_group_member_invited(context, conversation_id, accepted.inviter_id, invitee_id)
+            .await;
+        if let Ok(detail) = load_detail(context, invitee_id, conversation_id).await {
+            let _ = self
+                .broadcast_group_info(&detail, &[], "members_added", false)
+                .await;
+        }
         Ok(conversation)
     }
 
@@ -367,7 +545,16 @@ where
         owner_id: i64,
         conversation_id: Uuid,
     ) -> AppResult<()> {
-        repository::dissolve_group(context.postgres.pool(), conversation_id, owner_id).await
+        let detail = load_detail(context, owner_id, conversation_id).await?;
+        let persisted =
+            repository::dissolve_group(context.postgres.pool(), conversation_id, owner_id).await?;
+        let _ = MessageService::new(self.broadcaster.clone())
+            .broadcast_persisted_system_message(persisted, "群聊已解散".to_string())
+            .await;
+        let _ = self
+            .broadcast_group_info(&detail, &[], "dissolved", true)
+            .await;
+        Ok(())
     }
 
     async fn notify_new_members(&self, conversation_id: Uuid, member_ids: &[i64]) -> AppResult<()> {
@@ -386,6 +573,75 @@ where
             .broadcast_conversation_updates(updates, member_ids)
             .await
     }
+
+    async fn broadcast_group_info(
+        &self,
+        detail: &GroupDetail,
+        departed_member_ids: &[i64],
+        change_type: &'static str,
+        is_dissolved: bool,
+    ) -> AppResult<()> {
+        let owner_id = detail
+            .owner_id
+            .parse::<i64>()
+            .map_err(|_| AppError::internal_server_error("invalid group owner"))?;
+        let mut recipients = detail
+            .members
+            .iter()
+            .map(|member| {
+                Ok(GroupInfoRecipient {
+                    user_id: member
+                        .account_id
+                        .parse::<i64>()
+                        .map_err(|_| AppError::internal_server_error("invalid group member"))?,
+                    membership_active: true,
+                    current_user_role: if member.account_id == detail.owner_id {
+                        "owner"
+                    } else {
+                        "member"
+                    },
+                })
+            })
+            .collect::<AppResult<Vec<_>>>()?;
+        recipients.extend(
+            departed_member_ids
+                .iter()
+                .map(|user_id| GroupInfoRecipient {
+                    user_id: *user_id,
+                    membership_active: false,
+                    current_user_role: "none",
+                }),
+        );
+        self.broadcaster
+            .broadcast_group_info_update(
+                &recipients,
+                GroupInfoUpdatePayload {
+                    conversation_id: detail.conversation_id,
+                    name: detail.name.clone(),
+                    avatar: detail.avatar.clone(),
+                    owner_id,
+                    member_count: detail.member_count.min(i32::MAX as usize) as i32,
+                    announcement: detail.announcement.clone(),
+                    announcement_updated_at: detail.announcement_updated_at,
+                    announcement_updated_by: detail
+                        .announcement_updated_by
+                        .as_deref()
+                        .and_then(|value| value.parse().ok()),
+                    is_dissolved,
+                    change_type,
+                },
+            )
+            .await
+    }
+}
+
+fn member_display_name(detail: &GroupDetail, user_id: i64) -> String {
+    detail
+        .members
+        .iter()
+        .find(|member| member.account_id == user_id.to_string())
+        .map(|member| member.nickname.clone())
+        .unwrap_or_else(|| format!("用户 {user_id}"))
 }
 
 fn to_join_request_payload(
@@ -423,10 +679,12 @@ async fn load_detail(
 #[cfg(test)]
 mod tests {
     use crate::{
-        models::{GroupMemberIdsBody, JoinGroupBody, UpdateGroupNameBody},
+        models::{
+            GroupMemberIdsBody, JoinGroupBody, UpdateGroupAnnouncementBody, UpdateGroupNameBody,
+        },
         service::{
-            normalize_group_name, normalize_join_message, normalize_member_ids,
-            normalize_search_keyword,
+            normalize_group_announcement, normalize_group_name, normalize_join_message,
+            normalize_member_ids, normalize_search_keyword,
         },
     };
 
@@ -448,6 +706,29 @@ mod tests {
         assert!(
             normalize_group_name(UpdateGroupNameBody {
                 name: "群".repeat(101),
+            })
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn announcement_trims_and_enforces_boundaries() {
+        assert_eq!(
+            normalize_group_announcement(UpdateGroupAnnouncementBody {
+                announcement: "  公告  ".to_string(),
+            })
+            .unwrap(),
+            "公告"
+        );
+        assert!(
+            normalize_group_announcement(UpdateGroupAnnouncementBody {
+                announcement: " ".to_string(),
+            })
+            .is_err()
+        );
+        assert!(
+            normalize_group_announcement(UpdateGroupAnnouncementBody {
+                announcement: "字".repeat(2001),
             })
             .is_err()
         );

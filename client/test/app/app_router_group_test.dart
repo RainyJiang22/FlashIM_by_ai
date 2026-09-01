@@ -143,9 +143,51 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('新群名'), findsOneWidget);
   });
+
+  testWidgets('dissolving from details keeps chat route as read-only history', (
+    tester,
+  ) async {
+    final groups = _GroupRepository();
+    await tester.pumpWidget(_app(groups: groups));
+    final context = tester.element(find.text('home'));
+    Navigator.of(context).pushNamed(
+      AppRoutes.chat,
+      arguments: ChatRouteArguments(
+        conversation: Conversation(
+          id: 'group-1',
+          type: 1,
+          name: '历史群',
+          unreadCount: 0,
+          createdAt: DateTime(2026, 8, 31),
+        ),
+        currentUserId: '1',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('chat-details-action')));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('group-dissolve-button')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.byKey(const Key('group-dissolve-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('group-dissolve-confirm')));
+    await tester.pumpAndSettle();
+
+    expect(groups.dissolveCount, 1);
+    expect(find.byKey(const Key('dissolved-chat-readonly')), findsOneWidget);
+    expect(find.text('该群聊已解散'), findsOneWidget);
+    expect(find.byKey(const Key('chat-details-action')), findsNothing);
+  });
 }
 
-Widget _app({_ConversationRepository? conversations}) {
+Widget _app({
+  _ConversationRepository? conversations,
+  _GroupRepository? groups,
+}) {
   return MultiRepositoryProvider(
     providers: [
       RepositoryProvider<FriendRepository>.value(value: _FriendRepository()),
@@ -155,7 +197,9 @@ Widget _app({_ConversationRepository? conversations}) {
       RepositoryProvider<MessageRepository>.value(
         value: const _MessageRepository(),
       ),
-      RepositoryProvider<GroupRepository>.value(value: _GroupRepository()),
+      RepositoryProvider<GroupRepository>.value(
+        value: groups ?? _GroupRepository(),
+      ),
       RepositoryProvider<WsClient>.value(value: _WsClient()),
     ],
     child: MaterialApp(
@@ -166,6 +210,7 @@ Widget _app({_ConversationRepository? conversations}) {
 }
 
 class _GroupRepository implements GroupRepository {
+  var dissolveCount = 0;
   var detail = GroupDetail(
     conversationId: 'group-1',
     name: '旧群名',
@@ -192,7 +237,12 @@ class _GroupRepository implements GroupRepository {
   Future<GroupDetail> addMembers(String groupId, List<int> memberIds) async =>
       detail;
   @override
-  Future<void> dissolveGroup(String groupId) async {}
+  Future<void> dissolveGroup(String groupId) async {
+    dissolveCount += 1;
+  }
+
+  @override
+  Future<void> leaveGroup(String groupId) async {}
   @override
   Future<GroupDetail> getDetail(String groupId) async => detail;
   @override
@@ -213,6 +263,9 @@ class _GroupRepository implements GroupRepository {
   Future<GroupDetail> removeMember(String groupId, int memberId) async =>
       detail;
   @override
+  Future<GroupDetail> transferOwner(String groupId, int ownerId) async =>
+      detail;
+  @override
   Future<List<GroupSearchItem>> searchGroups(String keyword) async => const [];
   @override
   Future<GroupDetail> updateName(String groupId, String name) async {
@@ -228,6 +281,12 @@ class _GroupRepository implements GroupRepository {
     );
     return detail;
   }
+
+  @override
+  Future<GroupDetail> updateAnnouncement(
+    String groupId,
+    String announcement,
+  ) async => detail;
 
   @override
   Future<GroupDetail> updateSettings(

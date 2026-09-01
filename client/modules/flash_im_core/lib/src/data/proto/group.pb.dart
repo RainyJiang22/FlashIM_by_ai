@@ -194,6 +194,197 @@ class GroupJoinRequestNotification extends $pb.GeneratedMessage {
   void clearHandledAt() => $_clearField(11);
 }
 
+class GroupInfoUpdateNotification extends $pb.GeneratedMessage {
+  factory GroupInfoUpdateNotification({
+    $core.String? conversationId,
+    $core.String? name,
+    $core.String? avatar,
+    $fixnum.Int64? ownerId,
+    $core.int? memberCount,
+    $core.String? announcement,
+    $core.String? announcementUpdatedAt,
+    $fixnum.Int64? announcementUpdatedBy,
+    $core.bool? isDissolved,
+    $core.bool? membershipActive,
+    $core.String? currentUserRole,
+    $core.String? changeType,
+  }) {
+    final result = create();
+    if (conversationId != null) result.conversationId = conversationId;
+    if (name != null) result.name = name;
+    if (avatar != null) result.avatar = avatar;
+    if (ownerId != null) result.ownerId = ownerId;
+    if (memberCount != null) result.memberCount = memberCount;
+    if (announcement != null) result.announcement = announcement;
+    if (announcementUpdatedAt != null)
+      result.announcementUpdatedAt = announcementUpdatedAt;
+    if (announcementUpdatedBy != null)
+      result.announcementUpdatedBy = announcementUpdatedBy;
+    if (isDissolved != null) result.isDissolved = isDissolved;
+    if (membershipActive != null) result.membershipActive = membershipActive;
+    if (currentUserRole != null) result.currentUserRole = currentUserRole;
+    if (changeType != null) result.changeType = changeType;
+    return result;
+  }
+
+  GroupInfoUpdateNotification._();
+
+  factory GroupInfoUpdateNotification.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(data, registry);
+  factory GroupInfoUpdateNotification.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GroupInfoUpdateNotification',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'im'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'conversationId')
+    ..aOS(2, _omitFieldNames ? '' : 'name')
+    ..aOS(3, _omitFieldNames ? '' : 'avatar')
+    ..aInt64(4, _omitFieldNames ? '' : 'ownerId')
+    ..aI(5, _omitFieldNames ? '' : 'memberCount')
+    ..aOS(6, _omitFieldNames ? '' : 'announcement')
+    ..aOS(7, _omitFieldNames ? '' : 'announcementUpdatedAt')
+    ..aInt64(8, _omitFieldNames ? '' : 'announcementUpdatedBy')
+    ..aOB(9, _omitFieldNames ? '' : 'isDissolved')
+    ..aOB(10, _omitFieldNames ? '' : 'membershipActive')
+    ..aOS(11, _omitFieldNames ? '' : 'currentUserRole')
+    ..aOS(12, _omitFieldNames ? '' : 'changeType')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GroupInfoUpdateNotification clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GroupInfoUpdateNotification copyWith(
+          void Function(GroupInfoUpdateNotification) updates) =>
+      super.copyWith(
+              (message) => updates(message as GroupInfoUpdateNotification))
+          as GroupInfoUpdateNotification;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GroupInfoUpdateNotification create() =>
+      GroupInfoUpdateNotification._();
+  @$core.override
+  GroupInfoUpdateNotification createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static GroupInfoUpdateNotification getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GroupInfoUpdateNotification>(create);
+  static GroupInfoUpdateNotification? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get conversationId => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set conversationId($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasConversationId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearConversationId() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get avatar => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set avatar($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasAvatar() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearAvatar() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get ownerId => $_getI64(3);
+  @$pb.TagNumber(4)
+  set ownerId($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasOwnerId() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearOwnerId() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $core.int get memberCount => $_getIZ(4);
+  @$pb.TagNumber(5)
+  set memberCount($core.int value) => $_setSignedInt32(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasMemberCount() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearMemberCount() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  $core.String get announcement => $_getSZ(5);
+  @$pb.TagNumber(6)
+  set announcement($core.String value) => $_setString(5, value);
+  @$pb.TagNumber(6)
+  $core.bool hasAnnouncement() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearAnnouncement() => $_clearField(6);
+
+  @$pb.TagNumber(7)
+  $core.String get announcementUpdatedAt => $_getSZ(6);
+  @$pb.TagNumber(7)
+  set announcementUpdatedAt($core.String value) => $_setString(6, value);
+  @$pb.TagNumber(7)
+  $core.bool hasAnnouncementUpdatedAt() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearAnnouncementUpdatedAt() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get announcementUpdatedBy => $_getI64(7);
+  @$pb.TagNumber(8)
+  set announcementUpdatedBy($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasAnnouncementUpdatedBy() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearAnnouncementUpdatedBy() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.bool get isDissolved => $_getBF(8);
+  @$pb.TagNumber(9)
+  set isDissolved($core.bool value) => $_setBool(8, value);
+  @$pb.TagNumber(9)
+  $core.bool hasIsDissolved() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearIsDissolved() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.bool get membershipActive => $_getBF(9);
+  @$pb.TagNumber(10)
+  set membershipActive($core.bool value) => $_setBool(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasMembershipActive() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearMembershipActive() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get currentUserRole => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set currentUserRole($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasCurrentUserRole() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearCurrentUserRole() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get changeType => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set changeType($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasChangeType() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearChangeType() => $_clearField(12);
+}
+
 const $core.bool _omitFieldNames =
     $core.bool.fromEnvironment('protobuf.omit_field_names');
 const $core.bool _omitMessageNames =

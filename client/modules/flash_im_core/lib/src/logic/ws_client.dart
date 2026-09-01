@@ -47,6 +47,8 @@ class WsClient {
       StreamController<FriendRemovedEvent>.broadcast();
   final _groupJoinRequestController =
       StreamController<GroupJoinRequestNotification>.broadcast();
+  final _groupInfoUpdateController =
+      StreamController<GroupInfoUpdateNotification>.broadcast();
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _channelSubscription;
@@ -72,6 +74,8 @@ class WsClient {
       _friendRemovedController.stream;
   Stream<GroupJoinRequestNotification> get groupJoinRequestStream =>
       _groupJoinRequestController.stream;
+  Stream<GroupInfoUpdateNotification> get groupInfoUpdateStream =>
+      _groupInfoUpdateController.stream;
   WsConnectionState get state => _state;
 
   Future<void> connect() async {
@@ -167,6 +171,7 @@ class WsClient {
     await _friendAcceptedController.close();
     await _friendRemovedController.close();
     await _groupJoinRequestController.close();
+    await _groupInfoUpdateController.close();
   }
 
   void _handleMessage(dynamic message) {
@@ -211,6 +216,11 @@ class WsClient {
       case WsFrameType.GROUP_JOIN_REQUEST:
         _groupJoinRequestController.add(
           GroupJoinRequestNotification.fromBuffer(frame.payload),
+        );
+        _frameController.add(frame);
+      case WsFrameType.GROUP_INFO_UPDATE:
+        _groupInfoUpdateController.add(
+          GroupInfoUpdateNotification.fromBuffer(frame.payload),
         );
         _frameController.add(frame);
       case WsFrameType.PING:

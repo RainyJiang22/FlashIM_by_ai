@@ -146,12 +146,14 @@ GroupDetail groupDetail({
   bool isOwner = true,
   bool joinApprovalRequired = false,
   String name = '测试群聊',
+  String announcement = '',
 }) => GroupDetail(
   conversationId: 'group-1',
   name: name,
   avatar: 'grid:identicon:1,identicon:2',
   ownerId: 1,
   joinApprovalRequired: joinApprovalRequired,
+  announcement: announcement,
   currentUserRole: isOwner ? 'owner' : 'member',
   memberCount: 2,
   members: [
@@ -196,6 +198,8 @@ class FakeGroupRepository implements GroupRepository {
   final List<({String groupId, String requestId, bool approved})>
   handleJoinRequestCalls = [];
   var dissolveCount = 0;
+  var leaveCount = 0;
+  final List<int> transferredOwnerIds = [];
 
   void _throwIfNeeded() {
     if (error != null) throw error!;
@@ -269,6 +273,12 @@ class FakeGroupRepository implements GroupRepository {
   }
 
   @override
+  Future<void> leaveGroup(String groupId) async {
+    _throwIfNeeded();
+    leaveCount += 1;
+  }
+
+  @override
   Future<JoinGroupResult> joinGroup(String groupId, {String? message}) async {
     _throwIfNeeded();
     joinCalls.add((groupId: groupId, message: message));
@@ -290,12 +300,34 @@ class FakeGroupRepository implements GroupRepository {
   }
 
   @override
+  Future<GroupDetail> transferOwner(String groupId, int ownerId) async {
+    _throwIfNeeded();
+    transferredOwnerIds.add(ownerId);
+    detail = detail.copyWith(
+      ownerId: ownerId,
+      currentUserRole: ownerId == detail.ownerId ? 'owner' : 'member',
+    );
+    return detail;
+  }
+
+  @override
+  Future<GroupDetail> updateAnnouncement(
+    String groupId,
+    String announcement,
+  ) async {
+    _throwIfNeeded();
+    detail = detail.copyWith(announcement: announcement);
+    return detail;
+  }
+
+  @override
   Future<GroupDetail> updateName(String groupId, String name) async {
     _throwIfNeeded();
     detail = groupDetail(
       isOwner: detail.isOwner,
       joinApprovalRequired: detail.joinApprovalRequired,
       name: name,
+      announcement: detail.announcement,
     );
     return detail;
   }
@@ -310,6 +342,7 @@ class FakeGroupRepository implements GroupRepository {
       isOwner: detail.isOwner,
       joinApprovalRequired: joinApprovalRequired,
       name: detail.name,
+      announcement: detail.announcement,
     );
     return detail;
   }

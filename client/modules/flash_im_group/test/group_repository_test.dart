@@ -13,30 +13,46 @@ void main() {
 
     final detail = await repository.getDetail('group-1');
     await repository.updateName('group-1', '新群名');
+    await repository.updateAnnouncement('group-1', '周五发布');
+    await repository.transferOwner('group-1', 2);
     await repository.updateSettings('group-1', joinApprovalRequired: true);
     await repository.addMembers('group-1', const [3]);
     await repository.removeMember('group-1', 2);
     await repository.inviteMembers('group-1', const [4]);
+    await repository.leaveGroup('group-1');
     await repository.dissolveGroup('group-1');
 
     expect(detail.isOwner, isTrue);
     expect(detail.avatar, 'grid:identicon:1');
+    expect(detail.announcement, '周五发布');
+    expect(detail.announcementUpdatedBy, 1);
+    expect(detail.announcementUpdatedByName, '群主');
+    expect(detail.announcementUpdatedAt, isNotNull);
+    expect(detail.isDissolved, isFalse);
     expect(detail.members.single.accountId, 1);
     expect(adapter.requests.map((request) => request.method), [
       'GET',
       'PATCH',
       'PATCH',
+      'PATCH',
+      'PATCH',
       'POST',
       'DELETE',
+      'POST',
       'POST',
       'DELETE',
     ]);
-    expect(adapter.requests[3].data, {
+    expect(adapter.requests[2].path, '/groups/group-1/announcement');
+    expect(adapter.requests[2].data, {'announcement': '周五发布'});
+    expect(adapter.requests[3].path, '/groups/group-1/owner');
+    expect(adapter.requests[3].data, {'owner_id': 2});
+    expect(adapter.requests[5].data, {
       'member_ids': [3],
     });
-    expect(adapter.requests[5].data, {
+    expect(adapter.requests[7].data, {
       'member_ids': [4],
     });
+    expect(adapter.requests[8].path, '/groups/group-1/leave');
   });
 
   test('rejects an invitation response with an undelivered item', () async {
@@ -155,6 +171,11 @@ class _RecordingAdapter implements HttpClientAdapter {
                     options.data['join_approval_required'] != null
                 ? options.data['join_approval_required']
                 : false,
+            'announcement': '周五发布',
+            'announcement_updated_at': '2026-08-31T08:00:00Z',
+            'announcement_updated_by': '1',
+            'announcement_updated_by_name': '群主',
+            'is_dissolved': false,
             'current_user_role': 'owner',
             'member_count': 1,
             'members': [

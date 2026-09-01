@@ -15,3 +15,18 @@ message GroupJoinRequestNotification {
   string created_at = 10;
   string handled_at = 11;
 }
+
+message GroupInfoUpdateNotification {
+  string conversation_id = 1;
+  string name = 2;
+  string avatar = 3;
+  int64 owner_id = 4;
+  int32 member_count = 5;
+  string announcement = 6;
+  string announcement_updated_at = 7;
+  int64 announcement_updated_by = 8;
+  bool is_dissolved = 9;
+  bool membership_active = 10;
+  string current_user_role = 11;
+  string change_type = 12;
+}

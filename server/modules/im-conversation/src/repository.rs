@@ -20,6 +20,8 @@ pub fn list_conversations_sql() -> &'static str {
         c.last_message_at,
         c.last_message_preview,
         me.unread_count,
+        c.announcement,
+        c.is_dissolved,
         c.created_at
     FROM conversation_members me
     JOIN conversations c ON c.id = me.conversation_id
@@ -50,7 +52,10 @@ pub fn list_conversations_sql() -> &'static str {
     ) group_members ON TRUE
     WHERE me.user_id = $1
       AND me.is_deleted = FALSE
-      AND c.is_dissolved = FALSE
+      AND (
+          c.is_dissolved = FALSE
+          OR (c.type = 1 AND $4::SMALLINT IS NULL)
+      )
       AND ($4::SMALLINT IS NULL OR c.type = $4)
     ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC
     LIMIT $2 OFFSET $3
@@ -72,6 +77,8 @@ pub fn get_conversation_by_id_sql() -> &'static str {
         c.last_message_at,
         c.last_message_preview,
         me.unread_count,
+        c.announcement,
+        c.is_dissolved,
         c.created_at
     FROM conversation_members me
     JOIN conversations c ON c.id = me.conversation_id
@@ -103,7 +110,6 @@ pub fn get_conversation_by_id_sql() -> &'static str {
     WHERE me.user_id = $1
       AND c.id = $2
       AND me.is_deleted = FALSE
-      AND c.is_dissolved = FALSE
     "#
 }
 
@@ -356,6 +362,33 @@ pub async fn is_member(pool: &PgPool, conversation_id: Uuid, user_id: i64) -> Ap
     .map_err(|_| AppError::internal_server_error("failed to verify conversation member"))
 }
 
+pub async fn can_read_history(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    user_id: i64,
+) -> AppResult<bool> {
+    sqlx::query_scalar::<_, bool>(can_read_history_sql())
+        .bind(conversation_id)
+        .bind(user_id)
+        .fetch_one(pool)
+        .await
+        .map_err(|_| {
+            AppError::internal_server_error("failed to verify conversation history access")
+        })
+}
+
+pub fn can_read_history_sql() -> &'static str {
+    r#"
+        SELECT EXISTS(
+            SELECT 1
+            FROM conversation_members member
+            WHERE member.conversation_id = $1
+              AND member.user_id = $2
+              AND member.is_deleted = FALSE
+        )
+        "#
+}
+
 pub async fn get_member_ids(pool: &PgPool, conversation_id: Uuid) -> AppResult<Vec<i64>> {
     sqlx::query_scalar::<_, i64>(
         r#"
@@ -522,8 +555,9 @@ pub async fn ensure_private_members(
 #[cfg(test)]
 mod tests {
     use super::{
-        create_group_conversation_sql, get_conversation_by_id_sql, group_friend_validation_sql,
-        insert_group_members_sql, list_conversations_sql, refresh_group_avatar_sql,
+        can_read_history_sql, create_group_conversation_sql, get_conversation_by_id_sql,
+        group_friend_validation_sql, insert_group_members_sql, list_conversations_sql,
+        refresh_group_avatar_sql,
     };
 
     #[test]
@@ -533,6 +567,7 @@ mod tests {
         assert!(sql.contains("ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC"));
         assert!(sql.contains("AND me.is_deleted = FALSE"));
         assert!(sql.contains("c.is_dissolved = FALSE"));
+        assert!(sql.contains("OR (c.type = 1 AND $4::SMALLINT IS NULL)"));
         assert!(sql.contains("$4::SMALLINT IS NULL OR c.type = $4"));
         assert!(sql.contains("c.owner_id"));
         assert!(sql.contains("ARRAY_AGG(group_member.avatar_url"));
@@ -566,7 +601,16 @@ mod tests {
         assert!(sql.contains("member_avatars"));
         assert!(sql.contains("AND c.id = $2"));
         assert!(sql.contains("AND me.is_deleted = FALSE"));
-        assert!(sql.contains("c.is_dissolved = FALSE"));
+        assert!(sql.contains("c.is_dissolved"));
+        assert!(!sql.contains("AND c.is_dissolved = FALSE"));
+    }
+
+    #[test]
+    fn history_access_keeps_membership_but_not_active_group_filter() {
+        let sql = can_read_history_sql();
+
+        assert!(sql.contains("member.is_deleted = FALSE"));
+        assert!(!sql.contains("is_dissolved"));
     }
 
     #[test]

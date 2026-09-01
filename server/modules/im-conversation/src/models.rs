@@ -16,6 +16,8 @@ pub struct ConversationListRow {
     pub last_message_at: Option<DateTime<Utc>>,
     pub last_message_preview: Option<String>,
     pub unread_count: i32,
+    pub announcement: Option<String>,
+    pub is_dissolved: bool,
     pub created_at: DateTime<Utc>,
 }
 
@@ -33,6 +35,8 @@ pub struct ConversationListItem {
     pub last_message_at: Option<DateTime<Utc>>,
     pub last_message_preview: Option<String>,
     pub unread_count: i32,
+    pub announcement: String,
+    pub is_dissolved: bool,
     pub created_at: DateTime<Utc>,
 }
 
@@ -51,6 +55,8 @@ impl From<ConversationListRow> for ConversationListItem {
             last_message_at: row.last_message_at,
             last_message_preview: row.last_message_preview,
             unread_count: row.unread_count,
+            announcement: row.announcement.unwrap_or_default(),
+            is_dissolved: row.is_dissolved,
             created_at: row.created_at,
         }
     }
@@ -92,6 +98,8 @@ mod tests {
             last_message_at: None,
             last_message_preview: None,
             unread_count: 0,
+            announcement: Some("欢迎加入".to_string()),
+            is_dissolved: false,
             created_at: Utc::now(),
         };
 
@@ -99,6 +107,7 @@ mod tests {
         assert_eq!(item.owner_id.as_deref(), Some("10001"));
         assert_eq!(item.avatar.as_deref(), Some("grid:identicon:10001"));
         assert_eq!(item.member_avatars, ["identicon:10001"]);
+        assert_eq!(item.announcement, "欢迎加入");
         assert!(item.peer_user_id.is_none());
     }
 }

@@ -19,6 +19,8 @@ void main() {
       'last_message_at': '2026-03-29T09:12:00Z',
       'last_message_preview': '你好',
       'unread_count': 2,
+      'announcement': '请文明交流',
+      'is_dissolved': true,
       'created_at': '2026-03-29T08:00:00Z',
     });
 
@@ -30,6 +32,8 @@ void main() {
     expect(conversation.lastMessageAt, DateTime.parse('2026-03-29T09:12:00Z'));
     expect(conversation.lastMessagePreview, '你好');
     expect(conversation.unreadCount, 2);
+    expect(conversation.announcement, '请文明交流');
+    expect(conversation.isDissolved, isTrue);
     expect(conversation.createdAt, DateTime.parse('2026-03-29T08:00:00Z'));
   });
 
@@ -57,6 +61,7 @@ void main() {
       'avatar': 'grid:identicon:1,identicon:2',
       'owner_id': 1,
       'member_avatars': ['identicon:1', '', 'identicon:2'],
+      'announcement': '周五发布新版本',
       'unread_count': 0,
       'created_at': '2026-08-16T08:00:00Z',
     });
@@ -66,6 +71,7 @@ void main() {
     expect(conversation.avatar, 'grid:identicon:1,identicon:2');
     expect(conversation.groupAvatar, 'grid:identicon:1,identicon:2');
     expect(conversation.memberAvatars, ['identicon:1', 'identicon:2']);
+    expect(conversation.announcement, '周五发布新版本');
     expect(
       () => conversation.memberAvatars.add('identicon:3'),
       throwsUnsupportedError,
@@ -142,6 +148,30 @@ void main() {
 
     expect(find.byType(GroupAvatarWidget), findsOneWidget);
     expect(find.byType(AvatarWidget), findsNWidgets(3));
+  });
+
+  testWidgets('dissolved group tile keeps preview and shows status badge', (
+    tester,
+  ) async {
+    final conversation = Conversation(
+      id: 'group-dissolved',
+      type: 1,
+      name: '历史群',
+      lastMessagePreview: '群聊已解散',
+      unreadCount: 0,
+      isDissolved: true,
+      createdAt: DateTime(2026, 8, 31),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: ConversationTile(conversation: conversation)),
+      ),
+    );
+
+    expect(find.byKey(const Key('dissolved-group-badge')), findsOneWidget);
+    expect(find.text('已解散'), findsOneWidget);
+    expect(find.text('群聊已解散'), findsOneWidget);
   });
 
   test('created_at is required', () {

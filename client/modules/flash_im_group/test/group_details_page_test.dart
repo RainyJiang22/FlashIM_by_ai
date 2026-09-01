@@ -48,6 +48,11 @@ void main() {
     expect(find.text('群号'), findsOneWidget);
     expect(find.text('group-1'), findsOneWidget);
     expect(find.text('入群验证'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('group-dissolve-button')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.byKey(const Key('group-dissolve-button')), findsOneWidget);
     final approvalSwitch = tester.widget<CupertinoSwitch>(
       find.byKey(const Key('group-join-approval-switch')),
@@ -70,6 +75,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(groupRepository.detail.name, '新群名');
 
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('group-dissolve-button')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.byKey(const Key('group-dissolve-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('group-dissolve-confirm')));
@@ -105,6 +115,12 @@ void main() {
     expect(find.text('添加'), findsOneWidget);
     expect(find.text('删除'), findsNothing);
     expect(find.byKey(const Key('group-dissolve-button')), findsNothing);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('group-leave-button')),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.byKey(const Key('group-leave-button')), findsOneWidget);
     final approvalSwitch = tester.widget<CupertinoSwitch>(
       find.byKey(const Key('group-join-approval-switch')),
     );

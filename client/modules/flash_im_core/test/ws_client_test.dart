@@ -235,6 +235,47 @@ void main() {
     await client.dispose();
   });
 
+  test('dispatches group info update frames and closes the stream', () async {
+    final channel = _FakeWebSocketChannel();
+    final client = WsClient(
+      config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+      tokenProvider: () => 'jwt-token',
+      channelFactory: (_) => channel,
+    );
+    final events = <GroupInfoUpdateNotification>[];
+    var streamDone = false;
+    final subscription = client.groupInfoUpdateStream.listen(
+      events.add,
+      onDone: () => streamDone = true,
+    );
+
+    await client.connect();
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.GROUP_INFO_UPDATE,
+        payload: GroupInfoUpdateNotification(
+          conversationId: 'group-1',
+          name: '治理群',
+          ownerId: Int64(10002),
+          memberCount: 3,
+          membershipActive: true,
+          currentUserRole: 'member',
+          changeType: 'owner_transferred',
+        ).writeToBuffer(),
+      ),
+    );
+    await _flushMicrotasks();
+
+    expect(events.single.conversationId, 'group-1');
+    expect(events.single.ownerId, Int64(10002));
+    expect(events.single.changeType, 'owner_transferred');
+
+    await client.dispose();
+    await _flushMicrotasks();
+    expect(streamDone, isTrue);
+    await subscription.cancel();
+  });
+
   test('sendMessage wraps media fields in SendMessageRequest', () async {
     final channel = _FakeWebSocketChannel();
     final client = WsClient(

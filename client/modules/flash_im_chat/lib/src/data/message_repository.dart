@@ -243,9 +243,8 @@ class DioMessageRepository implements MessageRepository {
 
   void _normalizePayloadUrls(Map<String, dynamic> payload) {
     final type = _int(payload['msg_type'] ?? payload['type']);
-    if (type != 0) {
-      payload['content'] = resolveMediaUrl('${payload['content'] ?? ''}');
-    }
+    if (type < 1 || type > 3) return;
+    payload['content'] = resolveMediaUrl('${payload['content'] ?? ''}');
     final extra = Message.parseExtra(payload['extra']);
     if (extra == null) return;
     for (final key in [

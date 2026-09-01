@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/group_detail.dart';
@@ -8,12 +11,19 @@ class GroupDetailCubit extends Cubit<GroupDetailState> {
   GroupDetailCubit({
     required GroupRepository repository,
     required String groupId,
+    WsClient? wsClient,
   }) : _repository = repository,
        _groupId = groupId,
-       super(const GroupDetailState());
+       super(const GroupDetailState()) {
+    _groupInfoSubscription = wsClient?.groupInfoUpdateStream.listen(
+      _applyGroupInfoUpdate,
+    );
+  }
 
   final GroupRepository _repository;
   final String _groupId;
+  StreamSubscription<GroupInfoUpdateNotification>? _groupInfoSubscription;
+  bool _isLeaving = false;
 
   Future<void> load() async {
     emit(state.copyWith(isLoading: true, clearError: true));
@@ -42,6 +52,27 @@ class GroupDetailCubit extends Cubit<GroupDetailState> {
     return _save(
       () => _repository.updateName(_groupId, name),
       fallback: '群名称修改失败，请稍后重试',
+    );
+  }
+
+  Future<bool> updateAnnouncement(String value) async {
+    final announcement = value.trim();
+    if (announcement.isEmpty ||
+        announcement.runes.length > 2000 ||
+        state.isSaving) {
+      return false;
+    }
+    return _save(
+      () => _repository.updateAnnouncement(_groupId, announcement),
+      fallback: '群公告发布失败，请稍后重试',
+    );
+  }
+
+  Future<bool> transferOwner(int memberId) async {
+    if (!state.isOwner || state.isSaving) return false;
+    return _save(
+      () => _repository.transferOwner(_groupId, memberId),
+      fallback: '群主转让失败，请稍后重试',
     );
   }
 
@@ -113,6 +144,83 @@ class GroupDetailCubit extends Cubit<GroupDetailState> {
     }
   }
 
+  Future<bool> leaveGroup() async {
+    if (state.isOwner || state.isSaving) return false;
+    _isLeaving = true;
+    emit(state.copyWith(isSaving: true, clearError: true));
+    try {
+      await _repository.leaveGroup(_groupId);
+      if (!isClosed) {
+        emit(state.copyWith(isSaving: false, isLeft: true, clearError: true));
+      }
+      return true;
+    } catch (error) {
+      if (!isClosed) {
+        emit(
+          state.copyWith(
+            isSaving: false,
+            errorMessage: _groupError(error, '退出群聊失败，请稍后重试'),
+          ),
+        );
+      }
+      return false;
+    } finally {
+      _isLeaving = false;
+    }
+  }
+
+  void _applyGroupInfoUpdate(GroupInfoUpdateNotification update) {
+    if (update.conversationId != _groupId || isClosed) return;
+    if (!update.membershipActive) {
+      emit(
+        state.copyWith(
+          isLeft: _isLeaving,
+          isRemoved: !_isLeaving,
+          isSaving: false,
+          clearError: true,
+        ),
+      );
+      return;
+    }
+    if (update.isDissolved) {
+      emit(
+        state.copyWith(isDissolved: true, isSaving: false, clearError: true),
+      );
+      return;
+    }
+    final detail = state.detail;
+    if (detail == null ||
+        const {
+          'members_added',
+          'member_removed',
+          'member_left',
+          'owner_transferred',
+        }.contains(update.changeType)) {
+      unawaited(load());
+      return;
+    }
+    emit(
+      state.copyWith(
+        detail: detail.copyWith(
+          name: update.name,
+          avatar: update.avatar,
+          ownerId: update.ownerId.toInt(),
+          announcement: update.announcement,
+          announcementUpdatedAt: DateTime.tryParse(
+            update.announcementUpdatedAt,
+          )?.toLocal(),
+          announcementUpdatedBy: update.announcementUpdatedBy.toInt() == 0
+              ? null
+              : update.announcementUpdatedBy.toInt(),
+          currentUserRole: update.currentUserRole,
+          memberCount: update.memberCount,
+          isDissolved: update.isDissolved,
+        ),
+        clearError: true,
+      ),
+    );
+  }
+
   Future<bool> _save(
     Future<GroupDetail> Function() request, {
     required String fallback,
@@ -144,6 +252,12 @@ class GroupDetailCubit extends Cubit<GroupDetailState> {
       return false;
     }
   }
+
+  @override
+  Future<void> close() async {
+    await _groupInfoSubscription?.cancel();
+    return super.close();
+  }
 }
 
 String _groupError(Object error, String fallback) {
@@ -155,6 +269,10 @@ String _groupError(Object error, String fallback) {
       'group member already exists' => '选择的好友已在群聊中',
       'group member limit reached' => '群成员已达上限',
       'group owner cannot be removed' => '不能删除群主',
+      'group owner cannot leave' => '群主请先转让群主或解散群聊',
+      'new owner must be another member' => '请选择其他成员作为新群主',
+      'new owner must be an active member' => '新群主必须是当前群成员',
+      'invalid group announcement' => '群公告需为 1～2000 字',
       'group invitation delivery failed' => '部分群邀请发送失败，请重试',
       _ => fallback,
     };

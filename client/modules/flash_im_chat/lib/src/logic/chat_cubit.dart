@@ -425,7 +425,9 @@ class ChatCubit extends Cubit<ChatState> {
   }
 
   Message _resolveMediaUrls(Message message) {
-    if (message.type == MessageType.text) return message;
+    if (!message.isImage && !message.isVideo && !message.isFile) {
+      return message;
+    }
     final extra = message.extra == null
         ? null
         : Map<String, dynamic>.from(message.extra!);

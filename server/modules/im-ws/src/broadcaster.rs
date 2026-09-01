@@ -4,7 +4,9 @@ use im_friend::broadcast::{
     FriendAcceptedPayload, FriendBroadcaster, FriendRemovedPayload, FriendRequestPayload,
     FriendUserPayload,
 };
-use im_group::broadcast::{GroupBroadcaster, GroupJoinRequestPayload};
+use im_group::broadcast::{
+    GroupBroadcaster, GroupInfoRecipient, GroupInfoUpdatePayload, GroupJoinRequestPayload,
+};
 use im_message::{
     broadcast::MessageBroadcaster,
     service::{ConversationUpdate as DomainConversationUpdate, MessagePayload},
@@ -14,11 +16,11 @@ use sqlx::PgPool;
 use crate::{
     frame::{
         chat_message_frame, conversation_update_frame, friend_accepted_frame, friend_removed_frame,
-        friend_request_frame, group_join_request_frame,
+        friend_request_frame, group_info_update_frame, group_join_request_frame,
     },
     proto::{
         ChatMessage, ConversationUpdate, FriendAcceptedEvent, FriendRemovedEvent,
-        FriendRequestEvent, FriendUser, GroupJoinRequestNotification,
+        FriendRequestEvent, FriendUser, GroupInfoUpdateNotification, GroupJoinRequestNotification,
     },
     state::WsState,
 };
@@ -147,6 +149,36 @@ impl GroupBroadcaster for WsBroadcaster {
                     .unwrap_or_default(),
             }),
         );
+        Ok(())
+    }
+
+    async fn broadcast_group_info_update(
+        &self,
+        recipients: &[GroupInfoRecipient],
+        event: GroupInfoUpdatePayload,
+    ) -> AppResult<()> {
+        for recipient in recipients {
+            self.state.send_to_user(
+                recipient.user_id,
+                group_info_update_frame(GroupInfoUpdateNotification {
+                    conversation_id: event.conversation_id.to_string(),
+                    name: event.name.clone(),
+                    avatar: event.avatar.clone(),
+                    owner_id: event.owner_id,
+                    member_count: event.member_count,
+                    announcement: event.announcement.clone(),
+                    announcement_updated_at: event
+                        .announcement_updated_at
+                        .map(|value| value.to_rfc3339())
+                        .unwrap_or_default(),
+                    announcement_updated_by: event.announcement_updated_by.unwrap_or_default(),
+                    is_dissolved: event.is_dissolved,
+                    membership_active: recipient.membership_active,
+                    current_user_role: recipient.current_user_role.to_string(),
+                    change_type: event.change_type.to_string(),
+                }),
+            );
+        }
         Ok(())
     }
 }

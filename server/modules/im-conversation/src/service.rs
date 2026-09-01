@@ -161,6 +161,11 @@ impl<'a> ConversationMessageService<'a> {
         crate::repository::is_member(self.context.postgres.pool(), conversation_id, user_id).await
     }
 
+    pub async fn can_read_history(&self, conversation_id: Uuid, user_id: i64) -> AppResult<bool> {
+        crate::repository::can_read_history(self.context.postgres.pool(), conversation_id, user_id)
+            .await
+    }
+
     pub async fn get_member_ids(&self, conversation_id: Uuid) -> AppResult<Vec<i64>> {
         crate::repository::get_member_ids(self.context.postgres.pool(), conversation_id).await
     }

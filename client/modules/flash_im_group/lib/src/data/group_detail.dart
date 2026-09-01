@@ -39,6 +39,11 @@ class GroupDetail extends Equatable {
     required this.avatar,
     required this.ownerId,
     required this.joinApprovalRequired,
+    this.announcement = '',
+    this.announcementUpdatedAt,
+    this.announcementUpdatedBy,
+    this.announcementUpdatedByName = '',
+    this.isDissolved = false,
     required this.currentUserRole,
     required this.memberCount,
     required List<GroupMember> members,
@@ -66,6 +71,11 @@ class GroupDetail extends Equatable {
           : avatar,
       ownerId: _requiredInt(json, 'owner_id'),
       joinApprovalRequired: json['join_approval_required'] == true,
+      announcement: _string(json['announcement']),
+      announcementUpdatedAt: _optionalDateTime(json['announcement_updated_at']),
+      announcementUpdatedBy: _optionalInt(json['announcement_updated_by']),
+      announcementUpdatedByName: _string(json['announcement_updated_by_name']),
+      isDissolved: json['is_dissolved'] == true,
       currentUserRole: _requiredString(json, 'current_user_role'),
       memberCount: _requiredInt(json, 'member_count'),
       members: members,
@@ -77,16 +87,51 @@ class GroupDetail extends Equatable {
   final String avatar;
   final int ownerId;
   final bool joinApprovalRequired;
+  final String announcement;
+  final DateTime? announcementUpdatedAt;
+  final int? announcementUpdatedBy;
+  final String announcementUpdatedByName;
+  final bool isDissolved;
   final String currentUserRole;
   final int memberCount;
   final List<GroupMember> members;
 
   bool get isOwner => currentUserRole == 'owner';
 
+  GroupDetail copyWith({
+    String? name,
+    String? avatar,
+    int? ownerId,
+    String? announcement,
+    DateTime? announcementUpdatedAt,
+    int? announcementUpdatedBy,
+    String? announcementUpdatedByName,
+    bool? isDissolved,
+    String? currentUserRole,
+    int? memberCount,
+    List<GroupMember>? members,
+  }) => GroupDetail(
+    conversationId: conversationId,
+    name: name ?? this.name,
+    avatar: avatar ?? this.avatar,
+    ownerId: ownerId ?? this.ownerId,
+    joinApprovalRequired: joinApprovalRequired,
+    announcement: announcement ?? this.announcement,
+    announcementUpdatedAt: announcementUpdatedAt ?? this.announcementUpdatedAt,
+    announcementUpdatedBy: announcementUpdatedBy ?? this.announcementUpdatedBy,
+    announcementUpdatedByName:
+        announcementUpdatedByName ?? this.announcementUpdatedByName,
+    isDissolved: isDissolved ?? this.isDissolved,
+    currentUserRole: currentUserRole ?? this.currentUserRole,
+    memberCount: memberCount ?? this.memberCount,
+    members: members ?? this.members,
+  );
+
   Conversation applyToConversation(Conversation conversation) =>
       conversation.copyWith(
         name: name,
         avatar: avatar,
+        announcement: announcement,
         memberAvatars: members.map((member) => member.avatar).take(9).toList(),
       );
 
@@ -97,20 +142,32 @@ class GroupDetail extends Equatable {
     avatar,
     ownerId,
     joinApprovalRequired,
+    announcement,
+    announcementUpdatedAt,
+    announcementUpdatedBy,
+    announcementUpdatedByName,
+    isDissolved,
     currentUserRole,
     memberCount,
     members,
   ];
 }
 
-enum GroupDetailsOutcome { updated, dissolved }
+enum GroupDetailsOutcome { updated, left, removed, dissolved }
 
 class GroupDetailsResult extends Equatable {
   const GroupDetailsResult.updated(this.conversation)
     : outcome = GroupDetailsOutcome.updated;
 
-  const GroupDetailsResult.dissolved()
-    : outcome = GroupDetailsOutcome.dissolved,
+  const GroupDetailsResult.dissolved([this.conversation])
+    : outcome = GroupDetailsOutcome.dissolved;
+
+  const GroupDetailsResult.left()
+    : outcome = GroupDetailsOutcome.left,
+      conversation = null;
+
+  const GroupDetailsResult.removed()
+    : outcome = GroupDetailsOutcome.removed,
       conversation = null;
 
   final GroupDetailsOutcome outcome;
@@ -132,6 +189,12 @@ int _requiredInt(Map<String, dynamic> json, String key) {
   throw FormatException('GroupDetail field "$key" is required.');
 }
 
+int? _optionalInt(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toInt();
+  return int.tryParse('$value');
+}
+
 String _string(dynamic value) => value is String ? value : '';
 
 String _requiredString(Map<String, dynamic> json, String key) {
@@ -148,4 +211,10 @@ DateTime _requiredDateTime(Map<String, dynamic> json, String key) {
     return DateTime.parse(value).toLocal();
   }
   throw FormatException('GroupDetail field "$key" is invalid.');
+}
+
+DateTime? _optionalDateTime(dynamic value) {
+  if (value == null || value == '') return null;
+  if (value is String) return DateTime.parse(value).toLocal();
+  throw const FormatException('GroupDetail optional date field is invalid.');
 }

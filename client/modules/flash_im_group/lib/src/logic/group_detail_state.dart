@@ -9,6 +9,8 @@ class GroupDetailState extends Equatable {
     this.isSaving = false,
     this.isDeleteMode = false,
     this.isDissolved = false,
+    this.isLeft = false,
+    this.isRemoved = false,
     this.errorMessage,
   });
 
@@ -17,6 +19,8 @@ class GroupDetailState extends Equatable {
   final bool isSaving;
   final bool isDeleteMode;
   final bool isDissolved;
+  final bool isLeft;
+  final bool isRemoved;
   final String? errorMessage;
 
   bool get isOwner => detail?.isOwner == true;
@@ -27,6 +31,8 @@ class GroupDetailState extends Equatable {
     bool? isSaving,
     bool? isDeleteMode,
     bool? isDissolved,
+    bool? isLeft,
+    bool? isRemoved,
     String? errorMessage,
     bool clearError = false,
   }) => GroupDetailState(
@@ -35,6 +41,8 @@ class GroupDetailState extends Equatable {
     isSaving: isSaving ?? this.isSaving,
     isDeleteMode: isDeleteMode ?? this.isDeleteMode,
     isDissolved: isDissolved ?? this.isDissolved,
+    isLeft: isLeft ?? this.isLeft,
+    isRemoved: isRemoved ?? this.isRemoved,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
   );
 
@@ -45,6 +53,8 @@ class GroupDetailState extends Equatable {
     isSaving,
     isDeleteMode,
     isDissolved,
+    isLeft,
+    isRemoved,
     errorMessage,
   ];
 }

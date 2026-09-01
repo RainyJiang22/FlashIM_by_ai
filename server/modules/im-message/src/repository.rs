@@ -1,5 +1,5 @@
 use flash_core::{AppError, AppResult};
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
 use crate::models::{MessageRow, MessageWithSenderRow, NewMessage};
@@ -59,6 +59,20 @@ pub async fn persist_message(
         return Err(AppError::not_found("conversation not found"));
     }
 
+    let persisted = persist_message_in_transaction(&mut transaction, message, preview).await?;
+
+    transaction
+        .commit()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to commit message transaction"))?;
+    Ok(persisted)
+}
+
+async fn persist_message_in_transaction(
+    transaction: &mut Transaction<'_, Postgres>,
+    message: NewMessage,
+    preview: &str,
+) -> AppResult<PersistedMessage> {
     let seq = sqlx::query_scalar::<_, i64>(
         r#"
         INSERT INTO conversation_seq (conversation_id, current_seq)
@@ -69,7 +83,7 @@ pub async fn persist_message(
         "#,
     )
     .bind(message.conversation_id)
-    .fetch_one(&mut *transaction)
+    .fetch_one(&mut **transaction)
     .await
     .map_err(|_| AppError::internal_server_error("failed to generate message sequence"))?;
 
@@ -80,7 +94,7 @@ pub async fn persist_message(
         .bind(message.r#type)
         .bind(message.content)
         .bind(message.extra)
-        .fetch_one(&mut *transaction)
+        .fetch_one(&mut **transaction)
         .await
         .map_err(|_| AppError::internal_server_error("failed to insert message"))?;
 
@@ -94,7 +108,7 @@ pub async fn persist_message(
     .bind(row.conversation_id)
     .bind(preview)
     .bind(row.created_at)
-    .execute(&mut *transaction)
+    .execute(&mut **transaction)
     .await
     .map_err(|_| AppError::internal_server_error("failed to update conversation preview"))?;
 
@@ -109,7 +123,7 @@ pub async fn persist_message(
     )
     .bind(row.conversation_id)
     .bind(row.sender_id)
-    .execute(&mut *transaction)
+    .execute(&mut **transaction)
     .await
     .map_err(|_| AppError::internal_server_error("failed to increment unread count"))?;
 
@@ -122,7 +136,7 @@ pub async fn persist_message(
         "#,
     )
     .bind(row.conversation_id)
-    .fetch_all(&mut *transaction)
+    .fetch_all(&mut **transaction)
     .await
     .map_err(|_| AppError::internal_server_error("failed to load conversation members"))?;
     let unread_counts = sqlx::query_as::<_, (i64, i32)>(
@@ -136,19 +150,26 @@ pub async fn persist_message(
     )
     .bind(row.conversation_id)
     .bind(&member_ids)
-    .fetch_all(&mut *transaction)
+    .fetch_all(&mut **transaction)
     .await
     .map_err(|_| AppError::internal_server_error("failed to load unread counts"))?;
 
-    transaction
-        .commit()
-        .await
-        .map_err(|_| AppError::internal_server_error("failed to commit message transaction"))?;
     Ok(PersistedMessage {
         row,
         member_ids,
         unread_counts,
     })
+}
+
+pub async fn persist_system_message_in_transaction(
+    transaction: &mut Transaction<'_, Postgres>,
+    message: NewMessage,
+    preview: &str,
+) -> AppResult<PersistedMessage> {
+    if message.r#type != crate::service::GROUP_CREATED_MESSAGE_TYPE {
+        return Err(AppError::bad_request("invalid group system message"));
+    }
+    persist_message_in_transaction(transaction, message, preview).await
 }
 
 pub fn find_before_sql() -> &'static str {

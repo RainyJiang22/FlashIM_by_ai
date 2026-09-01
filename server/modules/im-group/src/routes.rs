@@ -15,7 +15,8 @@ use crate::{
     broadcast::{GroupBroadcaster, NoopGroupBroadcaster},
     models::{
         GroupActionResponse, GroupMemberIdsBody, GroupSearchQuery, HandleJoinRequestBody,
-        JoinGroupBody, UpdateGroupNameBody, UpdateGroupSettingsBody,
+        JoinGroupBody, TransferGroupOwnerBody, UpdateGroupAnnouncementBody, UpdateGroupNameBody,
+        UpdateGroupSettingsBody,
     },
     service::GroupService,
 };
@@ -41,6 +42,12 @@ where
             get(get_group::<B>).delete(dissolve_group::<B>),
         )
         .route("/groups/{id}/name", patch(update_group_name::<B>))
+        .route("/groups/{id}/owner", patch(transfer_group_owner::<B>))
+        .route(
+            "/groups/{id}/announcement",
+            patch(update_group_announcement::<B>),
+        )
+        .route("/groups/{id}/leave", post(leave_group::<B>))
         .route("/groups/{id}/settings", patch(update_group_settings::<B>))
         .route("/groups/{id}/members", post(add_group_members::<B>))
         .route(
@@ -168,6 +175,58 @@ where
         .update_settings(&context, user_id, conversation_id, body)
         .await?;
     Ok(utf8_json(Json(detail)))
+}
+
+async fn update_group_announcement<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Path(conversation_id): Path<Uuid>,
+    Json(body): Json<UpdateGroupAnnouncementBody>,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let detail = GroupService::new(broadcaster)
+        .update_announcement(&context, user_id, conversation_id, body)
+        .await?;
+    Ok(utf8_json(Json(detail)))
+}
+
+async fn transfer_group_owner<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Path(conversation_id): Path<Uuid>,
+    Json(body): Json<TransferGroupOwnerBody>,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let detail = GroupService::new(broadcaster)
+        .transfer_owner(&context, user_id, conversation_id, body)
+        .await?;
+    Ok(utf8_json(Json(detail)))
+}
+
+async fn leave_group<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Path(conversation_id): Path<Uuid>,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    GroupService::new(broadcaster)
+        .leave_group(&context, user_id, conversation_id)
+        .await?;
+    Ok(utf8_json(Json(GroupActionResponse {
+        message: "left group",
+    })))
 }
 
 async fn add_group_members<B>(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
@@ -103,7 +105,8 @@ void main() {
           home: ChatPage(
             conversation: original,
             currentUserId: '1',
-            onDetailsTap: () async => original.copyWith(name: '新群名'),
+            onDetailsTap: () async =>
+                original.copyWith(name: '新群名', announcement: '新群公告'),
           ),
         ),
       ),
@@ -114,6 +117,47 @@ void main() {
     await tester.tap(find.byKey(const Key('chat-details-action')));
     await tester.pump();
     expect(find.text('新群名'), findsOneWidget);
+    expect(find.text('新群公告'), findsOneWidget);
+    expect(find.byKey(const Key('chat-announcement-banner')), findsOneWidget);
+  });
+
+  testWidgets('group announcement stays pinned below the app bar', (
+    tester,
+  ) async {
+    var detailsTapped = false;
+    await tester.pumpWidget(
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<MessageRepository>.value(
+            value: const _FakeMessageRepository(),
+          ),
+          RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+        ],
+        child: MaterialApp(
+          home: ChatPage(
+            conversation: Conversation(
+              id: 'group-1',
+              type: 1,
+              name: '测试群',
+              announcement: '大家理性讨论，共同进步～',
+              unreadCount: 0,
+              createdAt: DateTime(2026, 9, 1),
+            ),
+            currentUserId: '1',
+            onDetailsTap: () async {
+              detailsTapped = true;
+              return null;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('chat-announcement-banner')), findsOneWidget);
+    expect(find.text('大家理性讨论，共同进步～'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('chat-announcement-banner')));
+    expect(detailsTapped, isTrue);
   });
 
   testWidgets('renders loaded message list', (tester) async {
@@ -182,6 +226,105 @@ void main() {
 
     expect(find.text('消息加载失败，请稍后重试'), findsOneWidget);
   });
+
+  testWidgets('dissolved group keeps history and replaces all send controls', (
+    tester,
+  ) async {
+    final message = Message(
+      id: 'm1',
+      conversationId: 'group-1',
+      senderId: '2',
+      senderName: '阿青',
+      seq: 1,
+      content: '历史消息',
+      status: MessageStatus.sent,
+      createdAt: DateTime(2026, 8, 31),
+    );
+    await tester.pumpWidget(
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<MessageRepository>.value(
+            value: _FakeMessageRepository(messages: [message]),
+          ),
+          RepositoryProvider<WsClient>.value(value: _FakeWsClient()),
+        ],
+        child: MaterialApp(
+          home: ChatPage(
+            conversation: Conversation(
+              id: 'group-1',
+              type: 1,
+              name: '已解散群',
+              unreadCount: 0,
+              isDissolved: true,
+              createdAt: DateTime(2026, 8, 31),
+            ),
+            currentUserId: '1',
+            onDetailsTap: () async => null,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('历史消息'), findsOneWidget);
+    expect(find.byKey(const Key('dissolved-chat-readonly')), findsOneWidget);
+    expect(find.text('该群聊已解散'), findsOneWidget);
+    expect(find.text('输入消息'), findsNothing);
+    expect(find.byTooltip('更多'), findsNothing);
+    expect(find.byKey(const Key('chat-details-action')), findsNothing);
+  });
+
+  testWidgets(
+    'group info update changes title and switches chat to read-only',
+    (tester) async {
+      final wsClient = _FakeWsClient();
+      await tester.pumpWidget(
+        MultiRepositoryProvider(
+          providers: [
+            RepositoryProvider<MessageRepository>.value(
+              value: const _FakeMessageRepository(),
+            ),
+            RepositoryProvider<WsClient>.value(value: wsClient),
+          ],
+          child: MaterialApp(
+            home: ChatPage(
+              conversation: Conversation(
+                id: 'group-1',
+                type: 1,
+                name: '旧群名',
+                unreadCount: 0,
+                createdAt: DateTime(2026, 8, 31),
+              ),
+              currentUserId: '1',
+              onDetailsTap: () async => null,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      wsClient.addGroupInfo(
+        GroupInfoUpdateNotification(
+          conversationId: 'group-1',
+          name: '实时群名',
+          memberCount: 2,
+          announcement: '实时公告',
+          isDissolved: true,
+          membershipActive: true,
+          currentUserRole: 'member',
+          changeType: 'dissolved',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('实时群名'), findsOneWidget);
+      expect(find.text('实时公告'), findsOneWidget);
+      expect(find.byKey(const Key('chat-announcement-banner')), findsOneWidget);
+      expect(find.byKey(const Key('dissolved-chat-readonly')), findsOneWidget);
+      expect(find.byKey(const Key('chat-details-action')), findsNothing);
+      await wsClient.closeEvents();
+    },
+  );
 }
 
 class _FakeMessageRepository implements MessageRepository {
@@ -238,4 +381,15 @@ class _FakeWsClient extends WsClient {
         config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
         tokenProvider: () => null,
       );
+
+  final _groupInfo = StreamController<GroupInfoUpdateNotification>.broadcast();
+
+  @override
+  Stream<GroupInfoUpdateNotification> get groupInfoUpdateStream =>
+      _groupInfo.stream;
+
+  void addGroupInfo(GroupInfoUpdateNotification update) =>
+      _groupInfo.add(update);
+
+  Future<void> closeEvents() => _groupInfo.close();
 }

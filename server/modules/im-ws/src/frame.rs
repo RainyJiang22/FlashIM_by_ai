@@ -4,8 +4,8 @@ use prost::Message as ProstMessage;
 
 use crate::proto::{
     AuthRequest, AuthResult, ChatMessage, ConversationUpdate, FriendAcceptedEvent,
-    FriendRemovedEvent, FriendRequestEvent, GroupJoinRequestNotification, MessageAck, WsFrame,
-    WsFrameType,
+    FriendRemovedEvent, FriendRequestEvent, GroupInfoUpdateNotification,
+    GroupJoinRequestNotification, MessageAck, WsFrame, WsFrameType,
 };
 
 #[derive(Debug)]
@@ -103,4 +103,40 @@ pub fn friend_removed_frame(event: FriendRemovedEvent) -> Vec<u8> {
 
 pub fn group_join_request_frame(event: GroupJoinRequestNotification) -> Vec<u8> {
     encode_frame(WsFrameType::GroupJoinRequest, event.encode_to_vec())
+}
+
+pub fn group_info_update_frame(event: GroupInfoUpdateNotification) -> Vec<u8> {
+    encode_frame(WsFrameType::GroupInfoUpdate, event.encode_to_vec())
+}
+
+#[cfg(test)]
+mod tests {
+    use prost::Message as ProstMessage;
+
+    use super::{decode_frame, group_info_update_frame};
+    use crate::proto::{GroupInfoUpdateNotification, WsFrameType};
+
+    #[test]
+    fn group_info_update_uses_type_eleven_and_keeps_recipient_state() {
+        let bytes = group_info_update_frame(GroupInfoUpdateNotification {
+            conversation_id: "group-id".to_string(),
+            name: "测试群".to_string(),
+            avatar: "grid:a".to_string(),
+            owner_id: 1,
+            member_count: 2,
+            announcement: "公告".to_string(),
+            announcement_updated_at: "2026-08-31T00:00:00Z".to_string(),
+            announcement_updated_by: 1,
+            is_dissolved: false,
+            membership_active: true,
+            current_user_role: "member".to_string(),
+            change_type: "announcement_updated".to_string(),
+        });
+
+        let (frame_type, payload) = decode_frame(&bytes).unwrap();
+        assert_eq!(frame_type, WsFrameType::GroupInfoUpdate);
+        let event = GroupInfoUpdateNotification::decode(payload.as_slice()).unwrap();
+        assert!(event.membership_active);
+        assert_eq!(event.change_type, "announcement_updated");
+    }
 }

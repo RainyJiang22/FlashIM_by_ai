@@ -43,3 +43,58 @@ final $typed_data.Uint8List groupJoinRequestNotificationDescriptor = $convert.ba
     '50QXZhdGFyEhgKB21lc3NhZ2UYCCABKAlSB21lc3NhZ2USFgoGc3RhdHVzGAkgASgFUgZzdGF0'
     'dXMSHQoKY3JlYXRlZF9hdBgKIAEoCVIJY3JlYXRlZEF0Eh0KCmhhbmRsZWRfYXQYCyABKAlSCW'
     'hhbmRsZWRBdA==');
+
+@$core.Deprecated('Use groupInfoUpdateNotificationDescriptor instead')
+const GroupInfoUpdateNotification$json = {
+  '1': 'GroupInfoUpdateNotification',
+  '2': [
+    {'1': 'conversation_id', '3': 1, '4': 1, '5': 9, '10': 'conversationId'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
+    {'1': 'avatar', '3': 3, '4': 1, '5': 9, '10': 'avatar'},
+    {'1': 'owner_id', '3': 4, '4': 1, '5': 3, '10': 'ownerId'},
+    {'1': 'member_count', '3': 5, '4': 1, '5': 5, '10': 'memberCount'},
+    {'1': 'announcement', '3': 6, '4': 1, '5': 9, '10': 'announcement'},
+    {
+      '1': 'announcement_updated_at',
+      '3': 7,
+      '4': 1,
+      '5': 9,
+      '10': 'announcementUpdatedAt'
+    },
+    {
+      '1': 'announcement_updated_by',
+      '3': 8,
+      '4': 1,
+      '5': 3,
+      '10': 'announcementUpdatedBy'
+    },
+    {'1': 'is_dissolved', '3': 9, '4': 1, '5': 8, '10': 'isDissolved'},
+    {
+      '1': 'membership_active',
+      '3': 10,
+      '4': 1,
+      '5': 8,
+      '10': 'membershipActive'
+    },
+    {
+      '1': 'current_user_role',
+      '3': 11,
+      '4': 1,
+      '5': 9,
+      '10': 'currentUserRole'
+    },
+    {'1': 'change_type', '3': 12, '4': 1, '5': 9, '10': 'changeType'},
+  ],
+};
+
+/// Descriptor for `GroupInfoUpdateNotification`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List groupInfoUpdateNotificationDescriptor = $convert.base64Decode(
+    'ChtHcm91cEluZm9VcGRhdGVOb3RpZmljYXRpb24SJwoPY29udmVyc2F0aW9uX2lkGAEgASgJUg'
+    '5jb252ZXJzYXRpb25JZBISCgRuYW1lGAIgASgJUgRuYW1lEhYKBmF2YXRhchgDIAEoCVIGYXZh'
+    'dGFyEhkKCG93bmVyX2lkGAQgASgDUgdvd25lcklkEiEKDG1lbWJlcl9jb3VudBgFIAEoBVILbW'
+    'VtYmVyQ291bnQSIgoMYW5ub3VuY2VtZW50GAYgASgJUgxhbm5vdW5jZW1lbnQSNgoXYW5ub3Vu'
+    'Y2VtZW50X3VwZGF0ZWRfYXQYByABKAlSFWFubm91bmNlbWVudFVwZGF0ZWRBdBI2Chdhbm5vdW'
+    '5jZW1lbnRfdXBkYXRlZF9ieRgIIAEoA1IVYW5ub3VuY2VtZW50VXBkYXRlZEJ5EiEKDGlzX2Rp'
+    'c3NvbHZlZBgJIAEoCFILaXNEaXNzb2x2ZWQSKwoRbWVtYmVyc2hpcF9hY3RpdmUYCiABKAhSEG'
+    '1lbWJlcnNoaXBBY3RpdmUSKgoRY3VycmVudF91c2VyX3JvbGUYCyABKAlSD2N1cnJlbnRVc2Vy'
+    'Um9sZRIfCgtjaGFuZ2VfdHlwZRgMIAEoCVIKY2hhbmdlVHlwZQ==');

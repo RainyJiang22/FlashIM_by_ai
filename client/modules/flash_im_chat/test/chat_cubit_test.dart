@@ -156,6 +156,44 @@ void main() {
     },
   );
 
+  late _FakeWsClient systemMessageWsClient;
+  blocTest<ChatCubit, ChatState>(
+    'incoming group system message keeps persisted text and event',
+    build: () {
+      systemMessageWsClient = _FakeWsClient();
+      return ChatCubit(
+        repository: _FakeMessageRepository(messages: const []),
+        wsClient: systemMessageWsClient,
+        conversation: conversation,
+        currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
+        mediaUrlResolver: (value) => 'http://127.0.0.1:9600/$value',
+      );
+    },
+    seed: () => const ChatLoaded(messages: [], hasMore: false),
+    act: (cubit) {
+      systemMessageWsClient.emitMessage(
+        ChatMessage(
+          id: 'system-1',
+          conversationId: 'c1',
+          senderId: 2,
+          senderName: '系统助手',
+          seq: 3,
+          type: 5,
+          content: '系统助手 更新了群公告',
+          extra: '{"system_event":"announcement_updated"}',
+          createdAt: '2026-09-01T09:02:00Z',
+        ),
+      );
+    },
+    expect: () => [isA<ChatLoaded>()],
+    verify: (cubit) {
+      final message = (cubit.state as ChatLoaded).messages.single;
+      expect(message.content, '系统助手 更新了群公告');
+      expect(message.extra?['system_event'], 'announcement_updated');
+    },
+  );
+
   late _FakeWsClient ignoredWsClient;
   blocTest<ChatCubit, ChatState>(
     'incoming message from another conversation is ignored',

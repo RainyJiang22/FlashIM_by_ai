@@ -16,6 +16,8 @@ class Conversation extends Equatable {
     this.peerAvatar,
     this.lastMessageAt,
     this.lastMessagePreview,
+    this.announcement = '',
+    this.isDissolved = false,
   }) : memberAvatars = List<String>.unmodifiable(memberAvatars);
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,8 @@ class Conversation extends Equatable {
       lastMessageAt: _parseNullableDateTime(json['last_message_at']),
       lastMessagePreview: json['last_message_preview'] as String?,
       unreadCount: (json['unread_count'] as num?)?.toInt() ?? 0,
+      announcement: json['announcement']?.toString() ?? '',
+      isDissolved: json['is_dissolved'] == true,
       createdAt: _parseRequiredDateTime(json['created_at'], 'created_at'),
     );
   }
@@ -70,32 +74,40 @@ class Conversation extends Equatable {
   final DateTime? lastMessageAt;
   final String? lastMessagePreview;
   final int unreadCount;
+  final String announcement;
+  final bool isDissolved;
   final DateTime createdAt;
 
   Conversation copyWith({
+    int? type,
     String? name,
     String? avatar,
+    String? ownerId,
     List<String>? memberAvatars,
     int? unreadCount,
     DateTime? lastMessageAt,
     String? lastMessagePreview,
     String? peerNickname,
     String? peerAvatar,
+    String? announcement,
+    bool? isDissolved,
   }) {
     return Conversation(
       id: id,
-      type: type,
+      type: type ?? this.type,
       unreadCount: unreadCount ?? this.unreadCount,
       createdAt: createdAt,
       name: name ?? this.name,
       avatar: avatar ?? this.avatar,
-      ownerId: ownerId,
+      ownerId: ownerId ?? this.ownerId,
       memberAvatars: memberAvatars ?? this.memberAvatars,
       peerUserId: peerUserId,
       peerNickname: peerNickname ?? this.peerNickname,
       peerAvatar: peerAvatar ?? this.peerAvatar,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
+      announcement: announcement ?? this.announcement,
+      isDissolved: isDissolved ?? this.isDissolved,
     );
   }
 
@@ -113,6 +125,8 @@ class Conversation extends Equatable {
     lastMessageAt,
     lastMessagePreview,
     unreadCount,
+    announcement,
+    isDissolved,
     createdAt,
   ];
 }

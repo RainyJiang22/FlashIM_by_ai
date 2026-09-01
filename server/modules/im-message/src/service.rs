@@ -110,18 +110,12 @@ where
             .await?
             .filter(|name| !name.trim().is_empty())
             .unwrap_or_else(|| format!("用户 {creator_id}"));
-        self.send_with_excluded_sender(
+        self.send_group_system_event(
             context,
-            SendMessageInput {
-                conversation_id,
-                sender_id: creator_id,
-                msg_type: GROUP_CREATED_MESSAGE_TYPE,
-                content: format!("{creator_name} 创建了群聊"),
-                extra: Some(serde_json::json!({
-                    "system_event": "group_created",
-                })),
-            },
-            None,
+            conversation_id,
+            creator_id,
+            format!("{creator_name} 创建了群聊"),
+            "group_created",
         )
         .await
     }
@@ -136,20 +130,71 @@ where
             .await?
             .filter(|name| !name.trim().is_empty())
             .unwrap_or_else(|| format!("用户 {member_id}"));
+        self.send_group_system_event(
+            context,
+            conversation_id,
+            member_id,
+            format!("{member_name} 加入了群聊"),
+            "member_joined",
+        )
+        .await
+    }
+
+    pub async fn send_group_member_invited(
+        &self,
+        context: &SharedContext,
+        conversation_id: Uuid,
+        inviter_id: i64,
+        invitee_id: i64,
+    ) -> AppResult<SendMessageOutput> {
+        let inviter_name = repository::get_user_display_name(context.postgres.pool(), inviter_id)
+            .await?
+            .filter(|name| !name.trim().is_empty())
+            .unwrap_or_else(|| format!("用户 {inviter_id}"));
+        let invitee_name = repository::get_user_display_name(context.postgres.pool(), invitee_id)
+            .await?
+            .filter(|name| !name.trim().is_empty())
+            .unwrap_or_else(|| format!("用户 {invitee_id}"));
+        self.send_group_system_event(
+            context,
+            conversation_id,
+            inviter_id,
+            format!("{inviter_name} 邀请 {invitee_name} 进群"),
+            "member_invited",
+        )
+        .await
+    }
+
+    pub async fn send_group_system_event(
+        &self,
+        context: &SharedContext,
+        conversation_id: Uuid,
+        sender_id: i64,
+        content: String,
+        system_event: &'static str,
+    ) -> AppResult<SendMessageOutput> {
         self.send_with_excluded_sender(
             context,
             SendMessageInput {
                 conversation_id,
-                sender_id: member_id,
+                sender_id,
                 msg_type: GROUP_CREATED_MESSAGE_TYPE,
-                content: format!("{member_name} 加入了群聊"),
+                content,
                 extra: Some(serde_json::json!({
-                    "system_event": "member_joined",
+                    "system_event": system_event,
                 })),
             },
             None,
         )
         .await
+    }
+
+    pub async fn broadcast_persisted_system_message(
+        &self,
+        persisted: repository::PersistedMessage,
+        preview: String,
+    ) -> AppResult<SendMessageOutput> {
+        self.publish_persisted(persisted, preview, None).await
     }
 
     async fn send_with_excluded_sender(
@@ -186,6 +231,16 @@ where
             &preview,
         )
         .await?;
+        self.publish_persisted(persisted, preview, excluded_sender)
+            .await
+    }
+
+    async fn publish_persisted(
+        &self,
+        persisted: repository::PersistedMessage,
+        preview: String,
+        excluded_sender: Option<i64>,
+    ) -> AppResult<SendMessageOutput> {
         let payload = MessagePayload::from(persisted.row);
         let member_ids = persisted.member_ids;
         let updates = persisted
@@ -229,7 +284,7 @@ where
         let (before_seq, limit) = normalize_history_query(query)?;
         let conversation_service = ConversationMessageService::new(context);
         if !conversation_service
-            .is_member(conversation_id, user_id)
+            .can_read_history(conversation_id, user_id)
             .await?
         {
             return Err(AppError::not_found("conversation not found"));

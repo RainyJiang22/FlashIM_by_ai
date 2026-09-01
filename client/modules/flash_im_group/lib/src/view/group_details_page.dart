@@ -1,4 +1,5 @@
 import 'package:flash_im_conversation/flash_im_conversation.dart';
+import 'package:flash_im_core/flash_im_core.dart' show WsClient;
 import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/cupertino.dart';
@@ -10,13 +11,20 @@ import '../data/group_repository.dart';
 import '../logic/group_detail_cubit.dart';
 import '../logic/group_detail_state.dart';
 import 'group_member_picker_page.dart';
+import 'group_announcement_page.dart';
+import 'transfer_group_owner_page.dart';
 import 'widgets/group_member_grid.dart';
 import 'widgets/group_name_editor.dart';
 
 class GroupDetailsPage extends StatelessWidget {
-  const GroupDetailsPage({super.key, required this.conversation});
+  const GroupDetailsPage({
+    super.key,
+    required this.conversation,
+    this.wsClient,
+  });
 
   final Conversation conversation;
+  final WsClient? wsClient;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +32,7 @@ class GroupDetailsPage extends StatelessWidget {
       create: (context) => GroupDetailCubit(
         repository: context.read<GroupRepository>(),
         groupId: conversation.id,
+        wsClient: wsClient,
       )..load(),
       child: _GroupDetailsView(conversation: conversation),
     );
@@ -40,10 +49,23 @@ class _GroupDetailsView extends StatelessWidget {
     return BlocConsumer<GroupDetailCubit, GroupDetailState>(
       listenWhen: (previous, current) =>
           previous.errorMessage != current.errorMessage ||
-          previous.isDissolved != current.isDissolved,
+          previous.isDissolved != current.isDissolved ||
+          previous.isLeft != current.isLeft ||
+          previous.isRemoved != current.isRemoved,
       listener: (context, state) {
         if (state.isDissolved) {
-          Navigator.of(context).pop(const GroupDetailsResult.dissolved());
+          final updated = state.detail
+              ?.applyToConversation(conversation)
+              .copyWith(isDissolved: true);
+          Navigator.of(context).pop(GroupDetailsResult.dissolved(updated));
+          return;
+        }
+        if (state.isLeft) {
+          Navigator.of(context).pop(const GroupDetailsResult.left());
+          return;
+        }
+        if (state.isRemoved) {
+          Navigator.of(context).pop(const GroupDetailsResult.removed());
           return;
         }
         final message = state.errorMessage;
@@ -149,6 +171,26 @@ class _GroupDetailsView extends StatelessWidget {
                   ),
                   const Divider(height: 1, indent: 16),
                   ListTile(
+                    key: const Key('group-announcement-row'),
+                    title: const Text('群公告'),
+                    subtitle: Text(
+                      detail.announcement.isEmpty
+                          ? '暂无群公告'
+                          : detail.announcement,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: FlashPalette.secondaryInk),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: FlashPalette.mutedInk,
+                    ),
+                    onTap: state.isSaving
+                        ? null
+                        : () => _openAnnouncement(context, detail),
+                  ),
+                  const Divider(height: 1, indent: 16),
+                  ListTile(
                     title: const Text('入群验证'),
                     subtitle: Text(
                       detail.joinApprovalRequired
@@ -183,6 +225,21 @@ class _GroupDetailsView extends StatelessWidget {
               ),
             ),
             if (detail.isOwner) ...[
+              const SizedBox(height: 14),
+              Container(
+                decoration: flashCardDecoration(),
+                child: ListTile(
+                  key: const Key('group-transfer-owner-row'),
+                  title: const Text('转让群主'),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: FlashPalette.mutedInk,
+                  ),
+                  onTap: state.isSaving
+                      ? null
+                      : () => _openTransferOwner(context, detail),
+                ),
+              ),
               const SizedBox(height: 22),
               OutlinedButton(
                 key: const Key('group-dissolve-button'),
@@ -198,6 +255,21 @@ class _GroupDetailsView extends StatelessWidget {
                     ? null
                     : () => _confirmDissolve(context),
                 child: const Text('解散群聊'),
+              ),
+            ] else ...[
+              const SizedBox(height: 22),
+              OutlinedButton(
+                key: const Key('group-leave-button'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: FlashPalette.danger,
+                  side: BorderSide(
+                    color: FlashPalette.danger.withValues(alpha: 0.28),
+                  ),
+                  backgroundColor: FlashPalette.surface,
+                  minimumSize: const Size.fromHeight(52),
+                ),
+                onPressed: state.isSaving ? null : () => _confirmLeave(context),
+                child: const Text('退出群聊'),
               ),
             ],
           ],
@@ -271,7 +343,7 @@ class _GroupDetailsView extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('解散群聊'),
-        content: const Text('解散后所有成员都将无法继续使用该群聊，且此操作不可撤销。'),
+        content: const Text('解散后群聊将转为只读，原成员仍可查看历史消息，且此操作不可撤销。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -289,6 +361,64 @@ class _GroupDetailsView extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       await context.read<GroupDetailCubit>().dissolveGroup();
     }
+  }
+
+  Future<void> _confirmLeave(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('退出群聊'),
+        content: const Text('退出后将无法继续查看该群聊和历史消息，确定退出吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            key: const Key('group-leave-confirm'),
+            style: FilledButton.styleFrom(backgroundColor: FlashPalette.danger),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('确认退出'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await context.read<GroupDetailCubit>().leaveGroup();
+    }
+  }
+
+  Future<void> _openAnnouncement(
+    BuildContext context,
+    GroupDetail detail,
+  ) async {
+    final cubit = context.read<GroupDetailCubit>();
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => GroupAnnouncementPage(
+          announcement: detail.announcement,
+          canEdit: detail.isOwner,
+          updatedByName: detail.announcementUpdatedByName,
+          updatedAt: detail.announcementUpdatedAt,
+          onPublish: cubit.updateAnnouncement,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openTransferOwner(
+    BuildContext context,
+    GroupDetail detail,
+  ) async {
+    final cubit = context.read<GroupDetailCubit>();
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => TransferGroupOwnerPage(
+          members: detail.members,
+          onTransfer: cubit.transferOwner,
+        ),
+      ),
+    );
   }
 
   void _popUpdated(BuildContext context, GroupDetail? detail) {

@@ -501,6 +501,25 @@ mod tests {
         let rename_response = app.clone().oneshot(rename_request).await.unwrap();
         assert_eq!(rename_response.status(), StatusCode::OK);
 
+        let announcement_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{conversation_id}/announcement"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"announcement":"  周五发布  "}"#))
+            .unwrap();
+        let announcement_response = app.clone().oneshot(announcement_request).await.unwrap();
+        assert_eq!(announcement_response.status(), StatusCode::OK);
+        let announcement_body = to_bytes(announcement_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let announcement: serde_json::Value = serde_json::from_slice(&announcement_body).unwrap();
+        assert_eq!(announcement["announcement"], "周五发布");
+        assert_eq!(
+            announcement["announcement_updated_by"],
+            owner_id.to_string()
+        );
+
         let settings_request = Request::builder()
             .method("PATCH")
             .uri(format!("/groups/{conversation_id}/settings"))
@@ -527,6 +546,53 @@ mod tests {
             sign_token(context.as_ref(), user_ids[1]).expect("member token should sign");
         let invitee_token =
             sign_token(context.as_ref(), user_ids[3]).expect("invitee token should sign");
+
+        let transfer_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{conversation_id}/owner"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({"owner_id": user_ids[1]}).to_string(),
+            ))
+            .unwrap();
+        let transfer_response = app.clone().oneshot(transfer_request).await.unwrap();
+        assert_eq!(transfer_response.status(), StatusCode::OK);
+
+        let former_owner_rename_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{conversation_id}/name"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"name":"不应成功"}"#))
+            .unwrap();
+        let former_owner_rename_response = app
+            .clone()
+            .oneshot(former_owner_rename_request)
+            .await
+            .unwrap();
+        assert_eq!(former_owner_rename_response.status(), StatusCode::FORBIDDEN);
+
+        let transfer_back_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{conversation_id}/owner"))
+            .header(header::AUTHORIZATION, format!("Bearer {member_token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(
+                serde_json::json!({"owner_id": owner_id}).to_string(),
+            ))
+            .unwrap();
+        let transfer_back_response = app.clone().oneshot(transfer_back_request).await.unwrap();
+        assert_eq!(transfer_back_response.status(), StatusCode::OK);
+
+        let owner_leave_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{conversation_id}/leave"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let owner_leave_response = app.clone().oneshot(owner_leave_request).await.unwrap();
+        assert_eq!(owner_leave_response.status(), StatusCode::BAD_REQUEST);
 
         let direct_add_request = Request::builder()
             .method("POST")
@@ -701,6 +767,21 @@ mod tests {
                 user_ids[0], user_ids[1], user_ids[2], user_ids[3]
             )
         );
+        let invited_message = sqlx::query_as::<_, (String, String)>(
+            r#"
+            SELECT content, extra->>'system_event'
+            FROM messages
+            WHERE conversation_id = $1 AND type = 5
+            ORDER BY seq DESC
+            LIMIT 1
+            "#,
+        )
+        .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+        .fetch_one(pool)
+        .await
+        .expect("member invitation system message should load");
+        assert_eq!(invited_message.1, "member_invited");
+        assert_eq!(invited_message.0, "群成员1 邀请 群成员3 进群",);
 
         let remove_request = Request::builder()
             .method("DELETE")
@@ -723,6 +804,15 @@ mod tests {
                 user_ids[0], user_ids[1], user_ids[3]
             )
         );
+
+        let leave_request = Request::builder()
+            .method("POST")
+            .uri(format!("/groups/{conversation_id}/leave"))
+            .header(header::AUTHORIZATION, format!("Bearer {invitee_token}"))
+            .body(Body::empty())
+            .unwrap();
+        let leave_response = app.clone().oneshot(leave_request).await.unwrap();
+        assert_eq!(leave_response.status(), StatusCode::OK);
 
         let member_dissolve_request = Request::builder()
             .method("DELETE")
@@ -751,6 +841,115 @@ mod tests {
         let dissolved_detail_response =
             app.clone().oneshot(dissolved_detail_request).await.unwrap();
         assert_eq!(dissolved_detail_response.status(), StatusCode::NOT_FOUND);
+
+        let dissolved_conversation_request = Request::builder()
+            .method("GET")
+            .uri(format!("/conversations/{conversation_id}"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let dissolved_conversation_response = app
+            .clone()
+            .oneshot(dissolved_conversation_request)
+            .await
+            .unwrap();
+        assert_eq!(dissolved_conversation_response.status(), StatusCode::OK);
+        let dissolved_conversation_body =
+            to_bytes(dissolved_conversation_response.into_body(), usize::MAX)
+                .await
+                .unwrap();
+        let dissolved_conversation: serde_json::Value =
+            serde_json::from_slice(&dissolved_conversation_body).unwrap();
+        assert_eq!(dissolved_conversation["is_dissolved"], true);
+
+        let dissolved_main_list_request = Request::builder()
+            .method("GET")
+            .uri("/conversations?limit=100&offset=0")
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let dissolved_main_list_response = app
+            .clone()
+            .oneshot(dissolved_main_list_request)
+            .await
+            .unwrap();
+        let dissolved_main_list_body =
+            to_bytes(dissolved_main_list_response.into_body(), usize::MAX)
+                .await
+                .unwrap();
+        let dissolved_main_list: Vec<serde_json::Value> =
+            serde_json::from_slice(&dissolved_main_list_body).unwrap();
+        assert!(dissolved_main_list.iter().any(|conversation| {
+            conversation["id"] == conversation_id && conversation["is_dissolved"] == true
+        }));
+
+        let dissolved_group_list_request = Request::builder()
+            .method("GET")
+            .uri("/conversations?type=1&limit=100&offset=0")
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let dissolved_group_list_response = app
+            .clone()
+            .oneshot(dissolved_group_list_request)
+            .await
+            .unwrap();
+        let dissolved_group_list_body =
+            to_bytes(dissolved_group_list_response.into_body(), usize::MAX)
+                .await
+                .unwrap();
+        let dissolved_group_list: Vec<serde_json::Value> =
+            serde_json::from_slice(&dissolved_group_list_body).unwrap();
+        assert!(
+            dissolved_group_list
+                .iter()
+                .all(|conversation| conversation["id"] != conversation_id)
+        );
+
+        let dissolved_history_request = Request::builder()
+            .method("GET")
+            .uri(format!("/conversations/{conversation_id}/messages"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let dissolved_history_response = app
+            .clone()
+            .oneshot(dissolved_history_request)
+            .await
+            .unwrap();
+        assert_eq!(dissolved_history_response.status(), StatusCode::OK);
+        let dissolved_history_body = to_bytes(dissolved_history_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let dissolved_messages: Vec<serde_json::Value> =
+            serde_json::from_slice(&dissolved_history_body).unwrap();
+        assert!(dissolved_messages.iter().any(|message| {
+            message["extra"]["system_event"] == "group_dissolved"
+                && message["content"] == "群聊已解散"
+        }));
+
+        let dissolved_send = MessageService::new(Arc::new(FailingBroadcaster))
+            .send(
+                &context,
+                SendMessageInput {
+                    conversation_id: conversation_id.parse().unwrap(),
+                    sender_id: owner_id,
+                    msg_type: 0,
+                    content: "不应发送".to_string(),
+                    extra: None,
+                },
+            )
+            .await;
+        assert!(dissolved_send.is_err());
+
+        let active_after_dissolve = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) FROM conversation_members WHERE conversation_id = $1 AND is_deleted = FALSE",
+        )
+        .bind(conversation_id.parse::<sqlx::types::Uuid>().unwrap())
+        .fetch_one(pool)
+        .await
+        .expect("dissolved membership should remain readable");
+        assert_eq!(active_after_dissolve, 2);
 
         let concurrent_group_request = Request::builder()
             .method("POST")
@@ -847,7 +1046,7 @@ mod tests {
         .fetch_one(pool)
         .await
         .expect("active member count should load");
-        assert_eq!(active_after_concurrent_dissolve, 0);
+        assert!(active_after_concurrent_dissolve >= 3);
 
         let capacity_invitee_a = user_ids[3];
         let capacity_invitee_b = user_ids[4];

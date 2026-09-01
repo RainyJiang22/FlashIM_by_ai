@@ -51,6 +51,30 @@ void main() {
     );
   });
 
+  test('history keeps group system message content unchanged', () async {
+    final adapter = _FakeAdapter({
+      '/conversations/group-1/messages': [
+        {
+          'id': 'system-1',
+          'conversation_id': 'group-1',
+          'sender_id': 2,
+          'sender_name': '系统助手',
+          'seq': 1,
+          'msg_type': 5,
+          'content': '系统助手 邀请 花青 进群',
+          'extra': {'system_event': 'member_invited'},
+          'created_at': '2026-09-01T09:02:00Z',
+        },
+      ],
+    });
+    final repository = DioMessageRepository(dio: _dio(adapter));
+
+    final messages = await repository.getMessages(conversationId: 'group-1');
+
+    expect(messages.single.content, '系统助手 邀请 花青 进群');
+    expect(messages.single.extra?['system_event'], 'member_invited');
+  });
+
   test(
     'upload methods send expected multipart fields and parse results',
     () async {

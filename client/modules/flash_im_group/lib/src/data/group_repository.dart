@@ -24,6 +24,12 @@ abstract interface class GroupRepository {
 
   Future<void> dissolveGroup(String groupId);
 
+  Future<void> leaveGroup(String groupId);
+
+  Future<GroupDetail> transferOwner(String groupId, int ownerId);
+
+  Future<GroupDetail> updateAnnouncement(String groupId, String announcement);
+
   Future<List<GroupSearchItem>> searchGroups(String keyword);
 
   Future<JoinGroupResult> joinGroup(String groupId, {String? message});
@@ -123,6 +129,36 @@ class DioGroupRepository implements GroupRepository {
   @override
   Future<void> dissolveGroup(String groupId) async {
     await _request(() => _dio.delete<dynamic>('/groups/$groupId'));
+  }
+
+  @override
+  Future<void> leaveGroup(String groupId) async {
+    await _request(() => _dio.post<dynamic>('/groups/$groupId/leave'));
+  }
+
+  @override
+  Future<GroupDetail> transferOwner(String groupId, int ownerId) async {
+    final response = await _request(
+      () => _dio.patch<dynamic>(
+        '/groups/$groupId/owner',
+        data: {'owner_id': ownerId},
+      ),
+    );
+    return _parseDetail(response.data);
+  }
+
+  @override
+  Future<GroupDetail> updateAnnouncement(
+    String groupId,
+    String announcement,
+  ) async {
+    final response = await _request(
+      () => _dio.patch<dynamic>(
+        '/groups/$groupId/announcement',
+        data: {'announcement': announcement},
+      ),
+    );
+    return _parseDetail(response.data);
   }
 
   @override

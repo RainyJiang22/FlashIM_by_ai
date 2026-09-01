@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
+import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -147,6 +150,80 @@ void main() {
       ),
     ],
   );
+
+  test(
+    'group info stream updates and removes the matching conversation',
+    () async {
+      final wsClient = _FakeWsClient();
+      final group = Conversation(
+        id: 'group-1',
+        type: 1,
+        name: '旧群名',
+        unreadCount: 0,
+        createdAt: DateTime(2026, 8, 31),
+      );
+      final cubit = ConversationListCubit(
+        repository: _FakeConversationRepository(
+          pages: {
+            0: [group],
+          },
+        ),
+        wsClient: wsClient,
+      );
+      await cubit.loadConversations();
+
+      wsClient.addGroupInfo(_groupInfo(name: '新群名', isDissolved: true));
+      await Future<void>.delayed(Duration.zero);
+      var loaded = cubit.state as ConversationListLoaded;
+      expect(loaded.conversations.single.name, '新群名');
+      expect(loaded.conversations.single.isDissolved, isTrue);
+
+      wsClient.addGroupInfo(_groupInfo(membershipActive: false));
+      await Future<void>.delayed(Duration.zero);
+      loaded = cubit.state as ConversationListLoaded;
+      expect(loaded.conversations, isEmpty);
+
+      await cubit.close();
+      expect(wsClient.hasGroupInfoListener, isFalse);
+      await wsClient.closeEvents();
+    },
+  );
+}
+
+GroupInfoUpdateNotification _groupInfo({
+  String name = '治理群',
+  bool membershipActive = true,
+  bool isDissolved = false,
+}) => GroupInfoUpdateNotification(
+  conversationId: 'group-1',
+  name: name,
+  avatar: 'grid:identicon:1,identicon:2',
+  memberCount: 2,
+  isDissolved: isDissolved,
+  membershipActive: membershipActive,
+  currentUserRole: 'member',
+  changeType: 'name_updated',
+);
+
+class _FakeWsClient extends WsClient {
+  _FakeWsClient()
+    : super(
+        config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+        tokenProvider: () => null,
+      );
+
+  final _groupInfo = StreamController<GroupInfoUpdateNotification>.broadcast();
+
+  @override
+  Stream<GroupInfoUpdateNotification> get groupInfoUpdateStream =>
+      _groupInfo.stream;
+
+  bool get hasGroupInfoListener => _groupInfo.hasListener;
+
+  void addGroupInfo(GroupInfoUpdateNotification update) =>
+      _groupInfo.add(update);
+
+  Future<void> closeEvents() => _groupInfo.close();
 }
 
 class _FakeConversationRepository implements ConversationRepository {

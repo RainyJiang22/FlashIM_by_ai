@@ -13,7 +13,16 @@ const GROUP_JOIN_REQUEST_NOT_FOUND: &str = "group join request not found";
 
 pub fn group_for_member_sql() -> &'static str {
     r#"
-    SELECT c.id, c.name, c.avatar, c.owner_id, c.join_approval_required
+    SELECT
+        c.id,
+        c.name,
+        c.avatar,
+        c.owner_id,
+        c.join_approval_required,
+        c.announcement,
+        c.announcement_updated_at,
+        c.announcement_updated_by,
+        c.is_dissolved
     FROM conversations c
     JOIN conversation_members member
       ON member.conversation_id = c.id
@@ -128,7 +137,16 @@ async fn lock_public_group(
 ) -> AppResult<GroupSummaryRow> {
     sqlx::query_as::<_, GroupSummaryRow>(
         r#"
-        SELECT c.id, c.name, c.avatar, c.owner_id, c.join_approval_required
+        SELECT
+            c.id,
+            c.name,
+            c.avatar,
+            c.owner_id,
+            c.join_approval_required,
+            c.announcement,
+            c.announcement_updated_at,
+            c.announcement_updated_by,
+            c.is_dissolved
         FROM conversations c
         WHERE c.id = $1
           AND c.type = 1
@@ -433,6 +451,37 @@ pub async fn update_group_settings(
     Ok(())
 }
 
+pub async fn update_group_announcement(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    owner_id: i64,
+    announcement: &str,
+) -> AppResult<()> {
+    let result = sqlx::query(
+        r#"
+        UPDATE conversations
+        SET announcement = $3,
+            announcement_updated_at = NOW(),
+            announcement_updated_by = $2,
+            updated_at = NOW()
+        WHERE id = $1
+          AND owner_id = $2
+          AND type = 1
+          AND is_dissolved = FALSE
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(owner_id)
+    .bind(announcement)
+    .execute(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to update group announcement"))?;
+    if result.rows_affected() == 0 {
+        return Err(AppError::forbidden(GROUP_OPERATION_NOT_ALLOWED));
+    }
+    Ok(())
+}
+
 async fn lock_group_for_actor(
     transaction: &mut Transaction<'_, Postgres>,
     conversation_id: Uuid,
@@ -440,7 +489,16 @@ async fn lock_group_for_actor(
 ) -> AppResult<GroupSummaryRow> {
     sqlx::query_as::<_, GroupSummaryRow>(
         r#"
-        SELECT c.id, c.name, c.avatar, c.owner_id, c.join_approval_required
+        SELECT
+            c.id,
+            c.name,
+            c.avatar,
+            c.owner_id,
+            c.join_approval_required,
+            c.announcement,
+            c.announcement_updated_at,
+            c.announcement_updated_by,
+            c.is_dissolved
         FROM conversations c
         JOIN conversation_members actor
           ON actor.conversation_id = c.id
@@ -458,6 +516,99 @@ async fn lock_group_for_actor(
     .await
     .map_err(|_| AppError::internal_server_error("failed to lock group"))?
     .ok_or(AppError::not_found(GROUP_NOT_FOUND))
+}
+
+pub async fn list_active_member_ids(pool: &PgPool, conversation_id: Uuid) -> AppResult<Vec<i64>> {
+    sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT user_id
+        FROM conversation_members
+        WHERE conversation_id = $1
+          AND is_deleted = FALSE
+        ORDER BY joined_at ASC, user_id ASC
+        "#,
+    )
+    .bind(conversation_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to list active group members"))
+}
+
+pub async fn leave_group(pool: &PgPool, conversation_id: Uuid, member_id: i64) -> AppResult<()> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to start leave transaction"))?;
+    let group = lock_group_for_actor(&mut transaction, conversation_id, member_id).await?;
+    if group.owner_id == member_id {
+        return Err(AppError::bad_request("group owner cannot leave"));
+    }
+    sqlx::query(
+        r#"
+        UPDATE conversation_members
+        SET is_deleted = TRUE, unread_count = 0
+        WHERE conversation_id = $1
+          AND user_id = $2
+          AND is_deleted = FALSE
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(member_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to leave group"))?;
+    im_conversation::service::refresh_group_avatar_in_transaction(
+        &mut transaction,
+        conversation_id,
+    )
+    .await?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to commit leave transaction"))
+}
+
+pub async fn transfer_group_owner(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    owner_id: i64,
+    new_owner_id: i64,
+) -> AppResult<()> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to start owner transaction"))?;
+    let group = lock_group_for_actor(&mut transaction, conversation_id, owner_id).await?;
+    if group.owner_id != owner_id {
+        return Err(AppError::forbidden(GROUP_OPERATION_NOT_ALLOWED));
+    }
+    if owner_id == new_owner_id {
+        return Err(AppError::bad_request("new owner must be another member"));
+    }
+    let new_owner_is_active =
+        is_active_member(&mut transaction, conversation_id, new_owner_id).await?;
+    if !new_owner_is_active {
+        return Err(AppError::bad_request("new owner must be an active member"));
+    }
+    sqlx::query(
+        r#"
+        UPDATE conversations
+        SET owner_id = $2, updated_at = NOW()
+        WHERE id = $1
+          AND owner_id = $3
+          AND is_dissolved = FALSE
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(new_owner_id)
+    .bind(owner_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to transfer group owner"))?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to commit owner transaction"))
 }
 
 async fn validate_actor_friends(
@@ -631,6 +782,11 @@ pub struct InvitationCreation {
     pub is_new: bool,
 }
 
+pub struct AcceptedGroupInvitation {
+    pub conversation_id: Uuid,
+    pub inviter_id: i64,
+}
+
 pub async fn create_group_invitations(
     pool: &PgPool,
     conversation_id: Uuid,
@@ -717,7 +873,7 @@ pub async fn accept_group_invitation(
     pool: &PgPool,
     invitation_id: Uuid,
     invitee_id: i64,
-) -> AppResult<Uuid> {
+) -> AppResult<AcceptedGroupInvitation> {
     let mut transaction = pool
         .begin()
         .await
@@ -771,7 +927,10 @@ pub async fn accept_group_invitation(
         transaction.commit().await.map_err(|_| {
             AppError::internal_server_error("failed to commit invitation transaction")
         })?;
-        return Ok(invitation.conversation_id);
+        return Ok(AcceptedGroupInvitation {
+            conversation_id: invitation.conversation_id,
+            inviter_id: invitation.inviter_id,
+        });
     }
 
     let inviter_is_member = sqlx::query_scalar::<_, bool>(
@@ -825,10 +984,17 @@ pub async fn accept_group_invitation(
         .commit()
         .await
         .map_err(|_| AppError::internal_server_error("failed to commit invitation transaction"))?;
-    Ok(invitation.conversation_id)
+    Ok(AcceptedGroupInvitation {
+        conversation_id: invitation.conversation_id,
+        inviter_id: invitation.inviter_id,
+    })
 }
 
-pub async fn dissolve_group(pool: &PgPool, conversation_id: Uuid, owner_id: i64) -> AppResult<()> {
+pub async fn dissolve_group(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    owner_id: i64,
+) -> AppResult<im_message::repository::PersistedMessage> {
     let mut transaction = pool
         .begin()
         .await
@@ -837,6 +1003,22 @@ pub async fn dissolve_group(pool: &PgPool, conversation_id: Uuid, owner_id: i64)
     if group.owner_id != owner_id {
         return Err(AppError::forbidden(GROUP_OPERATION_NOT_ALLOWED));
     }
+    let content = "群聊已解散".to_string();
+    let persisted = im_message::repository::persist_system_message_in_transaction(
+        &mut transaction,
+        im_message::models::NewMessage {
+            conversation_id,
+            sender_id: owner_id,
+            seq: 0,
+            r#type: im_message::service::GROUP_CREATED_MESSAGE_TYPE,
+            content: content.clone(),
+            extra: Some(serde_json::json!({
+                "system_event": "group_dissolved",
+            })),
+        },
+        &content,
+    )
+    .await?;
     sqlx::query(
         r#"
         UPDATE conversations
@@ -848,22 +1030,23 @@ pub async fn dissolve_group(pool: &PgPool, conversation_id: Uuid, owner_id: i64)
     .execute(&mut *transaction)
     .await
     .map_err(|_| AppError::internal_server_error("failed to dissolve group"))?;
-    sqlx::query(
-        "UPDATE conversation_members SET is_deleted = TRUE, unread_count = 0 WHERE conversation_id = $1",
-    )
-    .bind(conversation_id)
-    .execute(&mut *transaction)
-    .await
-    .map_err(|_| AppError::internal_server_error("failed to remove dissolved group members"))?;
     sqlx::query("DELETE FROM group_invitations WHERE conversation_id = $1 AND status = 0")
         .bind(conversation_id)
         .execute(&mut *transaction)
         .await
         .map_err(|_| AppError::internal_server_error("failed to invalidate group invitations"))?;
+    sqlx::query(
+        "UPDATE group_join_requests SET status = 2, handled_at = NOW() WHERE conversation_id = $1 AND status = 0",
+    )
+    .bind(conversation_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to invalidate group join requests"))?;
     transaction
         .commit()
         .await
-        .map_err(|_| AppError::internal_server_error("failed to commit dissolve transaction"))
+        .map_err(|_| AppError::internal_server_error("failed to commit dissolve transaction"))?;
+    Ok(persisted)
 }
 
 #[cfg(test)]

@@ -137,7 +137,7 @@ void main() {
     expect(find.text('已加入'), findsOneWidget);
   });
 
-  testWidgets('group created message is centered gray text without avatar', (
+  testWidgets('group system message shows centered pill content', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -152,7 +152,7 @@ void main() {
                 senderId: '1',
                 senderName: '小雨',
                 seq: 1,
-                content: 'https://example.com/raw-group-created-payload',
+                content: '小雨 创建了群聊',
                 type: MessageType.groupCreated,
                 status: MessageStatus.sent,
                 createdAt: DateTime(2026, 8, 28),
@@ -166,14 +166,96 @@ void main() {
 
     expect(find.byKey(const Key('group-created-message')), findsOneWidget);
     expect(find.byType(AvatarWidget), findsNothing);
-    expect(
-      find.text('https://example.com/raw-group-created-payload'),
-      findsNothing,
-    );
     final text = tester.widget<Text>(find.text('小雨 创建了群聊'));
     expect(text.textAlign, TextAlign.center);
     expect(text.style?.color, FlashPalette.mutedInk);
     expect(tester.getCenter(find.text('小雨 创建了群聊')).dx, closeTo(180, 0.1));
+  });
+
+  testWidgets('invitation system message keeps inviter and invitee wording', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'system-invited-1',
+              conversationId: 'group-1',
+              senderId: '1',
+              senderName: '朱红',
+              seq: 3,
+              content: '朱红 邀请 枫叶红 进群',
+              extra: const {'system_event': 'member_invited'},
+              type: MessageType.groupCreated,
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 9, 1),
+            ),
+            isMine: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('朱红 邀请 枫叶红 进群'), findsOneWidget);
+    expect(find.byType(AvatarWidget), findsNothing);
+  });
+
+  testWidgets('legacy group protocol payload never renders as a link', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'legacy-system-1',
+              conversationId: 'group-1',
+              senderId: '1',
+              senderName: '小雨',
+              seq: 1,
+              content: 'https://cdn.example.com/avatar.webp',
+              type: MessageType.groupCreated,
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 8, 28),
+            ),
+            isMine: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('小雨 创建了群聊'), findsOneWidget);
+    expect(find.text('https://cdn.example.com/avatar.webp'), findsNothing);
+  });
+
+  testWidgets('malformed system content still falls back by event type', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'legacy-announcement-1',
+              conversationId: 'group-1',
+              senderId: '1',
+              senderName: '系统助手',
+              seq: 1,
+              content: 'https://127.0.0.1/系统助手 更新了群公告',
+              extra: const {'system_event': 'announcement_updated'},
+              type: MessageType.groupCreated,
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 9, 1),
+            ),
+            isMine: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('系统助手 更新了群公告'), findsOneWidget);
+    expect(find.text('群聊信息已更新'), findsNothing);
   });
 
   testWidgets('member join system message keeps persisted join wording', (
@@ -189,7 +271,7 @@ void main() {
               senderId: '2',
               senderName: '阿青',
               seq: 2,
-              content: 'legacy-system-payload',
+              content: '阿青 加入了群聊',
               extra: const {'system_event': 'member_joined'},
               type: MessageType.groupCreated,
               status: MessageStatus.sent,

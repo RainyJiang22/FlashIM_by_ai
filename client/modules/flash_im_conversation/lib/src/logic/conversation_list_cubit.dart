@@ -19,6 +19,9 @@ class ConversationListCubit extends Cubit<ConversationListState> {
        super(const ConversationListInitial()) {
     _conversationUpdateSubscription = _wsClient?.conversationUpdateStream
         .listen(applyConversationUpdate);
+    _groupInfoUpdateSubscription = _wsClient?.groupInfoUpdateStream.listen(
+      applyGroupInfoUpdate,
+    );
   }
 
   final ConversationRepository _repository;
@@ -26,6 +29,7 @@ class ConversationListCubit extends Cubit<ConversationListState> {
   final int _pageSize;
   bool _isLoadingMore = false;
   StreamSubscription<ConversationUpdate>? _conversationUpdateSubscription;
+  StreamSubscription<GroupInfoUpdateNotification>? _groupInfoUpdateSubscription;
 
   Future<void> loadConversations() async {
     emit(const ConversationListLoading());
@@ -174,6 +178,50 @@ class ConversationListCubit extends Cubit<ConversationListState> {
     );
   }
 
+  void applyGroupInfoUpdate(GroupInfoUpdateNotification update) {
+    final current = state;
+    if (current is! ConversationListLoaded || update.conversationId.isEmpty) {
+      return;
+    }
+    final conversations = [...current.conversations];
+    final index = conversations.indexWhere(
+      (conversation) => conversation.id == update.conversationId,
+    );
+    if (!update.membershipActive) {
+      if (index >= 0) {
+        conversations.removeAt(index);
+        emit(current.copyWith(conversations: conversations));
+      }
+      return;
+    }
+
+    if (index >= 0) {
+      conversations[index] = conversations[index].copyWith(
+        type: 1,
+        name: update.name,
+        avatar: update.avatar,
+        ownerId: update.ownerId.toString(),
+        isDissolved: update.isDissolved,
+      );
+    } else {
+      conversations.insert(
+        0,
+        Conversation(
+          id: update.conversationId,
+          type: 1,
+          name: update.name,
+          avatar: update.avatar,
+          ownerId: update.ownerId.toString(),
+          unreadCount: 0,
+          isDissolved: update.isDissolved,
+          createdAt: DateTime.now(),
+        ),
+      );
+      unawaited(_hydrateConversation(update.conversationId));
+    }
+    emit(current.copyWith(conversations: conversations));
+  }
+
   Future<void> _hydrateConversation(String conversationId) async {
     try {
       final detail = await _repository.getById(conversationId);
@@ -199,6 +247,7 @@ class ConversationListCubit extends Cubit<ConversationListState> {
   @override
   Future<void> close() async {
     await _conversationUpdateSubscription?.cancel();
+    await _groupInfoUpdateSubscription?.cancel();
     return super.close();
   }
 }

@@ -4,6 +4,7 @@ import 'package:flash_starter/flash_starter.dart';
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
+import 'package:flash_im_core/flash_im_core.dart' show WsClient;
 import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_im_group/flash_im_group.dart';
 import 'package:flash_session/flash_session.dart';
@@ -177,7 +178,9 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
                           conversation: args.conversation,
                         ),
                       );
-                  if (result?.isDissolved == true && context.mounted) {
+                  if ((result?.outcome == GroupDetailsOutcome.left ||
+                          result?.outcome == GroupDetailsOutcome.removed) &&
+                      context.mounted) {
                     Navigator.of(context).pop(true);
                     return null;
                   }
@@ -249,7 +252,10 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
         );
       }
       return MaterialPageRoute<GroupDetailsResult>(
-        builder: (_) => GroupDetailsPage(conversation: args.conversation),
+        builder: (context) => GroupDetailsPage(
+          conversation: args.conversation,
+          wsClient: context.read<WsClient>(),
+        ),
         settings: settings,
       );
     default:

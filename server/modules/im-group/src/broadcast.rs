@@ -22,12 +22,39 @@ pub struct GroupJoinRequestPayload {
     pub handled_at: Option<DateTime<Utc>>,
 }
 
+#[derive(Clone, Debug)]
+pub struct GroupInfoUpdatePayload {
+    pub conversation_id: Uuid,
+    pub name: String,
+    pub avatar: String,
+    pub owner_id: i64,
+    pub member_count: i32,
+    pub announcement: String,
+    pub announcement_updated_at: Option<DateTime<Utc>>,
+    pub announcement_updated_by: Option<i64>,
+    pub is_dissolved: bool,
+    pub change_type: &'static str,
+}
+
+#[derive(Clone, Debug)]
+pub struct GroupInfoRecipient {
+    pub user_id: i64,
+    pub membership_active: bool,
+    pub current_user_role: &'static str,
+}
+
 #[async_trait]
 pub trait GroupBroadcaster: Send + Sync {
     async fn broadcast_group_join_request(
         &self,
         to_user_id: i64,
         event: GroupJoinRequestPayload,
+    ) -> AppResult<()>;
+
+    async fn broadcast_group_info_update(
+        &self,
+        recipients: &[GroupInfoRecipient],
+        event: GroupInfoUpdatePayload,
     ) -> AppResult<()>;
 }
 
@@ -40,6 +67,14 @@ impl GroupBroadcaster for NoopGroupBroadcaster {
         &self,
         _to_user_id: i64,
         _event: GroupJoinRequestPayload,
+    ) -> AppResult<()> {
+        Ok(())
+    }
+
+    async fn broadcast_group_info_update(
+        &self,
+        _recipients: &[GroupInfoRecipient],
+        _event: GroupInfoUpdatePayload,
     ) -> AppResult<()> {
         Ok(())
     }

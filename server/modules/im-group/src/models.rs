@@ -11,6 +11,10 @@ pub struct GroupSummaryRow {
     pub avatar: Option<String>,
     pub owner_id: i64,
     pub join_approval_required: bool,
+    pub announcement: Option<String>,
+    pub announcement_updated_at: Option<DateTime<Utc>>,
+    pub announcement_updated_by: Option<i64>,
+    pub is_dissolved: bool,
 }
 
 #[derive(Clone, Debug, sqlx::FromRow)]
@@ -37,6 +41,11 @@ pub struct GroupDetail {
     pub avatar: String,
     pub owner_id: String,
     pub join_approval_required: bool,
+    pub announcement: String,
+    pub announcement_updated_at: Option<DateTime<Utc>>,
+    pub announcement_updated_by: Option<String>,
+    pub announcement_updated_by_name: String,
+    pub is_dissolved: bool,
     pub current_user_role: &'static str,
     pub member_count: usize,
     pub members: Vec<GroupMember>,
@@ -69,6 +78,16 @@ impl GroupDetail {
         } else {
             "member"
         };
+        let announcement_updated_by_name = summary
+            .announcement_updated_by
+            .and_then(|updated_by| {
+                members
+                    .iter()
+                    .find(|member| member.account_id == updated_by.to_string())
+                    .map(|member| member.nickname.clone())
+                    .or_else(|| Some(format!("用户 {updated_by}")))
+            })
+            .unwrap_or_default();
 
         Self {
             conversation_id: summary.id,
@@ -86,6 +105,11 @@ impl GroupDetail {
             }),
             owner_id: summary.owner_id.to_string(),
             join_approval_required: summary.join_approval_required,
+            announcement: summary.announcement.unwrap_or_default(),
+            announcement_updated_at: summary.announcement_updated_at,
+            announcement_updated_by: summary.announcement_updated_by.map(|id| id.to_string()),
+            announcement_updated_by_name,
+            is_dissolved: summary.is_dissolved,
             current_user_role,
             member_count,
             members,
@@ -119,6 +143,16 @@ pub struct GroupInvitationListResponse {
 #[derive(Clone, Debug, Deserialize)]
 pub struct UpdateGroupNameBody {
     pub name: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct UpdateGroupAnnouncementBody {
+    pub announcement: String,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize)]
+pub struct TransferGroupOwnerBody {
+    pub owner_id: i64,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -284,6 +318,10 @@ mod tests {
                 avatar: Some("grid:identicon:1".to_string()),
                 owner_id: 1,
                 join_approval_required: true,
+                announcement: Some("欢迎加入".to_string()),
+                announcement_updated_at: None,
+                announcement_updated_by: Some(1),
+                is_dissolved: false,
             },
             1,
             vec![GroupMemberRow {
@@ -298,5 +336,7 @@ mod tests {
         assert_eq!(detail.avatar, "grid:identicon:1");
         assert_eq!(detail.members[0].nickname, "用户 1");
         assert!(detail.members[0].is_owner);
+        assert_eq!(detail.announcement, "欢迎加入");
+        assert_eq!(detail.announcement_updated_by_name, "用户 1");
     }
 }

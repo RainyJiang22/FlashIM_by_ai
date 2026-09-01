@@ -282,6 +282,9 @@ class _FakeGroupRepository implements GroupRepository {
   Future<void> dissolveGroup(String groupId) => throw UnimplementedError();
 
   @override
+  Future<void> leaveGroup(String groupId) => throw UnimplementedError();
+
+  @override
   Future<GroupDetail> getDetail(String groupId) => throw UnimplementedError();
 
   @override
@@ -304,10 +307,18 @@ class _FakeGroupRepository implements GroupRepository {
       throw UnimplementedError();
 
   @override
+  Future<GroupDetail> transferOwner(String groupId, int ownerId) =>
+      throw UnimplementedError();
+
+  @override
   Future<List<GroupSearchItem>> searchGroups(String keyword) async => const [];
 
   @override
   Future<GroupDetail> updateName(String groupId, String name) =>
+      throw UnimplementedError();
+
+  @override
+  Future<GroupDetail> updateAnnouncement(String groupId, String announcement) =>
       throw UnimplementedError();
 
   @override

@@ -158,7 +158,7 @@ void main() {
 
   late _FakeWsClient systemMessageWsClient;
   blocTest<ChatCubit, ChatState>(
-    'incoming group system message keeps persisted text and event',
+    'own group system message refreshes immediately and keeps persisted text',
     build: () {
       systemMessageWsClient = _FakeWsClient();
       return ChatCubit(
@@ -172,25 +172,41 @@ void main() {
     },
     seed: () => const ChatLoaded(messages: [], hasMore: false),
     act: (cubit) {
-      systemMessageWsClient.emitMessage(
-        ChatMessage(
-          id: 'system-1',
-          conversationId: 'c1',
-          senderId: 2,
-          senderName: '系统助手',
-          seq: 3,
-          type: 5,
-          content: '系统助手 更新了群公告',
-          extra: '{"system_event":"announcement_updated"}',
-          createdAt: '2026-09-01T09:02:00Z',
-        ),
-      );
+      final events = [
+        ('announcement_updated', '系统助手 更新了群公告'),
+        ('group_name_updated', '系统助手 将群名修改为「读书会」'),
+        ('member_invited', '系统助手 邀请 花青、湖绿等进群'),
+      ];
+      for (var index = 0; index < events.length; index++) {
+        final event = events[index];
+        systemMessageWsClient.emitMessage(
+          ChatMessage(
+            id: 'system-$index',
+            conversationId: 'c1',
+            senderId: 1,
+            senderName: '系统助手',
+            seq: index + 3,
+            type: 5,
+            content: event.$2,
+            extra: '{"system_event":"${event.$1}"}',
+            createdAt: '2026-09-01T09:02:00Z',
+          ),
+        );
+      }
     },
-    expect: () => [isA<ChatLoaded>()],
+    expect: () => [isA<ChatLoaded>(), isA<ChatLoaded>(), isA<ChatLoaded>()],
     verify: (cubit) {
-      final message = (cubit.state as ChatLoaded).messages.single;
-      expect(message.content, '系统助手 更新了群公告');
-      expect(message.extra?['system_event'], 'announcement_updated');
+      final messages = (cubit.state as ChatLoaded).messages;
+      expect(messages.map((message) => message.content), [
+        '系统助手 更新了群公告',
+        '系统助手 将群名修改为「读书会」',
+        '系统助手 邀请 花青、湖绿等进群',
+      ]);
+      expect(messages.map((message) => message.extra?['system_event']), [
+        'announcement_updated',
+        'group_name_updated',
+        'member_invited',
+      ]);
     },
   );
 

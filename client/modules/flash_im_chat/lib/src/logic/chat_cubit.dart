@@ -411,7 +411,7 @@ class ChatCubit extends Cubit<ChatState> {
     final current = state;
     if (current is! ChatLoaded ||
         message.conversationId != _conversation.id ||
-        '${message.senderId}' == _currentUserId) {
+        ('${message.senderId}' == _currentUserId && message.type != 5)) {
       return;
     }
     var incoming = Message.fromChatMessage(message);

@@ -353,12 +353,9 @@ where
         .await?;
         let _ = self.notify_new_members(conversation_id, &member_ids).await;
         let detail = load_detail(context, actor_id, conversation_id).await?;
-        let message_service = MessageService::new(self.broadcaster.clone());
-        for member_id in &member_ids {
-            let _ = message_service
-                .send_group_member_invited(context, conversation_id, actor_id, *member_id)
-                .await;
-        }
+        let _ = MessageService::new(self.broadcaster.clone())
+            .send_group_members_invited(context, conversation_id, actor_id, &member_ids)
+            .await;
         let _ = self
             .broadcast_group_info(&detail, &[], "members_added", false)
             .await;
@@ -529,7 +526,12 @@ where
             .notify_new_members(conversation_id, &[invitee_id])
             .await;
         let _ = MessageService::new(self.broadcaster.clone())
-            .send_group_member_invited(context, conversation_id, accepted.inviter_id, invitee_id)
+            .send_group_members_invited(
+                context,
+                conversation_id,
+                accepted.inviter_id,
+                &[invitee_id],
+            )
             .await;
         if let Ok(detail) = load_detail(context, invitee_id, conversation_id).await {
             let _ = self

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use flash_core::{AppError, AppResult};
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
@@ -23,6 +25,31 @@ pub async fn get_user_display_name(pool: &PgPool, user_id: i64) -> AppResult<Opt
     .await
     .map(|nickname| nickname.flatten())
     .map_err(|_| AppError::internal_server_error("failed to load message sender"))
+}
+
+pub async fn get_user_display_names(
+    pool: &PgPool,
+    user_ids: &[i64],
+) -> AppResult<HashMap<i64, String>> {
+    let rows = sqlx::query_as::<_, (i64, Option<String>)>(
+        r#"
+        SELECT account_id, nickname
+        FROM user_profiles
+        WHERE account_id = ANY($1)
+        "#,
+    )
+    .bind(user_ids)
+    .fetch_all(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to load message senders"))?;
+    Ok(rows
+        .into_iter()
+        .filter_map(|(user_id, nickname)| {
+            nickname
+                .filter(|value| !value.trim().is_empty())
+                .map(|value| (user_id, value))
+        })
+        .collect())
 }
 
 pub fn active_conversation_lock_sql() -> &'static str {

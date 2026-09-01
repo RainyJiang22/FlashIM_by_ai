@@ -140,26 +140,36 @@ where
         .await
     }
 
-    pub async fn send_group_member_invited(
+    pub async fn send_group_members_invited(
         &self,
         context: &SharedContext,
         conversation_id: Uuid,
         inviter_id: i64,
-        invitee_id: i64,
+        invitee_ids: &[i64],
     ) -> AppResult<SendMessageOutput> {
+        if invitee_ids.is_empty() {
+            return Err(AppError::bad_request("group invitees are empty"));
+        }
         let inviter_name = repository::get_user_display_name(context.postgres.pool(), inviter_id)
             .await?
             .filter(|name| !name.trim().is_empty())
             .unwrap_or_else(|| format!("用户 {inviter_id}"));
-        let invitee_name = repository::get_user_display_name(context.postgres.pool(), invitee_id)
-            .await?
-            .filter(|name| !name.trim().is_empty())
-            .unwrap_or_else(|| format!("用户 {invitee_id}"));
+        let display_names =
+            repository::get_user_display_names(context.postgres.pool(), invitee_ids).await?;
+        let invitee_names = invitee_ids
+            .iter()
+            .map(|invitee_id| {
+                display_names
+                    .get(invitee_id)
+                    .cloned()
+                    .unwrap_or_else(|| format!("用户 {invitee_id}"))
+            })
+            .collect::<Vec<_>>();
         self.send_group_system_event(
             context,
             conversation_id,
             inviter_id,
-            format!("{inviter_name} 邀请 {invitee_name} 进群"),
+            build_group_invitation_content(&inviter_name, &invitee_names),
             "member_invited",
         )
         .await
@@ -298,6 +308,13 @@ where
     }
 }
 
+fn build_group_invitation_content(inviter_name: &str, invitee_names: &[String]) -> String {
+    match invitee_names {
+        [invitee_name] => format!("{inviter_name} 邀请 {invitee_name} 进群"),
+        _ => format!("{inviter_name} 邀请 {}等进群", invitee_names.join("、")),
+    }
+}
+
 pub fn normalize_history_query(query: MessageQuery) -> AppResult<(i64, i64)> {
     let before_seq = query.before_seq.unwrap_or(DEFAULT_BEFORE_SEQ);
     if before_seq < 1 {
@@ -386,11 +403,23 @@ mod tests {
     use crate::{
         models::MessageQuery,
         service::{
-            GROUP_CREATED_MESSAGE_TYPE, build_preview, normalize_history_query,
-            validate_file_extra, validate_group_invitation_extra, validate_image_extra,
-            validate_video_extra,
+            GROUP_CREATED_MESSAGE_TYPE, build_group_invitation_content, build_preview,
+            normalize_history_query, validate_file_extra, validate_group_invitation_extra,
+            validate_image_extra, validate_video_extra,
         },
     };
+
+    #[test]
+    fn group_invitation_content_uses_one_message_for_single_or_multiple_invitees() {
+        assert_eq!(
+            build_group_invitation_content("系统助手", &["花青".to_string()]),
+            "系统助手 邀请 花青 进群"
+        );
+        assert_eq!(
+            build_group_invitation_content("系统助手", &["花青".to_string(), "湖绿".to_string()]),
+            "系统助手 邀请 花青、湖绿等进群"
+        );
+    }
 
     #[test]
     fn history_query_defaults_and_clamps_limit() {

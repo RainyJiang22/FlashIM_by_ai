@@ -224,54 +224,44 @@ class _GroupDetailsView extends StatelessWidget {
                 ],
               ),
             ),
-            if (detail.isOwner) ...[
-              const SizedBox(height: 14),
-              Container(
-                decoration: flashCardDecoration(),
-                child: ListTile(
-                  key: const Key('group-transfer-owner-row'),
-                  title: const Text('转让群主'),
-                  trailing: const Icon(
-                    Icons.chevron_right_rounded,
-                    color: FlashPalette.mutedInk,
+            const SizedBox(height: 14),
+            Container(
+              decoration: flashCardDecoration(),
+              child: Column(
+                children: [
+                  if (detail.isOwner) ...[
+                    ListTile(
+                      key: const Key('group-transfer-owner-row'),
+                      title: const Text('转让群主'),
+                      trailing: const Icon(
+                        Icons.chevron_right_rounded,
+                        color: FlashPalette.mutedInk,
+                      ),
+                      onTap: state.isSaving
+                          ? null
+                          : () => _openTransferOwner(context, detail),
+                    ),
+                    const Divider(height: 1, indent: 16),
+                  ],
+                  ListTile(
+                    key: Key(
+                      detail.isOwner
+                          ? 'group-dissolve-button'
+                          : 'group-leave-button',
+                    ),
+                    title: Text(
+                      detail.isOwner ? '解散群聊' : '退出群聊',
+                      style: const TextStyle(color: FlashPalette.danger),
+                    ),
+                    onTap: state.isSaving
+                        ? null
+                        : detail.isOwner
+                        ? () => _confirmDissolve(context)
+                        : () => _confirmLeave(context),
                   ),
-                  onTap: state.isSaving
-                      ? null
-                      : () => _openTransferOwner(context, detail),
-                ),
+                ],
               ),
-              const SizedBox(height: 22),
-              OutlinedButton(
-                key: const Key('group-dissolve-button'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: FlashPalette.danger,
-                  side: BorderSide(
-                    color: FlashPalette.danger.withValues(alpha: 0.28),
-                  ),
-                  backgroundColor: FlashPalette.surface,
-                  minimumSize: const Size.fromHeight(52),
-                ),
-                onPressed: state.isSaving
-                    ? null
-                    : () => _confirmDissolve(context),
-                child: const Text('解散群聊'),
-              ),
-            ] else ...[
-              const SizedBox(height: 22),
-              OutlinedButton(
-                key: const Key('group-leave-button'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: FlashPalette.danger,
-                  side: BorderSide(
-                    color: FlashPalette.danger.withValues(alpha: 0.28),
-                  ),
-                  backgroundColor: FlashPalette.surface,
-                  minimumSize: const Size.fromHeight(52),
-                ),
-                onPressed: state.isSaving ? null : () => _confirmLeave(context),
-                child: const Text('退出群聊'),
-              ),
-            ],
+            ),
           ],
         ),
         if (state.isSaving)

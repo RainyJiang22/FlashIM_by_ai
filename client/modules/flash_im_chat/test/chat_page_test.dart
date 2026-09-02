@@ -121,6 +121,127 @@ void main() {
     expect(find.byKey(const Key('chat-announcement-banner')), findsOneWidget);
   });
 
+  testWidgets(
+    'membership inactive does not pop a typed details route with bool',
+    (tester) async {
+      final wsClient = _FakeWsClient();
+      await tester.pumpWidget(
+        MultiRepositoryProvider(
+          providers: [
+            RepositoryProvider<MessageRepository>.value(
+              value: const _FakeMessageRepository(),
+            ),
+            RepositoryProvider<WsClient>.value(value: wsClient),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => ChatPage(
+                conversation: Conversation(
+                  id: 'group-1',
+                  type: 1,
+                  name: '测试群',
+                  unreadCount: 0,
+                  createdAt: DateTime(2026, 9, 2),
+                ),
+                currentUserId: '1',
+                onDetailsTap: () async {
+                  await Navigator.of(context).push<String>(
+                    MaterialPageRoute<String>(
+                      builder: (_) =>
+                          const Scaffold(body: Center(child: Text('强类型群详情'))),
+                    ),
+                  );
+                  return null;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('chat-details-action')));
+      await tester.pumpAndSettle();
+      expect(find.text('强类型群详情'), findsOneWidget);
+
+      wsClient.addGroupInfo(
+        GroupInfoUpdateNotification(
+          conversationId: 'group-1',
+          membershipActive: false,
+          changeType: 'member_left',
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('强类型群详情'), findsOneWidget);
+
+      Navigator.of(tester.element(find.text('强类型群详情'))).pop('left');
+      await tester.pumpAndSettle();
+      expect(find.text('测试群'), findsOneWidget);
+      await wsClient.closeEvents();
+    },
+  );
+
+  testWidgets('membership inactive still closes the current chat route', (
+    tester,
+  ) async {
+    final wsClient = _FakeWsClient();
+    bool? routeResult;
+    await tester.pumpWidget(
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<MessageRepository>.value(
+            value: const _FakeMessageRepository(),
+          ),
+          RepositoryProvider<WsClient>.value(value: wsClient),
+        ],
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: FilledButton(
+                onPressed: () async {
+                  routeResult = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute<bool>(
+                      builder: (_) => ChatPage(
+                        conversation: Conversation(
+                          id: 'group-1',
+                          type: 1,
+                          name: '测试群',
+                          unreadCount: 0,
+                          createdAt: DateTime(2026, 9, 2),
+                        ),
+                        currentUserId: '1',
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('打开群聊'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('打开群聊'));
+    await tester.pumpAndSettle();
+    expect(find.text('测试群'), findsOneWidget);
+
+    wsClient.addGroupInfo(
+      GroupInfoUpdateNotification(
+        conversationId: 'group-1',
+        membershipActive: false,
+        changeType: 'member_left',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(routeResult, isTrue);
+    expect(find.text('打开群聊'), findsOneWidget);
+    await wsClient.closeEvents();
+  });
+
   testWidgets('group announcement stays pinned below the app bar', (
     tester,
   ) async {

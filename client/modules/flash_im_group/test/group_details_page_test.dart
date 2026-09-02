@@ -53,7 +53,16 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
+    expect(find.byKey(const Key('group-transfer-owner-row')), findsOneWidget);
     expect(find.byKey(const Key('group-dissolve-button')), findsOneWidget);
+    expect(
+      tester.widget(find.byKey(const Key('group-transfer-owner-row'))),
+      isA<ListTile>(),
+    );
+    expect(
+      tester.widget(find.byKey(const Key('group-dissolve-button'))),
+      isA<ListTile>(),
+    );
     final approvalSwitch = tester.widget<CupertinoSwitch>(
       find.byKey(const Key('group-join-approval-switch')),
     );
@@ -121,6 +130,10 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.byKey(const Key('group-leave-button')), findsOneWidget);
+    expect(
+      tester.widget(find.byKey(const Key('group-leave-button'))),
+      isA<ListTile>(),
+    );
     final approvalSwitch = tester.widget<CupertinoSwitch>(
       find.byKey(const Key('group-join-approval-switch')),
     );

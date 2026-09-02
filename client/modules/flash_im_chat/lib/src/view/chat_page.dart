@@ -89,6 +89,7 @@ class _ChatScaffold extends StatefulWidget {
 class _ChatScaffoldState extends State<_ChatScaffold> {
   late Conversation _displayConversation;
   StreamSubscription<GroupInfoUpdateNotification>? _groupInfoSubscription;
+  var _isOpeningDetails = false;
 
   @override
   void initState() {
@@ -183,17 +184,32 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
   }
 
   Future<void> _openDetails() async {
-    final updated = await widget.onDetailsTap?.call();
-    if (!mounted || updated == null || updated.id != _displayConversation.id) {
-      return;
+    if (_isOpeningDetails) return;
+    _isOpeningDetails = true;
+    try {
+      final updated = await widget.onDetailsTap?.call();
+      if (!mounted ||
+          updated == null ||
+          updated.id != _displayConversation.id) {
+        return;
+      }
+      setState(() => _displayConversation = updated);
+    } finally {
+      _isOpeningDetails = false;
     }
-    setState(() => _displayConversation = updated);
   }
 
   void _applyGroupInfoUpdate(GroupInfoUpdateNotification update) {
     if (!mounted) return;
     if (!update.membershipActive) {
-      Navigator.of(context).pop(true);
+      // GroupDetailsPage receives the same WS event and must close its typed
+      // route with GroupDetailsResult. Popping here would target that top route
+      // with a bool and then race its own pop listener.
+      if (_isOpeningDetails) return;
+      final route = ModalRoute.of(context);
+      if (route?.isCurrent == true) {
+        Navigator.of(context).pop(true);
+      }
       return;
     }
     setState(() {

@@ -5,8 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="fix(group):加入群通知">
-      <change beforePath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/build/native_assets/macos/objective_c.dylib" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/build/native_assets/macos/objective_c.dylib" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_page_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" afterDir="false" />
     </list>

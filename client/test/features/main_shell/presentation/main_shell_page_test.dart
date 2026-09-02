@@ -318,6 +318,10 @@ class _FakeGroupRepository implements GroupRepository {
       throw UnimplementedError();
 
   @override
+  Future<GroupDetail> updateNickname(String groupId, String nickname) =>
+      throw UnimplementedError();
+
+  @override
   Future<GroupDetail> updateAnnouncement(String groupId, String announcement) =>
       throw UnimplementedError();
 

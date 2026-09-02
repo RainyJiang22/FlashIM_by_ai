@@ -189,18 +189,30 @@ struct SenderProfile {
     avatar_url: Option<String>,
 }
 
-async fn load_sender_profile(pool: &PgPool, sender_id: i64) -> AppResult<Option<SenderProfile>> {
-    sqlx::query_as::<_, SenderProfile>(
-        r#"
-        SELECT nickname, avatar_url
-        FROM user_profiles
-        WHERE account_id = $1
-        "#,
-    )
-    .bind(sender_id)
-    .fetch_optional(pool)
-    .await
-    .map_err(|_| AppError::internal_server_error("failed to load sender profile"))
+fn sender_profile_sql() -> &'static str {
+    r#"
+        SELECT
+            COALESCE(NULLIF(BTRIM(member.group_nickname), ''), profile.nickname) AS nickname,
+            profile.avatar_url
+        FROM user_profiles profile
+        LEFT JOIN conversation_members member
+          ON member.conversation_id = $1
+         AND member.user_id = profile.account_id
+        WHERE profile.account_id = $2
+        "#
+}
+
+async fn load_sender_profile(
+    pool: &PgPool,
+    conversation_id: uuid::Uuid,
+    sender_id: i64,
+) -> AppResult<Option<SenderProfile>> {
+    sqlx::query_as::<_, SenderProfile>(sender_profile_sql())
+        .bind(conversation_id)
+        .bind(sender_id)
+        .fetch_optional(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to load sender profile"))
 }
 
 async fn load_total_unread(pool: &PgPool, user_id: i64) -> AppResult<i32> {
@@ -219,7 +231,8 @@ async fn load_total_unread(pool: &PgPool, user_id: i64) -> AppResult<i32> {
 }
 
 async fn to_proto_message(pool: &PgPool, message: MessagePayload) -> AppResult<ChatMessage> {
-    let sender_profile = load_sender_profile(pool, message.sender_id).await?;
+    let sender_profile =
+        load_sender_profile(pool, message.conversation_id, message.sender_id).await?;
 
     Ok(ChatMessage {
         id: message.id.to_string(),
@@ -271,7 +284,16 @@ fn to_proto_friend_user(user: FriendUserPayload) -> FriendUser {
 
 #[cfg(test)]
 mod tests {
+    use super::sender_profile_sql;
     use crate::proto::{ChatMessage, ConversationUpdate};
+
+    #[test]
+    fn sender_profile_prefers_group_nickname() {
+        let sql = sender_profile_sql();
+        assert!(sql.contains("member.group_nickname"));
+        assert!(sql.contains("profile.nickname"));
+        assert!(sql.contains("COALESCE"));
+    }
 
     #[test]
     fn proto_message_keeps_sender_profile_fields() {

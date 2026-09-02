@@ -25,6 +25,7 @@ export 'src/view/create_group_page.dart' show CreateGroupPage;
 export 'src/view/group_details_page.dart' show GroupDetailsPage;
 export 'src/view/group_announcement_page.dart' show GroupAnnouncementPage;
 export 'src/view/group_name_edit_page.dart' show GroupNameEditPage;
+export 'src/view/group_nickname_edit_page.dart' show GroupNicknameEditPage;
 export 'src/view/group_notifications_page.dart' show GroupNotificationsPage;
 export 'src/view/group_member_picker_page.dart' show GroupMemberPickerPage;
 export 'src/view/my_groups_page.dart' show MyGroupsPage;

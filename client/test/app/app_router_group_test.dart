@@ -218,6 +218,7 @@ class _GroupRepository implements GroupRepository {
     ownerId: 1,
     joinApprovalRequired: false,
     currentUserRole: 'owner',
+    currentUserNickname: '群主',
     memberCount: 1,
     members: [
       GroupMember(
@@ -276,9 +277,16 @@ class _GroupRepository implements GroupRepository {
       ownerId: detail.ownerId,
       joinApprovalRequired: detail.joinApprovalRequired,
       currentUserRole: detail.currentUserRole,
+      currentUserNickname: detail.currentUserNickname,
       memberCount: detail.memberCount,
       members: detail.members,
     );
+    return detail;
+  }
+
+  @override
+  Future<GroupDetail> updateNickname(String groupId, String nickname) async {
+    detail = detail.copyWith(currentUserNickname: nickname);
     return detail;
   }
 

@@ -47,6 +47,7 @@ pub struct GroupDetail {
     pub announcement_updated_by_name: String,
     pub is_dissolved: bool,
     pub current_user_role: &'static str,
+    pub current_user_nickname: String,
     pub member_count: usize,
     pub members: Vec<GroupMember>,
 }
@@ -78,6 +79,11 @@ impl GroupDetail {
         } else {
             "member"
         };
+        let current_user_nickname = members
+            .iter()
+            .find(|member| member.account_id == current_user_id.to_string())
+            .map(|member| member.nickname.clone())
+            .unwrap_or_else(|| format!("用户 {current_user_id}"));
         let announcement_updated_by_name = summary
             .announcement_updated_by
             .and_then(|updated_by| {
@@ -111,6 +117,7 @@ impl GroupDetail {
             announcement_updated_by_name,
             is_dissolved: summary.is_dissolved,
             current_user_role,
+            current_user_nickname,
             member_count,
             members,
         }
@@ -148,6 +155,11 @@ pub struct UpdateGroupNameBody {
 #[derive(Clone, Debug, Deserialize)]
 pub struct UpdateGroupAnnouncementBody {
     pub announcement: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct UpdateGroupNicknameBody {
+    pub nickname: String,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]

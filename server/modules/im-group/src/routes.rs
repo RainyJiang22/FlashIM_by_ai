@@ -16,7 +16,7 @@ use crate::{
     models::{
         GroupActionResponse, GroupMemberIdsBody, GroupSearchQuery, HandleJoinRequestBody,
         JoinGroupBody, TransferGroupOwnerBody, UpdateGroupAnnouncementBody, UpdateGroupNameBody,
-        UpdateGroupSettingsBody,
+        UpdateGroupNicknameBody, UpdateGroupSettingsBody,
     },
     service::GroupService,
 };
@@ -42,6 +42,7 @@ where
             get(get_group::<B>).delete(dissolve_group::<B>),
         )
         .route("/groups/{id}/name", patch(update_group_name::<B>))
+        .route("/groups/{id}/nickname", patch(update_group_nickname::<B>))
         .route("/groups/{id}/owner", patch(transfer_group_owner::<B>))
         .route(
             "/groups/{id}/announcement",
@@ -156,6 +157,23 @@ where
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let detail = GroupService::new(broadcaster)
         .update_name(&context, user_id, conversation_id, body)
+        .await?;
+    Ok(utf8_json(Json(detail)))
+}
+
+async fn update_group_nickname<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Path(conversation_id): Path<Uuid>,
+    Json(body): Json<UpdateGroupNicknameBody>,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let detail = GroupService::new(broadcaster)
+        .update_nickname(&context, user_id, conversation_id, body)
         .await?;
     Ok(utf8_json(Json(detail)))
 }

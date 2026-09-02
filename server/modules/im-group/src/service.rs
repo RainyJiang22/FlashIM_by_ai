@@ -18,7 +18,8 @@ use crate::{
         GroupDetail, GroupInvitationItem, GroupInvitationListResponse, GroupJoinRequestItem,
         GroupJoinRequestListResponse, GroupMemberIdsBody, GroupSearchItem, GroupSearchResponse,
         HandleJoinRequestBody, JoinGroupBody, JoinGroupResponse, TransferGroupOwnerBody,
-        UpdateGroupAnnouncementBody, UpdateGroupNameBody, UpdateGroupSettingsBody,
+        UpdateGroupAnnouncementBody, UpdateGroupNameBody, UpdateGroupNicknameBody,
+        UpdateGroupSettingsBody,
     },
     repository,
 };
@@ -37,6 +38,14 @@ fn normalize_group_announcement(body: UpdateGroupAnnouncementBody) -> AppResult<
         return Err(AppError::bad_request("invalid group announcement"));
     }
     Ok(announcement)
+}
+
+fn normalize_group_nickname(body: UpdateGroupNicknameBody) -> AppResult<String> {
+    let nickname = body.nickname.trim().to_string();
+    if nickname.is_empty() || nickname.chars().count() > 50 {
+        return Err(AppError::bad_request("invalid group nickname"));
+    }
+    Ok(nickname)
 }
 
 fn normalize_member_ids(actor_id: i64, body: GroupMemberIdsBody) -> AppResult<Vec<i64>> {
@@ -92,6 +101,28 @@ where
         conversation_id: Uuid,
     ) -> AppResult<GroupDetail> {
         load_detail(context, user_id, conversation_id).await
+    }
+
+    pub async fn update_nickname(
+        &self,
+        context: &SharedContext,
+        member_id: i64,
+        conversation_id: Uuid,
+        body: UpdateGroupNicknameBody,
+    ) -> AppResult<GroupDetail> {
+        let nickname = normalize_group_nickname(body)?;
+        repository::update_group_nickname(
+            context.postgres.pool(),
+            conversation_id,
+            member_id,
+            &nickname,
+        )
+        .await?;
+        let detail = load_detail(context, member_id, conversation_id).await?;
+        let _ = self
+            .broadcast_group_info(&detail, &[], "member_nickname_updated", false)
+            .await;
+        Ok(detail)
     }
 
     pub async fn search(
@@ -683,10 +714,11 @@ mod tests {
     use crate::{
         models::{
             GroupMemberIdsBody, JoinGroupBody, UpdateGroupAnnouncementBody, UpdateGroupNameBody,
+            UpdateGroupNicknameBody,
         },
         service::{
-            normalize_group_announcement, normalize_group_name, normalize_join_message,
-            normalize_member_ids, normalize_search_keyword,
+            normalize_group_announcement, normalize_group_name, normalize_group_nickname,
+            normalize_join_message, normalize_member_ids, normalize_search_keyword,
         },
     };
 
@@ -708,6 +740,29 @@ mod tests {
         assert!(
             normalize_group_name(UpdateGroupNameBody {
                 name: "群".repeat(101),
+            })
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn group_nickname_trims_and_enforces_boundaries() {
+        assert_eq!(
+            normalize_group_nickname(UpdateGroupNicknameBody {
+                nickname: "  小雨  ".to_string(),
+            })
+            .unwrap(),
+            "小雨"
+        );
+        assert!(
+            normalize_group_nickname(UpdateGroupNicknameBody {
+                nickname: " ".to_string(),
+            })
+            .is_err()
+        );
+        assert!(
+            normalize_group_nickname(UpdateGroupNicknameBody {
+                nickname: "群".repeat(51),
             })
             .is_err()
         );

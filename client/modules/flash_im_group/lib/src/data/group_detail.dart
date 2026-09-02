@@ -45,6 +45,7 @@ class GroupDetail extends Equatable {
     this.announcementUpdatedByName = '',
     this.isDissolved = false,
     required this.currentUserRole,
+    required this.currentUserNickname,
     required this.memberCount,
     required List<GroupMember> members,
   }) : members = List<GroupMember>.unmodifiable(members);
@@ -77,6 +78,7 @@ class GroupDetail extends Equatable {
       announcementUpdatedByName: _string(json['announcement_updated_by_name']),
       isDissolved: json['is_dissolved'] == true,
       currentUserRole: _requiredString(json, 'current_user_role'),
+      currentUserNickname: _requiredString(json, 'current_user_nickname'),
       memberCount: _requiredInt(json, 'member_count'),
       members: members,
     );
@@ -93,6 +95,7 @@ class GroupDetail extends Equatable {
   final String announcementUpdatedByName;
   final bool isDissolved;
   final String currentUserRole;
+  final String currentUserNickname;
   final int memberCount;
   final List<GroupMember> members;
 
@@ -108,6 +111,7 @@ class GroupDetail extends Equatable {
     String? announcementUpdatedByName,
     bool? isDissolved,
     String? currentUserRole,
+    String? currentUserNickname,
     int? memberCount,
     List<GroupMember>? members,
   }) => GroupDetail(
@@ -123,6 +127,7 @@ class GroupDetail extends Equatable {
         announcementUpdatedByName ?? this.announcementUpdatedByName,
     isDissolved: isDissolved ?? this.isDissolved,
     currentUserRole: currentUserRole ?? this.currentUserRole,
+    currentUserNickname: currentUserNickname ?? this.currentUserNickname,
     memberCount: memberCount ?? this.memberCount,
     members: members ?? this.members,
   );
@@ -148,6 +153,7 @@ class GroupDetail extends Equatable {
     announcementUpdatedByName,
     isDissolved,
     currentUserRole,
+    currentUserNickname,
     memberCount,
     members,
   ];

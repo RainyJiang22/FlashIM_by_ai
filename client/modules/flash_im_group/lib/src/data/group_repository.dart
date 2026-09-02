@@ -9,6 +9,8 @@ abstract interface class GroupRepository {
 
   Future<GroupDetail> updateName(String groupId, String name);
 
+  Future<GroupDetail> updateNickname(String groupId, String nickname);
+
   Future<GroupDetail> updateSettings(
     String groupId, {
     required bool joinApprovalRequired,
@@ -66,6 +68,17 @@ class DioGroupRepository implements GroupRepository {
   Future<GroupDetail> updateName(String groupId, String name) async {
     final response = await _request(
       () => _dio.patch<dynamic>('/groups/$groupId/name', data: {'name': name}),
+    );
+    return _parseDetail(response.data);
+  }
+
+  @override
+  Future<GroupDetail> updateNickname(String groupId, String nickname) async {
+    final response = await _request(
+      () => _dio.patch<dynamic>(
+        '/groups/$groupId/nickname',
+        data: {'nickname': nickname},
+      ),
     );
     return _parseDetail(response.data);
   }

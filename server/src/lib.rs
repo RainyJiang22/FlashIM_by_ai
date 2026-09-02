@@ -471,7 +471,45 @@ mod tests {
         let group_detail: serde_json::Value = serde_json::from_slice(&group_detail_body).unwrap();
         assert_eq!(group_detail["member_count"], 3);
         assert_eq!(group_detail["current_user_role"], "owner");
+        assert_eq!(group_detail["current_user_nickname"], "群成员0");
         assert_eq!(group_detail["avatar"], created["avatar"]);
+
+        let nickname_request = Request::builder()
+            .method("PATCH")
+            .uri(format!("/groups/{conversation_id}/nickname"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(r#"{"nickname":"  项目负责人  "}"#))
+            .unwrap();
+        let nickname_response = app.clone().oneshot(nickname_request).await.unwrap();
+        assert_eq!(nickname_response.status(), StatusCode::OK);
+        let nickname_body = to_bytes(nickname_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let nickname_detail: serde_json::Value = serde_json::from_slice(&nickname_body).unwrap();
+        assert_eq!(nickname_detail["current_user_nickname"], "项目负责人");
+        let owner_member = nickname_detail["members"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|member| member["account_id"] == owner_id.to_string())
+            .unwrap();
+        assert_eq!(owner_member["nickname"], "项目负责人");
+
+        let renamed_history_request = Request::builder()
+            .method("GET")
+            .uri(format!("/conversations/{conversation_id}/messages"))
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(Body::empty())
+            .unwrap();
+        let renamed_history_response = app.clone().oneshot(renamed_history_request).await.unwrap();
+        assert_eq!(renamed_history_response.status(), StatusCode::OK);
+        let renamed_history_body = to_bytes(renamed_history_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let renamed_messages: Vec<serde_json::Value> =
+            serde_json::from_slice(&renamed_history_body).unwrap();
+        assert_eq!(renamed_messages[0]["sender_name"], "项目负责人");
 
         let broadcast_failure_output = MessageService::new(Arc::new(FailingBroadcaster))
             .send(

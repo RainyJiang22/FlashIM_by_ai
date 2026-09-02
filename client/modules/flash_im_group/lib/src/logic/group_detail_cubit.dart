@@ -55,6 +55,17 @@ class GroupDetailCubit extends Cubit<GroupDetailState> {
     );
   }
 
+  Future<bool> updateNickname(String value) async {
+    final nickname = value.trim();
+    if (nickname.isEmpty || nickname.runes.length > 50 || state.isSaving) {
+      return false;
+    }
+    return _save(
+      () => _repository.updateNickname(_groupId, nickname),
+      fallback: '群昵称修改失败，请稍后重试',
+    );
+  }
+
   Future<bool> updateAnnouncement(String value) async {
     final announcement = value.trim();
     if (announcement.isEmpty ||
@@ -195,6 +206,7 @@ class GroupDetailCubit extends Cubit<GroupDetailState> {
           'member_removed',
           'member_left',
           'owner_transferred',
+          'member_nickname_updated',
         }.contains(update.changeType)) {
       unawaited(load());
       return;
@@ -273,6 +285,7 @@ String _groupError(Object error, String fallback) {
       'new owner must be another member' => '请选择其他成员作为新群主',
       'new owner must be an active member' => '新群主必须是当前群成员',
       'invalid group announcement' => '群公告需为 1～2000 字',
+      'invalid group nickname' => '群昵称需为 1～50 字',
       'group invitation delivery failed' => '部分群邀请发送失败，请重试',
       _ => fallback,
     };

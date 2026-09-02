@@ -15,6 +15,7 @@ import 'group_announcement_page.dart';
 import 'transfer_group_owner_page.dart';
 import 'widgets/group_member_grid.dart';
 import 'widgets/group_name_editor.dart';
+import 'widgets/group_nickname_editor.dart';
 
 class GroupDetailsPage extends StatelessWidget {
   const GroupDetailsPage({
@@ -158,6 +159,12 @@ class _GroupDetailsView extends StatelessWidget {
                     name: detail.name,
                     canEdit: detail.isOwner && !state.isSaving,
                     onSave: context.read<GroupDetailCubit>().updateName,
+                  ),
+                  const Divider(height: 1, indent: 16),
+                  GroupNicknameEditor(
+                    nickname: detail.currentUserNickname,
+                    canEdit: !state.isSaving,
+                    onSave: context.read<GroupDetailCubit>().updateNickname,
                   ),
                   const Divider(height: 1, indent: 16),
                   ListTile(

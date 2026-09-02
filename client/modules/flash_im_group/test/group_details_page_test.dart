@@ -48,6 +48,18 @@ void main() {
     expect(find.text('群号'), findsOneWidget);
     expect(find.text('group-1'), findsOneWidget);
     expect(find.text('入群验证'), findsOneWidget);
+    expect(find.byKey(const Key('group-nickname-row')), findsOneWidget);
+    expect(find.text('群主'), findsWidgets);
+    await tester.tap(find.byKey(const Key('group-nickname-row')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('group-nickname-input')),
+      '项目负责人',
+    );
+    await tester.tap(find.byKey(const Key('group-nickname-save')));
+    await tester.pumpAndSettle();
+    expect(groupRepository.updatedNicknames, ['项目负责人']);
+    expect(find.text('项目负责人'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.byKey(const Key('group-dissolve-button')),
       300,

@@ -147,6 +147,7 @@ GroupDetail groupDetail({
   bool joinApprovalRequired = false,
   String name = '测试群聊',
   String announcement = '',
+  String? currentUserNickname,
 }) => GroupDetail(
   conversationId: 'group-1',
   name: name,
@@ -155,6 +156,7 @@ GroupDetail groupDetail({
   joinApprovalRequired: joinApprovalRequired,
   announcement: announcement,
   currentUserRole: isOwner ? 'owner' : 'member',
+  currentUserNickname: currentUserNickname ?? (isOwner ? '群主' : '阿青'),
   memberCount: 2,
   members: [
     GroupMember(
@@ -200,6 +202,7 @@ class FakeGroupRepository implements GroupRepository {
   var dissolveCount = 0;
   var leaveCount = 0;
   final List<int> transferredOwnerIds = [];
+  final List<String> updatedNicknames = [];
 
   void _throwIfNeeded() {
     if (error != null) throw error!;
@@ -328,7 +331,16 @@ class FakeGroupRepository implements GroupRepository {
       joinApprovalRequired: detail.joinApprovalRequired,
       name: name,
       announcement: detail.announcement,
+      currentUserNickname: detail.currentUserNickname,
     );
+    return detail;
+  }
+
+  @override
+  Future<GroupDetail> updateNickname(String groupId, String nickname) async {
+    _throwIfNeeded();
+    updatedNicknames.add(nickname);
+    detail = detail.copyWith(currentUserNickname: nickname);
     return detail;
   }
 
@@ -343,6 +355,7 @@ class FakeGroupRepository implements GroupRepository {
       joinApprovalRequired: joinApprovalRequired,
       name: detail.name,
       announcement: detail.announcement,
+      currentUserNickname: detail.currentUserNickname,
     );
     return detail;
   }

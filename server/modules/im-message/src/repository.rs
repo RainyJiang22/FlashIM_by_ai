@@ -205,7 +205,7 @@ pub fn find_before_sql() -> &'static str {
         m.id,
         m.conversation_id,
         m.sender_id,
-        p.nickname AS sender_name,
+        COALESCE(NULLIF(BTRIM(member.group_nickname), ''), p.nickname) AS sender_name,
         p.avatar_url AS sender_avatar,
         m.seq,
         m.type,
@@ -214,6 +214,9 @@ pub fn find_before_sql() -> &'static str {
         m.status,
         m.created_at
     FROM messages m
+    LEFT JOIN conversation_members member
+      ON member.conversation_id = m.conversation_id
+     AND member.user_id = m.sender_id
     LEFT JOIN user_profiles p ON p.account_id = m.sender_id
     WHERE m.conversation_id = $1
       AND m.seq < $2
@@ -269,6 +272,8 @@ mod tests {
         assert!(sql.contains("m.seq < $2"));
         assert!(sql.contains("ORDER BY m.seq DESC"));
         assert!(sql.contains("LIMIT $3"));
+        assert!(sql.contains("member.group_nickname"));
+        assert!(sql.contains("COALESCE"));
     }
 
     #[test]

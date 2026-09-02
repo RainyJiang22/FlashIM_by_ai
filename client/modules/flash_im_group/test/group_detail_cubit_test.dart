@@ -19,6 +19,10 @@ void main() {
     expect(await cubit.updateName('新群名'), isTrue);
     expect(cubit.state.detail?.name, '新群名');
 
+    expect(await cubit.updateNickname(' 项目负责人 '), isTrue);
+    expect(cubit.state.detail?.currentUserNickname, '项目负责人');
+    expect(repository.updatedNicknames, ['项目负责人']);
+
     expect(await cubit.updateSettings(true), isTrue);
     expect(cubit.state.detail?.joinApprovalRequired, isTrue);
     await cubit.close();

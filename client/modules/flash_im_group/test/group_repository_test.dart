@@ -13,6 +13,7 @@ void main() {
 
     final detail = await repository.getDetail('group-1');
     await repository.updateName('group-1', '新群名');
+    await repository.updateNickname('group-1', '项目负责人');
     await repository.updateAnnouncement('group-1', '周五发布');
     await repository.transferOwner('group-1', 2);
     await repository.updateSettings('group-1', joinApprovalRequired: true);
@@ -29,9 +30,11 @@ void main() {
     expect(detail.announcementUpdatedByName, '群主');
     expect(detail.announcementUpdatedAt, isNotNull);
     expect(detail.isDissolved, isFalse);
+    expect(detail.currentUserNickname, '群主');
     expect(detail.members.single.accountId, 1);
     expect(adapter.requests.map((request) => request.method), [
       'GET',
+      'PATCH',
       'PATCH',
       'PATCH',
       'PATCH',
@@ -42,17 +45,19 @@ void main() {
       'POST',
       'DELETE',
     ]);
-    expect(adapter.requests[2].path, '/groups/group-1/announcement');
-    expect(adapter.requests[2].data, {'announcement': '周五发布'});
-    expect(adapter.requests[3].path, '/groups/group-1/owner');
-    expect(adapter.requests[3].data, {'owner_id': 2});
-    expect(adapter.requests[5].data, {
+    expect(adapter.requests[2].path, '/groups/group-1/nickname');
+    expect(adapter.requests[2].data, {'nickname': '项目负责人'});
+    expect(adapter.requests[3].path, '/groups/group-1/announcement');
+    expect(adapter.requests[3].data, {'announcement': '周五发布'});
+    expect(adapter.requests[4].path, '/groups/group-1/owner');
+    expect(adapter.requests[4].data, {'owner_id': 2});
+    expect(adapter.requests[6].data, {
       'member_ids': [3],
     });
-    expect(adapter.requests[7].data, {
+    expect(adapter.requests[8].data, {
       'member_ids': [4],
     });
-    expect(adapter.requests[8].path, '/groups/group-1/leave');
+    expect(adapter.requests[9].path, '/groups/group-1/leave');
   });
 
   test('rejects an invitation response with an undelivered item', () async {
@@ -177,6 +182,7 @@ class _RecordingAdapter implements HttpClientAdapter {
             'announcement_updated_by_name': '群主',
             'is_dissolved': false,
             'current_user_role': 'owner',
+            'current_user_nickname': '群主',
             'member_count': 1,
             'members': [
               {

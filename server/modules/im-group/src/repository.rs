@@ -51,11 +51,18 @@ pub async fn list_group_members(
     pool: &PgPool,
     conversation_id: Uuid,
 ) -> AppResult<Vec<GroupMemberRow>> {
-    sqlx::query_as::<_, GroupMemberRow>(
-        r#"
+    sqlx::query_as::<_, GroupMemberRow>(list_group_members_sql())
+        .bind(conversation_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to list group members"))
+}
+
+pub fn list_group_members_sql() -> &'static str {
+    r#"
         SELECT
             member.user_id AS account_id,
-            profile.nickname,
+            COALESCE(NULLIF(BTRIM(member.group_nickname), ''), profile.nickname) AS nickname,
             profile.avatar_url AS avatar,
             member.joined_at
         FROM conversation_members member
@@ -66,12 +73,38 @@ pub async fn list_group_members(
           AND c.type = 1
           AND c.is_dissolved = FALSE
         ORDER BY (member.user_id = c.owner_id) DESC, member.joined_at ASC
+        "#
+}
+
+pub async fn update_group_nickname(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    member_id: i64,
+    nickname: &str,
+) -> AppResult<()> {
+    let updated = sqlx::query(
+        r#"
+        UPDATE conversation_members member
+        SET group_nickname = $3
+        FROM conversations conversation
+        WHERE member.conversation_id = $1
+          AND member.user_id = $2
+          AND member.is_deleted = FALSE
+          AND conversation.id = member.conversation_id
+          AND conversation.type = 1
+          AND conversation.is_dissolved = FALSE
         "#,
     )
     .bind(conversation_id)
-    .fetch_all(pool)
+    .bind(member_id)
+    .bind(nickname)
+    .execute(pool)
     .await
-    .map_err(|_| AppError::internal_server_error("failed to list group members"))
+    .map_err(|_| AppError::internal_server_error("failed to update group nickname"))?;
+    if updated.rows_affected() == 0 {
+        return Err(AppError::not_found(GROUP_NOT_FOUND));
+    }
+    Ok(())
 }
 
 pub async fn search_groups(
@@ -1051,7 +1084,7 @@ pub async fn dissolve_group(
 
 #[cfg(test)]
 mod tests {
-    use super::group_for_member_sql;
+    use super::{group_for_member_sql, list_group_members_sql};
 
     #[test]
     fn group_queries_require_active_membership_and_active_group() {
@@ -1059,5 +1092,13 @@ mod tests {
         assert!(sql.contains("member.is_deleted = FALSE"));
         assert!(sql.contains("c.type = 1"));
         assert!(sql.contains("c.is_dissolved = FALSE"));
+    }
+
+    #[test]
+    fn member_list_prefers_group_nickname() {
+        let sql = list_group_members_sql();
+        assert!(sql.contains("member.group_nickname"));
+        assert!(sql.contains("profile.nickname"));
+        assert!(sql.contains("COALESCE"));
     }
 }

@@ -12,6 +12,42 @@ pub struct PersistedMessage {
     pub unread_counts: Vec<(i64, i32)>,
 }
 
+#[derive(Clone, Debug, sqlx::FromRow)]
+pub struct MentionMemberRow {
+    pub user_id: i64,
+    pub nickname: Option<String>,
+    pub is_owner: bool,
+    pub is_admin: bool,
+}
+
+pub async fn list_mention_members(
+    pool: &PgPool,
+    conversation_id: Uuid,
+) -> AppResult<Vec<MentionMemberRow>> {
+    sqlx::query_as::<_, MentionMemberRow>(
+        r#"
+        SELECT
+            member.user_id,
+            COALESCE(NULLIF(BTRIM(member.group_nickname), ''), profile.nickname) AS nickname,
+            member.user_id = conversation.owner_id AS is_owner,
+            member.is_admin
+        FROM conversation_members member
+        JOIN conversations conversation
+          ON conversation.id = member.conversation_id
+         AND conversation.type = 1
+         AND conversation.is_dissolved = FALSE
+        LEFT JOIN user_profiles profile ON profile.account_id = member.user_id
+        WHERE member.conversation_id = $1
+          AND member.is_deleted = FALSE
+        ORDER BY member.joined_at ASC, member.user_id ASC
+        "#,
+    )
+    .bind(conversation_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to load mention members"))
+}
+
 pub async fn get_user_display_name(pool: &PgPool, user_id: i64) -> AppResult<Option<String>> {
     sqlx::query_scalar::<_, Option<String>>(
         r#"

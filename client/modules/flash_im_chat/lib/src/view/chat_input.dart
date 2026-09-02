@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flash_shared/flash_shared.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../data/mention.dart';
+import 'mention_picker_page.dart';
 
 const _cameraAvailabilityChannel = MethodChannel('flash_im/camera');
 
@@ -14,6 +19,8 @@ class ChatInput extends StatefulWidget {
     required this.onSendImage,
     required this.onSendVideo,
     required this.onSendFile,
+    this.onSendDraft,
+    this.mentionDataLoader,
     this.imagePicker,
     this.cameraAvailabilityChecker,
   });
@@ -22,6 +29,8 @@ class ChatInput extends StatefulWidget {
   final ValueChanged<String> onSendImage;
   final ValueChanged<String> onSendVideo;
   final ValueChanged<String> onSendFile;
+  final ValueChanged<ChatTextMessageDraft>? onSendDraft;
+  final Future<ChatMentionPickerData> Function()? mentionDataLoader;
   final ImagePicker? imagePicker;
   final Future<bool> Function()? cameraAvailabilityChecker;
 
@@ -34,6 +43,10 @@ class _ChatInputState extends State<ChatInput> {
   final _focusNode = FocusNode();
   late final ImagePicker _imagePicker;
   bool _panelVisible = false;
+  bool _isOpeningMentionPicker = false;
+  int? _mentionTriggerOffset;
+  final Map<String, ChatMentionCandidate> _mentions = {};
+  bool _mentionAll = false;
 
   @override
   void initState() {
@@ -77,6 +90,7 @@ class _ChatInputState extends State<ChatInput> {
                   ),
                   Expanded(
                     child: TextField(
+                      key: const Key('chat-input-field'),
                       controller: _controller,
                       focusNode: _focusNode,
                       minLines: 1,
@@ -101,7 +115,7 @@ class _ChatInputState extends State<ChatInput> {
                           setState(() => _panelVisible = false);
                         }
                       },
-                      onChanged: (_) => setState(() {}),
+                      onChanged: _handleTextChanged,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -252,9 +266,83 @@ class _ChatInputState extends State<ChatInput> {
   void _send() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+    final mentionAll = _mentionAll && text.contains('@所有人');
+    final mentions = _mentions.values
+        .where((member) => text.contains('@${member.displayName}'))
+        .toList(growable: false);
     _controller.clear();
+    _mentions.clear();
+    _mentionAll = false;
     setState(() {});
-    widget.onSend(text);
+    final draftHandler = widget.onSendDraft;
+    if (draftHandler != null && (mentionAll || mentions.isNotEmpty)) {
+      draftHandler(
+        ChatTextMessageDraft(
+          text: text,
+          mentions: mentions,
+          mentionAll: mentionAll,
+        ),
+      );
+    } else {
+      widget.onSend(text);
+    }
+  }
+
+  void _handleTextChanged(String value) {
+    setState(() {});
+    final loader = widget.mentionDataLoader;
+    if (loader == null || _isOpeningMentionPicker) return;
+    final cursor = _controller.selection.baseOffset;
+    if (cursor <= 0 || cursor > value.length || value[cursor - 1] != '@') {
+      return;
+    }
+    _mentionTriggerOffset = cursor - 1;
+    unawaited(_openMentionPicker(loader));
+  }
+
+  Future<void> _openMentionPicker(
+    Future<ChatMentionPickerData> Function() loader,
+  ) async {
+    _isOpeningMentionPicker = true;
+    try {
+      final data = await loader();
+      if (!mounted) return;
+      final selection = await Navigator.of(context).push<ChatMentionSelection>(
+        MaterialPageRoute<ChatMentionSelection>(
+          builder: (_) => MentionPickerPage(data: data),
+        ),
+      );
+      if (!mounted || selection == null) return;
+      _insertMentionSelection(selection);
+    } catch (_) {
+      if (mounted) _showToast('群成员加载失败，请稍后重试');
+    } finally {
+      _isOpeningMentionPicker = false;
+      _mentionTriggerOffset = null;
+    }
+  }
+
+  void _insertMentionSelection(ChatMentionSelection selection) {
+    final trigger = _mentionTriggerOffset;
+    if (trigger == null || trigger >= _controller.text.length) return;
+    final inserted = selection.mentionAll
+        ? '@所有人 '
+        : selection.members.map((member) => '@${member.displayName} ').join();
+    final text = _controller.text;
+    final nextText = text.replaceRange(trigger, trigger + 1, inserted);
+    if (selection.mentionAll) {
+      _mentionAll = true;
+    } else {
+      for (final member in selection.members) {
+        _mentions[member.userId] = member;
+      }
+    }
+    _controller.value = TextEditingValue(
+      text: nextText,
+      selection: TextSelection.collapsed(offset: trigger + inserted.length),
+    );
+    _focusNode.requestFocus();
+    setState(() {});
   }
 }
 

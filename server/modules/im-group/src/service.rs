@@ -18,8 +18,8 @@ use crate::{
         GroupDetail, GroupInvitationItem, GroupInvitationListResponse, GroupJoinRequestItem,
         GroupJoinRequestListResponse, GroupMemberIdsBody, GroupSearchItem, GroupSearchResponse,
         HandleJoinRequestBody, JoinGroupBody, JoinGroupResponse, TransferGroupOwnerBody,
-        UpdateGroupAnnouncementBody, UpdateGroupNameBody, UpdateGroupNicknameBody,
-        UpdateGroupSettingsBody,
+        UpdateGroupAdminsBody, UpdateGroupAnnouncementBody, UpdateGroupNameBody,
+        UpdateGroupNicknameBody, UpdateGroupSettingsBody,
     },
     repository,
 };
@@ -57,6 +57,14 @@ fn normalize_member_ids(actor_id: i64, body: GroupMemberIdsBody) -> AppResult<Ve
         if *member_id == actor_id || !unique.insert(*member_id) {
             return Err(AppError::bad_request("invalid group members"));
         }
+    }
+    Ok(body.member_ids)
+}
+
+fn normalize_admin_ids(body: UpdateGroupAdminsBody) -> AppResult<Vec<i64>> {
+    let mut unique = HashSet::with_capacity(body.member_ids.len());
+    if body.member_ids.iter().any(|id| !unique.insert(*id)) {
+        return Err(AppError::bad_request("invalid group admins"));
     }
     Ok(body.member_ids)
 }
@@ -350,6 +358,28 @@ where
         Ok(detail)
     }
 
+    pub async fn update_admins(
+        &self,
+        context: &SharedContext,
+        owner_id: i64,
+        conversation_id: Uuid,
+        body: UpdateGroupAdminsBody,
+    ) -> AppResult<GroupDetail> {
+        let admin_ids = normalize_admin_ids(body)?;
+        repository::update_group_admins(
+            context.postgres.pool(),
+            conversation_id,
+            owner_id,
+            &admin_ids,
+        )
+        .await?;
+        let detail = load_detail(context, owner_id, conversation_id).await?;
+        let _ = self
+            .broadcast_group_info(&detail, &[], "admins_updated", false)
+            .await;
+        Ok(detail)
+    }
+
     pub async fn update_settings(
         &self,
         context: &SharedContext,
@@ -628,8 +658,10 @@ where
                         .parse::<i64>()
                         .map_err(|_| AppError::internal_server_error("invalid group member"))?,
                     membership_active: true,
-                    current_user_role: if member.account_id == detail.owner_id {
+                    current_user_role: if member.is_owner {
                         "owner"
+                    } else if member.is_admin {
+                        "admin"
                     } else {
                         "member"
                     },
@@ -713,12 +745,13 @@ async fn load_detail(
 mod tests {
     use crate::{
         models::{
-            GroupMemberIdsBody, JoinGroupBody, UpdateGroupAnnouncementBody, UpdateGroupNameBody,
-            UpdateGroupNicknameBody,
+            GroupMemberIdsBody, JoinGroupBody, UpdateGroupAdminsBody, UpdateGroupAnnouncementBody,
+            UpdateGroupNameBody, UpdateGroupNicknameBody,
         },
         service::{
-            normalize_group_announcement, normalize_group_name, normalize_group_nickname,
-            normalize_join_message, normalize_member_ids, normalize_search_keyword,
+            normalize_admin_ids, normalize_group_announcement, normalize_group_name,
+            normalize_group_nickname, normalize_join_message, normalize_member_ids,
+            normalize_search_keyword,
         },
     };
 
@@ -763,6 +796,23 @@ mod tests {
         assert!(
             normalize_group_nickname(UpdateGroupNicknameBody {
                 nickname: "群".repeat(51),
+            })
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn group_admins_are_unique() {
+        assert_eq!(
+            normalize_admin_ids(UpdateGroupAdminsBody {
+                member_ids: vec![2, 3, 4],
+            })
+            .unwrap(),
+            vec![2, 3, 4]
+        );
+        assert!(
+            normalize_admin_ids(UpdateGroupAdminsBody {
+                member_ids: vec![2, 2],
             })
             .is_err()
         );

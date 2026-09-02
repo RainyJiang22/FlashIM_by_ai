@@ -15,8 +15,8 @@ use crate::{
     broadcast::{GroupBroadcaster, NoopGroupBroadcaster},
     models::{
         GroupActionResponse, GroupMemberIdsBody, GroupSearchQuery, HandleJoinRequestBody,
-        JoinGroupBody, TransferGroupOwnerBody, UpdateGroupAnnouncementBody, UpdateGroupNameBody,
-        UpdateGroupNicknameBody, UpdateGroupSettingsBody,
+        JoinGroupBody, TransferGroupOwnerBody, UpdateGroupAdminsBody, UpdateGroupAnnouncementBody,
+        UpdateGroupNameBody, UpdateGroupNicknameBody, UpdateGroupSettingsBody,
     },
     service::GroupService,
 };
@@ -44,6 +44,7 @@ where
         .route("/groups/{id}/name", patch(update_group_name::<B>))
         .route("/groups/{id}/nickname", patch(update_group_nickname::<B>))
         .route("/groups/{id}/owner", patch(transfer_group_owner::<B>))
+        .route("/groups/{id}/admins", patch(update_group_admins::<B>))
         .route(
             "/groups/{id}/announcement",
             patch(update_group_announcement::<B>),
@@ -225,6 +226,23 @@ where
     let user_id = extract_user_id(context.as_ref(), &headers)?;
     let detail = GroupService::new(broadcaster)
         .transfer_owner(&context, user_id, conversation_id, body)
+        .await?;
+    Ok(utf8_json(Json(detail)))
+}
+
+async fn update_group_admins<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Path(conversation_id): Path<Uuid>,
+    Json(body): Json<UpdateGroupAdminsBody>,
+) -> AppResult<impl IntoResponse>
+where
+    B: GroupBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let detail = GroupService::new(broadcaster)
+        .update_admins(&context, user_id, conversation_id, body)
         .await?;
     Ok(utf8_json(Json(detail)))
 }

@@ -25,6 +25,11 @@ void main() {
 
     expect(await cubit.updateSettings(true), isTrue);
     expect(cubit.state.detail?.joinApprovalRequired, isTrue);
+    expect(await cubit.updateAdmins(const [2]), isTrue);
+    expect(repository.updatedAdminIds, [
+      const [2],
+    ]);
+    expect(cubit.state.detail?.members.last.isAdmin, isTrue);
     await cubit.close();
   });
 

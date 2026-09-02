@@ -54,6 +54,25 @@ class GroupMemberTile extends StatelessWidget {
                       ),
                     ),
                   ),
+                if (member.isAdmin)
+                  const Positioned(
+                    right: -4,
+                    bottom: -3,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Color(0xFF5B67D6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(3),
+                        child: Icon(
+                          Icons.shield_rounded,
+                          color: Colors.white,
+                          size: 10,
+                        ),
+                      ),
+                    ),
+                  ),
                 if (showDelete && !member.isOwner)
                   const Positioned(
                     right: -5,

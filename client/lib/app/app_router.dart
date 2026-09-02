@@ -133,6 +133,29 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
           currentUserId: args.currentUserId,
           currentUserName: args.currentUserName,
           currentUserAvatar: args.currentUserAvatar,
+          mentionDataLoader: args.conversation.isGroupChat
+              ? () async {
+                  final detail = await context
+                      .read<GroupRepository>()
+                      .getDetail(args.conversation.id);
+                  return ChatMentionPickerData(
+                    canMentionAll: detail.canMentionAll,
+                    members: detail.members
+                        .where(
+                          (member) =>
+                              member.accountId.toString() != args.currentUserId,
+                        )
+                        .map(
+                          (member) => ChatMentionCandidate(
+                            userId: member.accountId.toString(),
+                            displayName: member.displayName,
+                            avatar: member.avatar,
+                          ),
+                        )
+                        .toList(growable: false),
+                  );
+                }
+              : null,
           onDetailsTap: args.conversation.isPrivateChat
               ? () async {
                   final peerId = int.tryParse(

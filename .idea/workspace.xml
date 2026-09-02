@@ -4,18 +4,25 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="fix(group):加入群通知">
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/coverage/lcov.info" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_nickname_edit_page.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/widgets/group_nickname_editor.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/migrations/20260902000100_group_member_nickname.sql" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(group):增加群聊扩展功能，可自定义群昵称">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/app/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/flash_im_chat.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/flash_im_chat.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_input.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_input.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_input_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_input_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/flash_im_group.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/flash_im_group.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_detail.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_detail.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_repository.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/logic/group_detail_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/logic/group_detail_cubit.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/widgets/group_member_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/widgets/group_member_tile.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_detail_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_detail_cubit_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_governance_pages_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_governance_pages_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_repository_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/test_fakes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/test_fakes.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" afterDir="false" />
@@ -25,8 +32,7 @@
       <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/routes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/service.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -408,7 +414,15 @@
       <option name="project" value="LOCAL" />
       <updated>1788161842759</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="feat(group):增加群聊扩展功能，可自定义群昵称">
+      <option name="closed" value="true" />
+      <created>1788340187269</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1788340187269</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -425,7 +439,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="refactor(login):调整前端模拟认证ui" />
     <MESSAGE value="feat(playground):整合JWT用户认证与聊天室" />
     <MESSAGE value="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
     <MESSAGE value="feat:后端认证系统升级" />
@@ -450,14 +463,15 @@
     <MESSAGE value="refactor(group):补充群聊头像显示逻辑" />
     <MESSAGE value="feat(group):搜索加群与入群审批" />
     <MESSAGE value="fix(group):加入群通知" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix(group):加入群通知" />
+    <MESSAGE value="feat(group):增加群聊扩展功能，可自定义群昵称" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(group):增加群聊扩展功能，可自定义群昵称" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart</url>
-          <line>30</line>
+          <line>37</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

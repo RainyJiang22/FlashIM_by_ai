@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/message.dart';
 import '../data/message_repository.dart';
+import '../data/mention.dart';
 import '../data/video_thumbnail_service.dart';
 import '../logic/chat_cubit.dart';
 import '../logic/chat_state.dart';
@@ -28,6 +29,7 @@ class ChatPage extends StatelessWidget {
     this.videoThumbnailService,
     this.onDetailsTap,
     this.onAcceptGroupInvitation,
+    this.mentionDataLoader,
   });
 
   final Conversation conversation;
@@ -37,6 +39,7 @@ class ChatPage extends StatelessWidget {
   final VideoThumbnailService? videoThumbnailService;
   final Future<Conversation?> Function()? onDetailsTap;
   final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
+  final Future<ChatMentionPickerData> Function()? mentionDataLoader;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +65,7 @@ class ChatPage extends StatelessWidget {
         currentUserAvatar: currentUserAvatar,
         onDetailsTap: onDetailsTap,
         onAcceptGroupInvitation: onAcceptGroupInvitation,
+        mentionDataLoader: mentionDataLoader,
       ),
     );
   }
@@ -74,6 +78,7 @@ class _ChatScaffold extends StatefulWidget {
     this.currentUserAvatar,
     this.onDetailsTap,
     this.onAcceptGroupInvitation,
+    this.mentionDataLoader,
   });
 
   final Conversation conversation;
@@ -81,6 +86,7 @@ class _ChatScaffold extends StatefulWidget {
   final String? currentUserAvatar;
   final Future<Conversation?> Function()? onDetailsTap;
   final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
+  final Future<ChatMentionPickerData> Function()? mentionDataLoader;
 
   @override
   State<_ChatScaffold> createState() => _ChatScaffoldState();
@@ -172,6 +178,8 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
               else
                 ChatInput(
                   onSend: context.read<ChatCubit>().sendText,
+                  onSendDraft: context.read<ChatCubit>().sendTextDraft,
+                  mentionDataLoader: widget.mentionDataLoader,
                   onSendImage: context.read<ChatCubit>().sendImageFromFile,
                   onSendVideo: context.read<ChatCubit>().sendVideoFromFile,
                   onSendFile: context.read<ChatCubit>().sendFileFromPicker,

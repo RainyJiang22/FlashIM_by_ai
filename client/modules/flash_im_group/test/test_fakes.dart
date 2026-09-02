@@ -202,6 +202,7 @@ class FakeGroupRepository implements GroupRepository {
   var dissolveCount = 0;
   var leaveCount = 0;
   final List<int> transferredOwnerIds = [];
+  final List<List<int>> updatedAdminIds = [];
   final List<String> updatedNicknames = [];
 
   void _throwIfNeeded() {
@@ -320,6 +321,27 @@ class FakeGroupRepository implements GroupRepository {
   ) async {
     _throwIfNeeded();
     detail = detail.copyWith(announcement: announcement);
+    return detail;
+  }
+
+  @override
+  Future<GroupDetail> updateAdmins(String groupId, List<int> memberIds) async {
+    _throwIfNeeded();
+    updatedAdminIds.add(memberIds);
+    detail = detail.copyWith(
+      members: detail.members
+          .map(
+            (member) => GroupMember(
+              accountId: member.accountId,
+              nickname: member.nickname,
+              avatar: member.avatar,
+              isOwner: member.isOwner,
+              isAdmin: memberIds.contains(member.accountId),
+              joinedAt: member.joinedAt,
+            ),
+          )
+          .toList(growable: false),
+    );
     return detail;
   }
 

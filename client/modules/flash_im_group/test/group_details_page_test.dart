@@ -66,6 +66,7 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.byKey(const Key('group-transfer-owner-row')), findsOneWidget);
+    expect(find.byKey(const Key('group-admin-row')), findsOneWidget);
     expect(find.byKey(const Key('group-dissolve-button')), findsOneWidget);
     expect(
       tester.widget(find.byKey(const Key('group-transfer-owner-row'))),
@@ -89,6 +90,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(groupRepository.detail.joinApprovalRequired, isTrue);
 
+    await tester.ensureVisible(find.byKey(const Key('group-name-row')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('group-name-row')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('group-name-input')), '新群名');

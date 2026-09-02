@@ -30,6 +30,8 @@ abstract interface class GroupRepository {
 
   Future<GroupDetail> transferOwner(String groupId, int ownerId);
 
+  Future<GroupDetail> updateAdmins(String groupId, List<int> memberIds);
+
   Future<GroupDetail> updateAnnouncement(String groupId, String announcement);
 
   Future<List<GroupSearchItem>> searchGroups(String keyword);
@@ -155,6 +157,17 @@ class DioGroupRepository implements GroupRepository {
       () => _dio.patch<dynamic>(
         '/groups/$groupId/owner',
         data: {'owner_id': ownerId},
+      ),
+    );
+    return _parseDetail(response.data);
+  }
+
+  @override
+  Future<GroupDetail> updateAdmins(String groupId, List<int> memberIds) async {
+    final response = await _request(
+      () => _dio.patch<dynamic>(
+        '/groups/$groupId/admins',
+        data: {'member_ids': memberIds},
       ),
     );
     return _parseDetail(response.data);

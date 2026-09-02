@@ -22,6 +22,7 @@ pub struct GroupMemberRow {
     pub account_id: i64,
     pub nickname: Option<String>,
     pub avatar: Option<String>,
+    pub is_admin: bool,
     pub joined_at: DateTime<Utc>,
 }
 
@@ -31,6 +32,7 @@ pub struct GroupMember {
     pub nickname: String,
     pub avatar: String,
     pub is_owner: bool,
+    pub is_admin: bool,
     pub joined_at: DateTime<Utc>,
 }
 
@@ -70,15 +72,24 @@ impl GroupDetail {
                     .avatar
                     .unwrap_or_else(|| format!("identicon:{}", row.account_id)),
                 is_owner: row.account_id == summary.owner_id,
+                is_admin: row.is_admin && row.account_id != summary.owner_id,
                 joined_at: row.joined_at,
             })
             .collect::<Vec<_>>();
         let member_count = members.len();
-        let current_user_role = if current_user_id == summary.owner_id {
-            "owner"
-        } else {
-            "member"
-        };
+        let current_user_role = members
+            .iter()
+            .find(|member| member.account_id == current_user_id.to_string())
+            .map(|member| {
+                if member.is_owner {
+                    "owner"
+                } else if member.is_admin {
+                    "admin"
+                } else {
+                    "member"
+                }
+            })
+            .unwrap_or("member");
         let current_user_nickname = members
             .iter()
             .find(|member| member.account_id == current_user_id.to_string())
@@ -174,6 +185,11 @@ pub struct UpdateGroupSettingsBody {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct GroupMemberIdsBody {
+    pub member_ids: Vec<i64>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct UpdateGroupAdminsBody {
     pub member_ids: Vec<i64>,
 }
 
@@ -340,6 +356,7 @@ mod tests {
                 account_id: 1,
                 nickname: None,
                 avatar: None,
+                is_admin: false,
                 joined_at: Utc::now(),
             }],
         );

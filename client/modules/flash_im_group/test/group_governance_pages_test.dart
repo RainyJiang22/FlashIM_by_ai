@@ -3,6 +3,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('owner can select and save group admins', (tester) async {
+    List<int>? savedIds;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: GroupAdminPage(
+          members: [
+            GroupMember(
+              accountId: 1,
+              nickname: '群主',
+              avatar: 'identicon:1',
+              isOwner: true,
+              joinedAt: DateTime(2026, 9, 2),
+            ),
+            GroupMember(
+              accountId: 2,
+              nickname: '阿青',
+              avatar: 'identicon:2',
+              isOwner: false,
+              joinedAt: DateTime(2026, 9, 2),
+            ),
+          ],
+          onSave: (ids) async {
+            savedIds = ids;
+            return true;
+          },
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('group-admin-1')), findsNothing);
+    await tester.tap(find.byKey(const Key('group-admin-2')));
+    await tester.tap(find.byKey(const Key('group-admin-save')));
+    await tester.pumpAndSettle();
+
+    expect(savedIds, [2]);
+  });
+
   testWidgets('group name page validates and saves the trimmed value', (
     tester,
   ) async {
@@ -34,8 +71,8 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-        home: GroupAnnouncementPage(
-          key: const ValueKey('member-announcement'),
+          home: GroupAnnouncementPage(
+            key: const ValueKey('member-announcement'),
             announcement: '周五发布',
             canEdit: false,
             updatedByName: '群主',
@@ -52,8 +89,8 @@ void main() {
       String? published;
       await tester.pumpWidget(
         MaterialApp(
-        home: GroupAnnouncementPage(
-          key: const ValueKey('owner-announcement'),
+          home: GroupAnnouncementPage(
+            key: const ValueKey('owner-announcement'),
             announcement: '',
             canEdit: true,
             updatedByName: '',

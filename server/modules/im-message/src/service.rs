@@ -3,7 +3,7 @@ use std::sync::Arc;
 use chrono::{DateTime, Utc};
 use flash_core::{AppError, AppResult, SharedContext};
 use im_conversation::service::ConversationMessageService;
-use serde_json::Value;
+use serde_json::{Map, Value, json};
 use uuid::Uuid;
 
 use crate::{
@@ -93,9 +93,10 @@ where
     pub async fn send(
         &self,
         context: &SharedContext,
-        input: SendMessageInput,
+        mut input: SendMessageInput,
     ) -> AppResult<SendMessageOutput> {
         let sender_id = input.sender_id;
+        input.extra = normalize_mentions(context, &input).await?;
         self.send_with_excluded_sender(context, input, Some(sender_id))
             .await
     }
@@ -308,6 +309,98 @@ where
     }
 }
 
+async fn normalize_mentions(
+    context: &SharedContext,
+    input: &SendMessageInput,
+) -> AppResult<Option<Value>> {
+    if input.msg_type != 0 {
+        return Ok(input.extra.clone());
+    }
+    let Some(Value::Object(extra)) = input.extra.clone() else {
+        return Ok(input.extra.clone());
+    };
+    if !extra.contains_key("mention_all") && !extra.contains_key("mention_user_ids") {
+        return Ok(Some(Value::Object(extra)));
+    }
+    let members =
+        repository::list_mention_members(context.postgres.pool(), input.conversation_id).await?;
+    normalize_mentions_for_members(extra, input.sender_id, &members).map(Some)
+}
+
+fn normalize_mentions_for_members(
+    mut extra: Map<String, Value>,
+    sender_id: i64,
+    members: &[repository::MentionMemberRow],
+) -> AppResult<Value> {
+    let mention_all = match extra.remove("mention_all") {
+        Some(Value::Bool(value)) => value,
+        Some(_) => return Err(AppError::bad_request("invalid mentions")),
+        None => false,
+    };
+    let mention_ids = parse_mention_ids(extra.remove("mention_user_ids"))?;
+    let sender = members
+        .iter()
+        .find(|member| member.user_id == sender_id)
+        .ok_or(AppError::not_found("conversation not found"))?;
+    if mention_all {
+        if !mention_ids.is_empty() {
+            return Err(AppError::bad_request("invalid mentions"));
+        }
+        if !sender.is_owner && !sender.is_admin {
+            return Err(AppError::forbidden("mention all is not allowed"));
+        }
+        extra.insert("mention_all".to_string(), Value::Bool(true));
+        extra.insert("mentions".to_string(), Value::Array(Vec::new()));
+        return Ok(Value::Object(extra));
+    }
+    let mut normalized = Vec::with_capacity(mention_ids.len());
+    for mention_id in mention_ids {
+        if mention_id == sender_id {
+            return Err(AppError::bad_request("invalid mentions"));
+        }
+        let member = members
+            .iter()
+            .find(|member| member.user_id == mention_id)
+            .ok_or(AppError::bad_request(
+                "mention targets are not active group members",
+            ))?;
+        normalized.push(json!({
+            "user_id": member.user_id.to_string(),
+            "nickname": member.nickname.clone().unwrap_or_else(|| format!("用户 {}", member.user_id)),
+        }));
+    }
+    extra.insert("mention_all".to_string(), Value::Bool(false));
+    extra.insert("mentions".to_string(), Value::Array(normalized));
+    Ok(Value::Object(extra))
+}
+
+fn parse_mention_ids(value: Option<Value>) -> AppResult<Vec<i64>> {
+    let Some(value) = value else {
+        return Ok(Vec::new());
+    };
+    let Value::Array(values) = value else {
+        return Err(AppError::bad_request("invalid mentions"));
+    };
+    if values.len() > 50 {
+        return Err(AppError::bad_request("invalid mentions"));
+    }
+    let mut ids = Vec::with_capacity(values.len());
+    for value in values {
+        let id = match value {
+            Value::Number(value) => value.as_i64(),
+            Value::String(value) => value.parse::<i64>().ok(),
+            _ => None,
+        }
+        .filter(|value| *value > 0)
+        .ok_or(AppError::bad_request("invalid mentions"))?;
+        if ids.contains(&id) {
+            return Err(AppError::bad_request("invalid mentions"));
+        }
+        ids.push(id);
+    }
+    Ok(ids)
+}
+
 fn build_group_invitation_content(inviter_name: &str, invitee_names: &[String]) -> String {
     match invitee_names {
         [invitee_name] => format!("{inviter_name} 邀请 {invitee_name} 进群"),
@@ -398,14 +491,16 @@ fn require_key(
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
+    use serde_json::{Map, json};
+
+    use crate::repository::MentionMemberRow;
 
     use crate::{
         models::MessageQuery,
         service::{
             GROUP_CREATED_MESSAGE_TYPE, build_group_invitation_content, build_preview,
-            normalize_history_query, validate_file_extra, validate_group_invitation_extra,
-            validate_image_extra, validate_video_extra,
+            normalize_history_query, normalize_mentions_for_members, validate_file_extra,
+            validate_group_invitation_extra, validate_image_extra, validate_video_extra,
         },
     };
 
@@ -504,6 +599,55 @@ mod tests {
                 "inviter_name": "小雨"
             })))
             .is_ok()
+        );
+    }
+
+    #[test]
+    fn mentions_validate_targets_and_mention_all_permission() {
+        let members = vec![
+            MentionMemberRow {
+                user_id: 1,
+                nickname: Some("群主".to_string()),
+                is_owner: true,
+                is_admin: false,
+            },
+            MentionMemberRow {
+                user_id: 2,
+                nickname: Some("阿青".to_string()),
+                is_owner: false,
+                is_admin: false,
+            },
+            MentionMemberRow {
+                user_id: 3,
+                nickname: Some("管理员".to_string()),
+                is_owner: false,
+                is_admin: true,
+            },
+        ];
+        let targeted = normalize_mentions_for_members(
+            Map::from_iter([("mention_user_ids".to_string(), json!(["2"]))]),
+            1,
+            &members,
+        )
+        .unwrap();
+        assert_eq!(targeted["mentions"][0]["nickname"], "阿青");
+        assert_eq!(targeted["mention_all"], false);
+
+        let all = normalize_mentions_for_members(
+            Map::from_iter([("mention_all".to_string(), json!(true))]),
+            3,
+            &members,
+        )
+        .unwrap();
+        assert_eq!(all["mention_all"], true);
+
+        assert!(
+            normalize_mentions_for_members(
+                Map::from_iter([("mention_all".to_string(), json!(true))]),
+                2,
+                &members,
+            )
+            .is_err()
         );
     }
 }

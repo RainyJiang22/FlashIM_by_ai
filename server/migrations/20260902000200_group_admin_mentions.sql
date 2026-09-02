@@ -1,0 +1,2 @@
+ALTER TABLE conversation_members
+ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE;

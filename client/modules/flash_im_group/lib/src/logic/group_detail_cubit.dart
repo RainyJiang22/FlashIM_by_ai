@@ -87,6 +87,14 @@ class GroupDetailCubit extends Cubit<GroupDetailState> {
     );
   }
 
+  Future<bool> updateAdmins(List<int> memberIds) async {
+    if (!state.isOwner || state.isSaving) return false;
+    return _save(
+      () => _repository.updateAdmins(_groupId, memberIds),
+      fallback: '群管理员设置失败，请稍后重试',
+    );
+  }
+
   Future<bool> updateSettings(bool required) async {
     if (state.isSaving) return false;
     return _save(
@@ -206,6 +214,7 @@ class GroupDetailCubit extends Cubit<GroupDetailState> {
           'member_removed',
           'member_left',
           'owner_transferred',
+          'admins_updated',
           'member_nickname_updated',
         }.contains(update.changeType)) {
       unawaited(load());
@@ -284,6 +293,7 @@ String _groupError(Object error, String fallback) {
       'group owner cannot leave' => '群主请先转让群主或解散群聊',
       'new owner must be another member' => '请选择其他成员作为新群主',
       'new owner must be an active member' => '新群主必须是当前群成员',
+      'invalid group admins' => '只能选择当前群成员作为管理员',
       'invalid group announcement' => '群公告需为 1～2000 字',
       'invalid group nickname' => '群昵称需为 1～50 字',
       'group invitation delivery failed' => '部分群邀请发送失败，请重试',

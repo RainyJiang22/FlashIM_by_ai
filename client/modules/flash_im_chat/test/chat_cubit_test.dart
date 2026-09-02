@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -43,6 +44,34 @@ void main() {
       ChatLoaded(messages: [history], hasMore: false),
     ],
   );
+
+  test('mentioned text sends structured extra over websocket', () async {
+    final wsClient = _FakeWsClient();
+    final cubit = ChatCubit(
+      repository: _FakeMessageRepository(messages: const []),
+      wsClient: wsClient,
+      conversation: conversation,
+      currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
+    );
+    await cubit.loadMessages();
+
+    cubit.sendTextDraft(
+      const ChatTextMessageDraft(
+        text: '@阿青 请查看',
+        mentions: [ChatMentionCandidate(userId: '2', displayName: '阿青')],
+      ),
+    );
+
+    final extra = jsonDecode(wsClient.sentRequests.single.extra);
+    expect(extra, {
+      'mention_all': false,
+      'mention_user_ids': ['2'],
+    });
+    expect((cubit.state as ChatLoaded).messages.single.extra, extra);
+    await cubit.close();
+    await wsClient.dispose();
+  });
 
   test('text message without ACK becomes failed after 12 seconds', () {
     fakeAsync((async) {

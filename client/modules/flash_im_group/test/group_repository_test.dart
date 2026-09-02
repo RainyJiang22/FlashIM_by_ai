@@ -16,6 +16,7 @@ void main() {
     await repository.updateNickname('group-1', '项目负责人');
     await repository.updateAnnouncement('group-1', '周五发布');
     await repository.transferOwner('group-1', 2);
+    await repository.updateAdmins('group-1', const [2]);
     await repository.updateSettings('group-1', joinApprovalRequired: true);
     await repository.addMembers('group-1', const [3]);
     await repository.removeMember('group-1', 2);
@@ -39,6 +40,7 @@ void main() {
       'PATCH',
       'PATCH',
       'PATCH',
+      'PATCH',
       'POST',
       'DELETE',
       'POST',
@@ -51,13 +53,17 @@ void main() {
     expect(adapter.requests[3].data, {'announcement': '周五发布'});
     expect(adapter.requests[4].path, '/groups/group-1/owner');
     expect(adapter.requests[4].data, {'owner_id': 2});
-    expect(adapter.requests[6].data, {
+    expect(adapter.requests[5].path, '/groups/group-1/admins');
+    expect(adapter.requests[5].data, {
+      'member_ids': [2],
+    });
+    expect(adapter.requests[7].data, {
       'member_ids': [3],
     });
-    expect(adapter.requests[8].data, {
+    expect(adapter.requests[9].data, {
       'member_ids': [4],
     });
-    expect(adapter.requests[9].path, '/groups/group-1/leave');
+    expect(adapter.requests[10].path, '/groups/group-1/leave');
   });
 
   test('rejects an invitation response with an undelivered item', () async {
@@ -190,6 +196,7 @@ class _RecordingAdapter implements HttpClientAdapter {
                 'nickname': '群主',
                 'avatar': 'identicon:1',
                 'is_owner': true,
+                'is_admin': false,
                 'joined_at': '2026-08-17T00:00:00Z',
               },
             ],

@@ -297,6 +297,10 @@ class _GroupRepository implements GroupRepository {
   ) async => detail;
 
   @override
+  Future<GroupDetail> updateAdmins(String groupId, List<int> memberIds) async =>
+      detail;
+
+  @override
   Future<GroupDetail> updateSettings(
     String groupId, {
     required bool joinApprovalRequired,

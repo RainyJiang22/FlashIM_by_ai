@@ -12,6 +12,7 @@ import '../logic/group_detail_cubit.dart';
 import '../logic/group_detail_state.dart';
 import 'group_member_picker_page.dart';
 import 'group_announcement_page.dart';
+import 'group_admin_page.dart';
 import 'transfer_group_owner_page.dart';
 import 'widgets/group_member_grid.dart';
 import 'widgets/group_name_editor.dart';
@@ -238,6 +239,21 @@ class _GroupDetailsView extends StatelessWidget {
                 children: [
                   if (detail.isOwner) ...[
                     ListTile(
+                      key: const Key('group-admin-row'),
+                      title: const Text('群管理员'),
+                      subtitle: Text(
+                        '${detail.members.where((member) => member.isAdmin).length} 位管理员',
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right_rounded,
+                        color: FlashPalette.mutedInk,
+                      ),
+                      onTap: state.isSaving
+                          ? null
+                          : () => _openAdmins(context, detail),
+                    ),
+                    const Divider(height: 1, indent: 16),
+                    ListTile(
                       key: const Key('group-transfer-owner-row'),
                       title: const Text('转让群主'),
                       trailing: const Icon(
@@ -307,6 +323,17 @@ class _GroupDetailsView extends StatelessWidget {
         context,
       ).showSnackBar(const SnackBar(content: Text('群邀请卡片已发送')));
     }
+  }
+
+  Future<void> _openAdmins(BuildContext context, GroupDetail detail) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => GroupAdminPage(
+          members: detail.members,
+          onSave: context.read<GroupDetailCubit>().updateAdmins,
+        ),
+      ),
+    );
   }
 
   Future<void> _confirmRemove(BuildContext context, GroupMember member) async {

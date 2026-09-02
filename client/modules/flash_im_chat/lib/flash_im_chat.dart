@@ -15,6 +15,13 @@ export 'src/data/message_repository.dart'
         ImageUploadResult,
         MessageRepository,
         VideoUploadResult;
+export 'src/data/mention.dart'
+    show
+        ChatMentionCandidate,
+        ChatMentionMetadata,
+        ChatMentionPickerData,
+        ChatMentionSelection,
+        ChatTextMessageDraft;
 export 'src/data/video_thumbnail_service.dart'
     show NativeVideoThumbnailService, VideoThumbnailInfo, VideoThumbnailService;
 export 'src/logic/chat_cubit.dart' show ChatCubit;

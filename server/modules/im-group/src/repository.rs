@@ -64,6 +64,7 @@ pub fn list_group_members_sql() -> &'static str {
             member.user_id AS account_id,
             COALESCE(NULLIF(BTRIM(member.group_nickname), ''), profile.nickname) AS nickname,
             profile.avatar_url AS avatar,
+            member.is_admin,
             member.joined_at
         FROM conversation_members member
         JOIN conversations c ON c.id = member.conversation_id
@@ -233,6 +234,7 @@ async fn upsert_group_member(
             unread_count = 0,
             last_read_seq = 0,
             is_deleted = FALSE,
+            is_admin = FALSE,
             joined_at = NOW()
         "#,
     )
@@ -638,10 +640,71 @@ pub async fn transfer_group_owner(
     .execute(&mut *transaction)
     .await
     .map_err(|_| AppError::internal_server_error("failed to transfer group owner"))?;
+    sqlx::query(
+        "UPDATE conversation_members SET is_admin = FALSE WHERE conversation_id = $1 AND user_id = $2",
+    )
+    .bind(conversation_id)
+    .bind(new_owner_id)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to clear owner admin role"))?;
     transaction
         .commit()
         .await
         .map_err(|_| AppError::internal_server_error("failed to commit owner transaction"))
+}
+
+pub async fn update_group_admins(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    owner_id: i64,
+    admin_ids: &[i64],
+) -> AppResult<()> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to start admin transaction"))?;
+    let group = lock_group_for_actor(&mut transaction, conversation_id, owner_id).await?;
+    if group.owner_id != owner_id {
+        return Err(AppError::forbidden(GROUP_OPERATION_NOT_ALLOWED));
+    }
+    if admin_ids.contains(&owner_id) {
+        return Err(AppError::bad_request("invalid group admins"));
+    }
+    let active_admin_count = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT COUNT(*)::BIGINT
+        FROM conversation_members
+        WHERE conversation_id = $1
+          AND user_id = ANY($2)
+          AND is_deleted = FALSE
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(admin_ids)
+    .fetch_one(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to validate group admins"))?;
+    if active_admin_count != admin_ids.len() as i64 {
+        return Err(AppError::bad_request("invalid group admins"));
+    }
+    sqlx::query(
+        r#"
+        UPDATE conversation_members
+        SET is_admin = user_id = ANY($2)
+        WHERE conversation_id = $1
+          AND is_deleted = FALSE
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(admin_ids)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to update group admins"))?;
+    transaction
+        .commit()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to commit admin transaction"))
 }
 
 async fn validate_actor_friends(
@@ -744,6 +807,7 @@ pub async fn add_group_members(
             unread_count = 0,
             last_read_seq = 0,
             is_deleted = FALSE,
+            is_admin = FALSE,
             joined_at = NOW()
         "#,
     )
@@ -993,7 +1057,7 @@ pub async fn accept_group_invitation(
             conversation_id, user_id, unread_count, last_read_seq, is_deleted, joined_at
         ) VALUES ($1, $2, 0, 0, FALSE, NOW())
         ON CONFLICT (conversation_id, user_id)
-        DO UPDATE SET unread_count = 0, last_read_seq = 0, is_deleted = FALSE, joined_at = NOW()
+        DO UPDATE SET unread_count = 0, last_read_seq = 0, is_deleted = FALSE, is_admin = FALSE, joined_at = NOW()
         "#,
     )
     .bind(invitation.conversation_id)

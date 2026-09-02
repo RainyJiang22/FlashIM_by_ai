@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../data/message.dart';
+import '../data/mention.dart';
 import '../data/message_repository.dart';
 import '../data/video_thumbnail_service.dart';
 import 'chat_state.dart';
@@ -117,6 +118,19 @@ class ChatCubit extends Cubit<ChatState> {
       localId: local.id,
       content: trimmed,
       type: MessageType.text,
+    );
+  }
+
+  void sendTextDraft(ChatTextMessageDraft draft) {
+    final trimmed = draft.text.trim();
+    if (trimmed.isEmpty || state is! ChatLoaded) return;
+    final local = _createLocal(content: trimmed, extra: draft.extra);
+    _appendLocal(local);
+    _sendOverWebSocket(
+      localId: local.id,
+      content: trimmed,
+      type: MessageType.text,
+      extra: draft.extra,
     );
   }
 

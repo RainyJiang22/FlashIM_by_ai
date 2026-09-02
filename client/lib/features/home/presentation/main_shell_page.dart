@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:collection';
+import 'dart:convert';
 
+import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart' hide FriendUser;
 import 'package:flash_im_friend/flash_im_friend.dart';
@@ -28,6 +31,10 @@ class _MainShellPageState extends State<MainShellPage> {
   late final ConversationListCubit _conversationListCubit;
   late final FriendCubit _friendCubit;
   late final GroupNotificationCubit _groupNotificationCubit;
+  StreamSubscription<ChatMessage>? _mentionSubscription;
+  final ListQueue<({ChatMessage message, ChatMentionMetadata metadata})>
+  _pendingMentionAlerts = ListQueue();
+  bool _isShowingMentionAlert = false;
 
   @override
   void initState() {
@@ -44,6 +51,9 @@ class _MainShellPageState extends State<MainShellPage> {
       repository: context.read<GroupRepository>(),
       wsClient: context.read<WsClient>(),
     )..load();
+    _mentionSubscription = context.read<WsClient>().chatMessageStream.listen(
+      _handleMentionMessage,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -54,6 +64,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
   @override
   void dispose() {
+    _mentionSubscription?.cancel();
     _groupNotificationCubit.close();
     _friendCubit.close();
     _conversationListCubit.close();
@@ -109,9 +120,66 @@ class _MainShellPageState extends State<MainShellPage> {
       ),
     );
     _isShowingPasswordPrompt = false;
+    _drainMentionAlerts();
     if (shouldSetNow == true && mounted) {
       await Navigator.of(context).pushNamed(AppRoutes.setPassword);
     }
+  }
+
+  void _handleMentionMessage(ChatMessage message) {
+    final session = context.read<SessionCubit>().state.session;
+    if (session == null || '${message.senderId}' == '${session.accountId}') {
+      return;
+    }
+    try {
+      final decoded = message.extra.trim().isEmpty
+          ? null
+          : jsonDecode(message.extra);
+      final extra = decoded is Map ? Map<String, dynamic>.from(decoded) : null;
+      final metadata = ChatMentionMetadata.fromExtra(extra);
+      if (!metadata.mentionsUser('${session.accountId}')) return;
+      _pendingMentionAlerts.add((message: message, metadata: metadata));
+      _drainMentionAlerts();
+    } catch (_) {
+      return;
+    }
+  }
+
+  void _drainMentionAlerts() {
+    if (!mounted ||
+        _isShowingMentionAlert ||
+        _isShowingPasswordPrompt ||
+        _pendingMentionAlerts.isEmpty) {
+      return;
+    }
+    unawaited(_showNextMentionAlert());
+  }
+
+  Future<void> _showNextMentionAlert() async {
+    _isShowingMentionAlert = true;
+    final alert = _pendingMentionAlerts.removeFirst();
+    final message = alert.message;
+    final metadata = alert.metadata;
+    final senderName = message.senderName.trim().isEmpty
+        ? '群成员'
+        : message.senderName.trim();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        key: const Key('mention-alert-dialog'),
+        title: Text(metadata.mentionAll ? '@所有人提醒' : '有人@你'),
+        content: Text('$senderName：${message.content}'),
+        actions: [
+          TextButton(
+            key: const Key('mention-alert-confirm'),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('知道了'),
+          ),
+        ],
+      ),
+    );
+    _isShowingMentionAlert = false;
+    _drainMentionAlerts();
   }
 
   Future<void> _openChat(Conversation conversation) async {

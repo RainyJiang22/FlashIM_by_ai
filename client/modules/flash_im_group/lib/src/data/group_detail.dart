@@ -8,6 +8,7 @@ class GroupMember extends Equatable {
     required this.nickname,
     required this.avatar,
     required this.isOwner,
+    this.isAdmin = false,
     required this.joinedAt,
   });
 
@@ -16,6 +17,7 @@ class GroupMember extends Equatable {
     nickname: _string(json['nickname']),
     avatar: _string(json['avatar']),
     isOwner: json['is_owner'] == true,
+    isAdmin: json['is_admin'] == true,
     joinedAt: _requiredDateTime(json, 'joined_at'),
   );
 
@@ -23,13 +25,21 @@ class GroupMember extends Equatable {
   final String nickname;
   final String avatar;
   final bool isOwner;
+  final bool isAdmin;
   final DateTime joinedAt;
 
   String get displayName =>
       nickname.trim().isEmpty ? '用户 $accountId' : nickname;
 
   @override
-  List<Object?> get props => [accountId, nickname, avatar, isOwner, joinedAt];
+  List<Object?> get props => [
+    accountId,
+    nickname,
+    avatar,
+    isOwner,
+    isAdmin,
+    joinedAt,
+  ];
 }
 
 class GroupDetail extends Equatable {
@@ -100,6 +110,8 @@ class GroupDetail extends Equatable {
   final List<GroupMember> members;
 
   bool get isOwner => currentUserRole == 'owner';
+  bool get isAdmin => currentUserRole == 'admin';
+  bool get canMentionAll => isOwner || isAdmin;
 
   GroupDetail copyWith({
     String? name,

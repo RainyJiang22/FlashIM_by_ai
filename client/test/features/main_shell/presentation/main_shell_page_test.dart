@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im/app/app_router.dart';
@@ -14,6 +15,105 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flash_im/features/home/presentation/main_shell_page.dart';
 
 void main() {
+  testWidgets('only mentioned account receives the mention alert dialog', (
+    tester,
+  ) async {
+    final cubit = SessionCubit(
+      repository: _FakeSessionRepository(hasPassword: true),
+    );
+    final wsClient = _FakeWsClient();
+    await tester.pumpWidget(
+      MultiRepositoryProvider(
+        providers: [
+          RepositoryProvider<WsClient>.value(value: wsClient),
+          RepositoryProvider<ConversationRepository>.value(
+            value: _FakeConversationRepository(),
+          ),
+          RepositoryProvider<FriendRepository>.value(
+            value: _FakeFriendRepository(),
+          ),
+          RepositoryProvider<GroupRepository>.value(
+            value: _FakeGroupRepository(),
+          ),
+        ],
+        child: BlocProvider<SessionCubit>.value(
+          value: cubit,
+          child: const MaterialApp(home: MainShellPage()),
+        ),
+      ),
+    );
+    await cubit.completeLogin(
+      const AppSession(
+        token: 'jwt-token',
+        accountId: 10001,
+        passwordSetupRequired: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    wsClient.emitMessage(
+      ChatMessage(
+        id: 'mention-1',
+        conversationId: 'group-1',
+        senderId: 2,
+        seq: 1,
+        content: '@Rainy 请查看',
+        extra: jsonEncode({
+          'mention_all': false,
+          'mentions': [
+            {'user_id': '10001', 'nickname': 'Rainy'},
+          ],
+        }),
+        senderName: '阿青',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('mention-alert-dialog')), findsOneWidget);
+    expect(find.text('有人@你'), findsOneWidget);
+    expect(find.text('阿青：@Rainy 请查看'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('mention-alert-confirm')));
+    await tester.pumpAndSettle();
+
+    wsClient.emitMessage(
+      ChatMessage(
+        id: 'mention-2',
+        conversationId: 'group-1',
+        senderId: 2,
+        seq: 2,
+        content: '@别人 请查看',
+        extra: jsonEncode({
+          'mention_all': false,
+          'mentions': [
+            {'user_id': '10002', 'nickname': '别人'},
+          ],
+        }),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mention-alert-dialog')), findsNothing);
+
+    wsClient.emitMessage(
+      ChatMessage(
+        id: 'mention-3',
+        conversationId: 'group-1',
+        senderId: 3,
+        seq: 3,
+        content: '@所有人 开会',
+        extra: jsonEncode({'mention_all': true, 'mentions': []}),
+        senderName: '管理员',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('mention-alert-dialog')), findsOneWidget);
+    expect(find.text('@所有人提醒'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('mention-alert-confirm')));
+    await tester.pumpAndSettle();
+
+    await cubit.close();
+    await wsClient.dispose();
+  });
+
   testWidgets('main shell shows password setup prompt and switches tabs', (
     tester,
   ) async {
@@ -326,6 +426,10 @@ class _FakeGroupRepository implements GroupRepository {
       throw UnimplementedError();
 
   @override
+  Future<GroupDetail> updateAdmins(String groupId, List<int> memberIds) =>
+      throw UnimplementedError();
+
+  @override
   Future<GroupDetail> updateSettings(
     String groupId, {
     required bool joinApprovalRequired,
@@ -340,6 +444,7 @@ class _FakeWsClient extends WsClient {
       );
 
   final _stateController = StreamController<WsConnectionState>.broadcast();
+  final _chatMessages = StreamController<ChatMessage>.broadcast(sync: true);
   WsConnectionState _state = WsConnectionState.disconnected;
   int connectCount = 0;
   int disconnectCount = 0;
@@ -349,6 +454,11 @@ class _FakeWsClient extends WsClient {
 
   @override
   Stream<WsConnectionState> get stateStream => _stateController.stream;
+
+  @override
+  Stream<ChatMessage> get chatMessageStream => _chatMessages.stream;
+
+  void emitMessage(ChatMessage message) => _chatMessages.add(message);
 
   @override
   Future<void> connect() async {
@@ -366,11 +476,16 @@ class _FakeWsClient extends WsClient {
 
   @override
   Future<void> dispose() async {
+    await _chatMessages.close();
     await _stateController.close();
   }
 }
 
 class _FakeSessionRepository implements SessionRepository {
+  _FakeSessionRepository({this.hasPassword = false});
+
+  final bool hasPassword;
+
   @override
   Future<void> changePassword({
     required String oldPassword,
@@ -382,13 +497,13 @@ class _FakeSessionRepository implements SessionRepository {
 
   @override
   Future<User> fetchProfile() async {
-    return const User(
+    return User(
       userId: 10001,
       nickname: 'Rainy',
       avatar: 'identicon:seed-main-shell',
       phone: '13800138000',
       signature: '',
-      hasPassword: false,
+      hasPassword: hasPassword,
     );
   }
 

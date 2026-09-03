@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package im;
+
+message UserPresenceEvent {
+  int64 user_id = 1;
+}
+
+message OnlineUserList {
+  repeated int64 user_ids = 1;
+}

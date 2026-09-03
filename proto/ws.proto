@@ -15,6 +15,10 @@ enum WsFrameType {
   FRIEND_REMOVED = 9;
   GROUP_JOIN_REQUEST = 10;
   GROUP_INFO_UPDATE = 11;
+  USER_ONLINE = 12;
+  USER_OFFLINE = 13;
+  ONLINE_LIST = 14;
+  READ_RECEIPT = 15;
 }
 
 message WsFrame {

@@ -180,6 +180,12 @@ where
                 },
             )
             .await?;
+        self.broadcaster
+            .broadcast_friend_presence(accepted.from_user_id, accepted.to_user_id, true)
+            .await?;
+        self.broadcaster
+            .broadcast_friend_presence(accepted.to_user_id, accepted.from_user_id, true)
+            .await?;
 
         Ok(AcceptFriendRequestResponse {
             request_id: accepted.id,
@@ -300,6 +306,12 @@ where
                     removed_at,
                 },
             )
+            .await?;
+        self.broadcaster
+            .broadcast_friend_presence(user_id, friend_user_id, false)
+            .await?;
+        self.broadcaster
+            .broadcast_friend_presence(friend_user_id, user_id, false)
             .await?;
 
         Ok(MessageResponse {

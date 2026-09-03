@@ -57,6 +57,13 @@ pub trait FriendBroadcaster: Send + Sync {
         to_user_id: i64,
         event: FriendRemovedPayload,
     ) -> AppResult<()>;
+
+    async fn broadcast_friend_presence(
+        &self,
+        to_user_id: i64,
+        friend_user_id: i64,
+        is_friend: bool,
+    ) -> AppResult<()>;
 }
 
 #[derive(Clone, Default)]
@@ -84,6 +91,15 @@ impl FriendBroadcaster for NoopFriendBroadcaster {
         &self,
         _to_user_id: i64,
         _event: FriendRemovedPayload,
+    ) -> AppResult<()> {
+        Ok(())
+    }
+
+    async fn broadcast_friend_presence(
+        &self,
+        _to_user_id: i64,
+        _friend_user_id: i64,
+        _is_friend: bool,
     ) -> AppResult<()> {
         Ok(())
     }

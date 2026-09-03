@@ -21,6 +21,7 @@ class ContactsPage extends StatelessWidget {
     required this.onSearchGroups,
     required this.onOpenGroupNotifications,
     required this.groupNotificationCount,
+    this.onlineUserIds = const <int>{},
   });
 
   final ValueChanged<FriendUser> onMessageFriend;
@@ -28,6 +29,7 @@ class ContactsPage extends StatelessWidget {
   final VoidCallback onSearchGroups;
   final VoidCallback onOpenGroupNotifications;
   final int groupNotificationCount;
+  final Set<int> onlineUserIds;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +88,7 @@ class ContactsPage extends StatelessWidget {
                     onOpenGroups: onOpenGroups,
                     onOpenGroupNotifications: onOpenGroupNotifications,
                     groupNotificationCount: groupNotificationCount,
+                    onlineUserIds: onlineUserIds,
                   );
                 },
               ),
@@ -193,6 +196,7 @@ class _ContactsBody extends StatelessWidget {
     required this.onOpenGroups,
     required this.onOpenGroupNotifications,
     required this.groupNotificationCount,
+    required this.onlineUserIds,
   });
 
   final FriendState state;
@@ -200,6 +204,7 @@ class _ContactsBody extends StatelessWidget {
   final VoidCallback onOpenGroups;
   final VoidCallback onOpenGroupNotifications;
   final int groupNotificationCount;
+  final Set<int> onlineUserIds;
 
   @override
   Widget build(BuildContext context) {
@@ -214,6 +219,7 @@ class _ContactsBody extends StatelessWidget {
       onOpenGroups: onOpenGroups,
       onOpenGroupNotifications: onOpenGroupNotifications,
       groupNotificationCount: groupNotificationCount,
+      onlineUserIds: onlineUserIds,
     );
   }
 }
@@ -228,6 +234,7 @@ class _AlphabeticalContactsList extends StatefulWidget {
     required this.onOpenGroups,
     required this.onOpenGroupNotifications,
     required this.groupNotificationCount,
+    required this.onlineUserIds,
   });
 
   final List<FriendUser> friends;
@@ -238,6 +245,7 @@ class _AlphabeticalContactsList extends StatefulWidget {
   final VoidCallback onOpenGroups;
   final VoidCallback onOpenGroupNotifications;
   final int groupNotificationCount;
+  final Set<int> onlineUserIds;
 
   @override
   State<_AlphabeticalContactsList> createState() =>
@@ -349,6 +357,9 @@ class _AlphabeticalContactsListState extends State<_AlphabeticalContactsList> {
           for (var index = 0; index < section.friends.length; index += 1) ...[
             FriendAvatarTile(
               user: section.friends[index],
+              isOnline: widget.onlineUserIds.contains(
+                section.friends[index].accountId,
+              ),
               onTap: () => _openFriendProfile(context, section.friends[index]),
             ),
             if (index != section.friends.length - 1)

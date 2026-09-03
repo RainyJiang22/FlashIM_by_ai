@@ -75,6 +75,36 @@ void main() {
     expect(messages.single.extra?['system_event'], 'member_invited');
   });
 
+  test('getReadStatus maps read and unread members', () async {
+    final adapter = _FakeAdapter({
+      '/conversations/group-1/messages/m1/read-status': {
+        'message_id': 'm1',
+        'conversation_id': 'group-1',
+        'seq': 9,
+        'read_members': [
+          {'user_id': '2', 'nickname': '阿青', 'avatar': '/avatars/2.png'},
+        ],
+        'unread_members': [
+          {'user_id': '3', 'nickname': '白露', 'avatar': ''},
+        ],
+      },
+    });
+    final repository = DioMessageRepository(dio: _dio(adapter));
+
+    final status = await repository.getReadStatus(
+      conversationId: 'group-1',
+      messageId: 'm1',
+    );
+
+    expect(status.seq, 9);
+    expect(status.readMembers.single.nickname, '阿青');
+    expect(
+      status.readMembers.single.avatar,
+      'http://127.0.0.1:9600/avatars/2.png',
+    );
+    expect(status.unreadMembers.single.userId, '3');
+  });
+
   test(
     'upload methods send expected multipart fields and parse results',
     () async {

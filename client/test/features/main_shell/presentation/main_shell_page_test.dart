@@ -204,10 +204,10 @@ void main() {
     await tester.tap(find.byKey(const Key('messages-create-group')));
     await tester.pumpAndSettle();
     expect(find.text('发起群聊'), findsOneWidget);
-    expect(find.text('添加联系人'), findsOneWidget);
+    expect(find.text('添加群/联系人'), findsOneWidget);
     final actionTop = tester.getTopLeft(find.text('发起群聊'));
     expect(actionTop.dy, greaterThan(triggerBottom.dy));
-    await tester.tap(find.text('添加联系人'));
+    await tester.tap(find.text('添加群/联系人'));
     await tester.pumpAndSettle();
     expect(find.text('加好友/群'), findsOneWidget);
     await tester.tap(find.text('搜索账号 / 手机号'));

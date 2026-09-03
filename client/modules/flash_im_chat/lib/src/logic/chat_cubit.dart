@@ -40,10 +40,19 @@ class ChatCubit extends Cubit<ChatState> {
       _handleIncomingMessage,
     );
     _messageAckSubscription = _wsClient.messageAckStream.listen(_handleAck);
+    _readReceiptSubscription = _wsClient.readReceiptStream.listen(
+      _handleReadReceipt,
+    );
+    _connectionSubscription = _wsClient.stateStream.listen((connectionState) {
+      if (connectionState == WsConnectionState.authenticated) {
+        unawaited(_resynchronizeAfterReconnect());
+      }
+    });
   }
 
   static const _pageSize = 50;
   static const _ackTimeout = Duration(seconds: 12);
+  static const _readReceiptDebounce = Duration(seconds: 1);
 
   final MessageRepository _repository;
   final WsClient _wsClient;
@@ -58,6 +67,15 @@ class ChatCubit extends Cubit<ChatState> {
   final Map<String, Timer> _ackTimers = {};
   StreamSubscription<ChatMessage>? _chatMessageSubscription;
   StreamSubscription<MessageAck>? _messageAckSubscription;
+  StreamSubscription<ReadReceipt>? _readReceiptSubscription;
+  StreamSubscription<WsConnectionState>? _connectionSubscription;
+  Timer? _readReceiptTimer;
+  Timer? _readCountRefreshTimer;
+  int _lastReportedReadSeq = 0;
+  int _pendingReadSeq = 0;
+  final Map<int, int> _readerReadSeqs = {};
+  bool _isRefreshingReadCounts = false;
+  bool _refreshReadCountsAgain = false;
 
   Future<void> loadMessages() async {
     emit(const ChatLoading());
@@ -69,6 +87,7 @@ class ChatCubit extends Cubit<ChatState> {
       emit(
         ChatLoaded(messages: messages, hasMore: messages.length == _pageSize),
       );
+      _scheduleReadReceipt();
     } catch (_) {
       emit(const ChatError('消息加载失败，请稍后重试'));
     }
@@ -419,6 +438,7 @@ class ChatCubit extends Cubit<ChatState> {
         ),
       ),
     );
+    _scheduleReadReceipt();
   }
 
   void _handleIncomingMessage(ChatMessage message) {
@@ -436,6 +456,138 @@ class ChatCubit extends Cubit<ChatState> {
         messages: _sortMessages([...current.messages, incoming]),
       ),
     );
+    _scheduleReadReceipt();
+  }
+
+  void _scheduleReadReceipt() {
+    final current = state;
+    if (current is! ChatLoaded || isClosed) return;
+    final maxSeq = current.messages
+        .where((message) => message.seq > 0)
+        .fold<int>(0, (max, message) => message.seq > max ? message.seq : max);
+    if (maxSeq <= _lastReportedReadSeq) return;
+    if (maxSeq > _pendingReadSeq) _pendingReadSeq = maxSeq;
+    _readReceiptTimer?.cancel();
+    _readReceiptTimer = Timer(_readReceiptDebounce, _sendPendingReadReceipt);
+  }
+
+  void _sendPendingReadReceipt() {
+    if (_pendingReadSeq <= _lastReportedReadSeq || isClosed) return;
+    final readSeq = _pendingReadSeq;
+    if (_wsClient.sendReadReceipt(
+      conversationId: _conversation.id,
+      readSeq: readSeq,
+    )) {
+      _lastReportedReadSeq = readSeq;
+    }
+  }
+
+  Future<void> _resynchronizeAfterReconnect() async {
+    _lastReportedReadSeq = 0;
+    _scheduleReadReceipt();
+    await _refreshReadCounts();
+  }
+
+  Future<void> _refreshReadCounts() async {
+    _refreshReadCountsAgain = true;
+    if (_isRefreshingReadCounts || isClosed) return;
+    _isRefreshingReadCounts = true;
+    try {
+      while (_refreshReadCountsAgain && !isClosed) {
+        _refreshReadCountsAgain = false;
+        try {
+          await _refreshReadCountsOnce();
+        } catch (_) {}
+      }
+    } finally {
+      _isRefreshingReadCounts = false;
+    }
+  }
+
+  Future<void> _refreshReadCountsOnce() async {
+    if (state is! ChatLoaded || isClosed) return;
+    final counts = <String, int>{};
+    int? beforeSeq;
+    while (!isClosed) {
+      final authoritative = await _repository.getMessages(
+        conversationId: _conversation.id,
+        beforeSeq: beforeSeq,
+        limit: _pageSize,
+      );
+      if (isClosed) return;
+      for (final message in authoritative) {
+        counts[message.id] = message.readCount;
+      }
+      final oldestFetchedSeq = _oldestPositiveSeq(authoritative);
+      final current = state;
+      final oldestLoadedSeq = current is ChatLoaded
+          ? _oldestPositiveSeq(current.messages)
+          : null;
+      if (authoritative.length < _pageSize ||
+          oldestFetchedSeq == null ||
+          oldestLoadedSeq == null ||
+          oldestFetchedSeq <= oldestLoadedSeq ||
+          oldestFetchedSeq == beforeSeq) {
+        break;
+      }
+      beforeSeq = oldestFetchedSeq;
+    }
+    final current = state;
+    if (current is! ChatLoaded || isClosed || _refreshReadCountsAgain) return;
+    final messages = current.messages
+        .map(
+          (message) => counts.containsKey(message.id)
+              ? message.copyWith(readCount: counts[message.id])
+              : message,
+        )
+        .toList(growable: false);
+    emit(current.copyWith(messages: messages));
+  }
+
+  int? _oldestPositiveSeq(Iterable<Message> messages) => messages
+      .where((message) => message.seq > 0)
+      .map((message) => message.seq)
+      .fold<int?>(null, (min, seq) => min == null || seq < min ? seq : min);
+
+  void _handleReadReceipt(ReadReceipt receipt) {
+    final current = state;
+    if (current is! ChatLoaded ||
+        receipt.conversationId != _conversation.id ||
+        '${receipt.readerId}' == _currentUserId ||
+        receipt.readSeq <= receipt.previousReadSeq) {
+      return;
+    }
+    final readerId = receipt.readerId.toInt();
+    final previousReadSeq =
+        receipt.previousReadSeq > (_readerReadSeqs[readerId] ?? 0)
+        ? receipt.previousReadSeq
+        : (_readerReadSeqs[readerId] ?? 0);
+    final readSeq = receipt.readSeq;
+    if (readSeq <= previousReadSeq) return;
+    _readerReadSeqs[readerId] = readSeq;
+    var changed = false;
+    final messages = current.messages
+        .map((message) {
+          if (message.senderId != _currentUserId ||
+              message.seq <= previousReadSeq ||
+              message.seq > readSeq) {
+            return message;
+          }
+          changed = true;
+          final nextCount = _conversation.isPrivateChat
+              ? 1
+              : message.readCount + 1;
+          return message.copyWith(readCount: nextCount);
+        })
+        .toList(growable: false);
+    if (changed) emit(current.copyWith(messages: messages));
+    if (changed && _conversation.isGroupChat) {
+      _readCountRefreshTimer?.cancel();
+      _readCountRefreshTimer = Timer(
+        const Duration(milliseconds: 200),
+        _refreshReadCounts,
+      );
+    }
   }
 
   Message _resolveMediaUrls(Message message) {
@@ -495,8 +647,13 @@ class ChatCubit extends Cubit<ChatState> {
     for (final timer in _ackTimers.values) {
       timer.cancel();
     }
+    _readReceiptTimer?.cancel();
+    _readCountRefreshTimer?.cancel();
+    _refreshReadCountsAgain = false;
     await _chatMessageSubscription?.cancel();
     await _messageAckSubscription?.cancel();
+    await _readReceiptSubscription?.cancel();
+    await _connectionSubscription?.cancel();
     return super.close();
   }
 }

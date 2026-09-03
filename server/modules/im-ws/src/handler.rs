@@ -19,8 +19,10 @@ use uuid::Uuid;
 use crate::{
     broadcaster::WsBroadcaster,
     dispatcher::{DispatchOutcome, dispatch_frame},
-    frame::{auth_result_frame, decode_frame},
-    proto::{AuthRequest, WsFrameType},
+    frame::{
+        auth_result_frame, decode_frame, online_list_frame, user_offline_frame, user_online_frame,
+    },
+    proto::{AuthRequest, OnlineUserList, UserPresenceEvent, WsFrameType},
     state::WsState,
 };
 
@@ -108,11 +110,20 @@ async fn handle_authenticated_socket(
     connection_id: Uuid,
     account_id: i64,
 ) {
-    let mut outbound = ws_state.register(account_id, connection_id);
+    let registration = ws_state.register(account_id, connection_id);
+    let mut outbound = registration.receiver;
     let service = MessageService::new(Arc::new(WsBroadcaster::new(
         ws_state.clone(),
         context.postgres.pool().clone(),
     )));
+
+    if !send_online_friend_snapshot(&mut socket, &context, &ws_state, account_id).await {
+        finish_connection(&context, &ws_state, account_id, connection_id).await;
+        return;
+    }
+    if registration.is_first_connection {
+        broadcast_presence(&context, &ws_state, account_id, true).await;
+    }
 
     loop {
         tokio::select! {
@@ -142,8 +153,75 @@ async fn handle_authenticated_socket(
         }
     }
 
-    ws_state.unregister(account_id, connection_id);
+    finish_connection(&context, &ws_state, account_id, connection_id).await;
     println!("im ws disconnected: connection_id={connection_id}, account_id={account_id}");
+}
+
+async fn send_online_friend_snapshot(
+    socket: &mut WebSocket,
+    context: &SharedContext,
+    ws_state: &WsState,
+    account_id: i64,
+) -> bool {
+    let friend_ids =
+        match im_friend::repository::list_friend_ids(context.postgres.pool(), account_id).await {
+            Ok(friend_ids) => friend_ids,
+            Err(error) => {
+                println!(
+                    "im ws presence snapshot failed: account_id={account_id}, error={}",
+                    error.message()
+                );
+                return true;
+            }
+        };
+    let user_ids = ws_state.online_subset(&friend_ids);
+    socket
+        .send(Message::Binary(
+            online_list_frame(OnlineUserList { user_ids }).into(),
+        ))
+        .await
+        .is_ok()
+}
+
+async fn finish_connection(
+    context: &SharedContext,
+    ws_state: &WsState,
+    account_id: i64,
+    connection_id: Uuid,
+) {
+    if ws_state.unregister(account_id, connection_id) {
+        broadcast_presence(context, ws_state, account_id, false).await;
+    }
+}
+
+async fn broadcast_presence(
+    context: &SharedContext,
+    ws_state: &WsState,
+    account_id: i64,
+    is_online: bool,
+) {
+    let friend_ids =
+        match im_friend::repository::list_friend_ids(context.postgres.pool(), account_id).await {
+            Ok(friend_ids) => friend_ids,
+            Err(error) => {
+                println!(
+                    "im ws presence broadcast failed: account_id={account_id}, error={}",
+                    error.message()
+                );
+                return;
+            }
+        };
+    let event = UserPresenceEvent {
+        user_id: account_id,
+    };
+    let frame = if is_online {
+        user_online_frame(event)
+    } else {
+        user_offline_frame(event)
+    };
+    for friend_id in friend_ids {
+        ws_state.send_to_user(friend_id, frame.clone());
+    }
 }
 
 async fn handle_client_message(

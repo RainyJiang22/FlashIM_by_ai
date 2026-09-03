@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flash_im_chat/flash_im_chat.dart';
+import 'package:flash_im_chat/src/data/message_repository.dart'
+    show TransferProgress;
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,6 +46,350 @@ void main() {
       ChatLoaded(messages: [history], hasMore: false),
     ],
   );
+
+  test('history read receipt is debounced to the maximum loaded seq', () {
+    fakeAsync((async) {
+      final wsClient = _FakeWsClient(canSendReadReceipts: true);
+      final cubit = ChatCubit(
+        repository: _FakeMessageRepository(
+          messages: [history.copyWith(seq: 7)],
+        ),
+        wsClient: wsClient,
+        conversation: conversation,
+        currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
+      );
+
+      cubit.loadMessages();
+      async.flushMicrotasks();
+      async.elapse(const Duration(milliseconds: 999));
+      expect(wsClient.sentReadReceipts, isEmpty);
+      async.elapse(const Duration(milliseconds: 1));
+      expect(wsClient.sentReadReceipts.single, ('c1', 7));
+
+      cubit.close();
+      wsClient.dispose();
+      async.flushMicrotasks();
+    });
+  });
+
+  test(
+    'foreign read receipt increments only mine messages in interval',
+    () async {
+      final wsClient = _FakeWsClient();
+      final group = Conversation(
+        id: 'g1',
+        type: 1,
+        unreadCount: 0,
+        createdAt: DateTime(2026, 9, 3),
+      );
+      final messages = [
+        history.copyWith(id: 'mine-3', seq: 3),
+        Message(
+          id: 'mine-5',
+          conversationId: 'g1',
+          senderId: '1',
+          senderName: '我',
+          seq: 5,
+          content: 'later',
+          status: MessageStatus.sent,
+          createdAt: DateTime(2026, 9, 3),
+        ),
+      ];
+      final cubit = ChatCubit(
+        repository: _FakeMessageRepository(messages: messages),
+        wsClient: wsClient,
+        conversation: group,
+        currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
+      );
+      await cubit.loadMessages();
+
+      wsClient.emitReadReceipt(
+        ReadReceipt(
+          conversationId: 'g1',
+          readerId: 2,
+          previousReadSeq: 3,
+          readSeq: 5,
+        ),
+      );
+
+      final loaded = cubit.state as ChatLoaded;
+      expect(loaded.messages.first.readCount, 0);
+      expect(loaded.messages.last.readCount, 1);
+      await cubit.close();
+      await wsClient.dispose();
+    },
+  );
+
+  test(
+    'duplicate reader receipt is idempotent within a chat session',
+    () async {
+      final wsClient = _FakeWsClient();
+      final group = Conversation(
+        id: 'g1',
+        type: 1,
+        unreadCount: 0,
+        createdAt: DateTime(2026, 9, 3),
+      );
+      final mine = Message(
+        id: 'mine-5',
+        conversationId: 'g1',
+        senderId: '1',
+        senderName: '我',
+        seq: 5,
+        content: 'hello',
+        status: MessageStatus.sent,
+        createdAt: DateTime(2026, 9, 3),
+      );
+      final cubit = ChatCubit(
+        repository: _FakeMessageRepository(messages: [mine]),
+        wsClient: wsClient,
+        conversation: group,
+        currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
+      );
+      await cubit.loadMessages();
+      final receipt = ReadReceipt(
+        conversationId: 'g1',
+        readerId: 2,
+        previousReadSeq: 0,
+        readSeq: 5,
+      );
+
+      wsClient.emitReadReceipt(receipt);
+      wsClient.emitReadReceipt(receipt);
+
+      expect((cubit.state as ChatLoaded).messages.single.readCount, 1);
+      await cubit.close();
+      await wsClient.dispose();
+    },
+  );
+
+  test('authentication recovery resends read seq and refreshes counts', () {
+    fakeAsync((async) {
+      final wsClient = _FakeWsClient(canSendReadReceipts: true);
+      final mine = Message(
+        id: 'mine-7',
+        conversationId: 'g1',
+        senderId: '1',
+        senderName: '我',
+        seq: 7,
+        content: 'hello',
+        status: MessageStatus.sent,
+        createdAt: DateTime(2026, 9, 3),
+      );
+      final repository = _SequencedMessageRepository([
+        [mine],
+        [mine.copyWith(readCount: 2)],
+      ]);
+      final cubit = ChatCubit(
+        repository: repository,
+        wsClient: wsClient,
+        conversation: Conversation(
+          id: 'g1',
+          type: 1,
+          unreadCount: 0,
+          createdAt: DateTime(2026, 9, 3),
+        ),
+        currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
+      );
+
+      cubit.loadMessages();
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 1));
+      expect(wsClient.sentReadReceipts, [('g1', 7)]);
+
+      wsClient.emitConnectionState(WsConnectionState.authenticated);
+      async.flushMicrotasks();
+      expect((cubit.state as ChatLoaded).messages.single.readCount, 2);
+      async.elapse(const Duration(seconds: 1));
+      expect(wsClient.sentReadReceipts, [('g1', 7), ('g1', 7)]);
+
+      cubit.close();
+      wsClient.dispose();
+      async.flushMicrotasks();
+    });
+  });
+
+  test('authentication recovery refreshes every loaded history page', () async {
+    final wsClient = _FakeWsClient(canSendReadReceipts: true);
+    final messages = List.generate(
+      51,
+      (index) => Message(
+        id: 'mine-${index + 1}',
+        conversationId: 'g1',
+        senderId: '1',
+        senderName: '我',
+        seq: index + 1,
+        content: 'message ${index + 1}',
+        status: MessageStatus.sent,
+        createdAt: DateTime(2026, 9, 3).add(Duration(seconds: index)),
+      ),
+    );
+    final repository = _PagedReadCountRepository(messages);
+    final cubit = ChatCubit(
+      repository: repository,
+      wsClient: wsClient,
+      conversation: Conversation(
+        id: 'g1',
+        type: 1,
+        unreadCount: 0,
+        createdAt: DateTime(2026, 9, 3),
+      ),
+      currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
+    );
+    addTearDown(cubit.close);
+    addTearDown(wsClient.dispose);
+
+    await cubit.loadMessages();
+    await cubit.loadMore();
+    repository.useAuthoritativeCounts = true;
+    wsClient.emitConnectionState(WsConnectionState.authenticated);
+    await repository.refreshedOlderPage.future;
+    await Future<void>.delayed(Duration.zero);
+
+    final refreshed = (cubit.state as ChatLoaded).messages;
+    expect(refreshed, hasLength(51));
+    expect(refreshed.first.readCount, 3);
+    expect(refreshed.last.readCount, 3);
+    expect(repository.refreshBeforeSeqs, [null, 2]);
+  });
+
+  test(
+    'read count refreshes are single flight and newest trigger wins',
+    () async {
+      final wsClient = _FakeWsClient();
+      final message = Message(
+        id: 'mine-1',
+        conversationId: 'g1',
+        senderId: '1',
+        senderName: '我',
+        seq: 1,
+        content: 'message',
+        status: MessageStatus.sent,
+        createdAt: DateTime(2026, 9, 3),
+      );
+      final repository = _ControlledRefreshRepository(message);
+      final cubit = ChatCubit(
+        repository: repository,
+        wsClient: wsClient,
+        conversation: Conversation(
+          id: 'g1',
+          type: 1,
+          unreadCount: 0,
+          createdAt: DateTime(2026, 9, 3),
+        ),
+        currentUserId: '1',
+        videoThumbnailService: const _FakeVideoThumbnailService(),
+      );
+      addTearDown(cubit.close);
+      addTearDown(wsClient.dispose);
+      await cubit.loadMessages();
+      repository.refreshing = true;
+
+      wsClient.emitConnectionState(WsConnectionState.authenticated);
+      wsClient.emitConnectionState(WsConnectionState.authenticated);
+      expect(repository.refreshCalls, 1);
+      expect(repository.maxActiveCalls, 1);
+
+      repository.firstRefresh.complete([message.copyWith(readCount: 1)]);
+      await repository.secondRefreshStarted.future;
+      expect((cubit.state as ChatLoaded).messages.single.readCount, 0);
+      expect(repository.maxActiveCalls, 1);
+      repository.secondRefresh.complete([message.copyWith(readCount: 2)]);
+      await Future<void>.delayed(Duration.zero);
+
+      expect((cubit.state as ChatLoaded).messages.single.readCount, 2);
+      expect(repository.refreshCalls, 2);
+    },
+  );
+
+  test('a failed refresh still runs a coalesced newer trigger', () async {
+    final wsClient = _FakeWsClient();
+    final message = Message(
+      id: 'mine-1',
+      conversationId: 'g1',
+      senderId: '1',
+      senderName: '我',
+      seq: 1,
+      content: 'message',
+      status: MessageStatus.sent,
+      createdAt: DateTime(2026, 9, 3),
+    );
+    final repository = _ControlledRefreshRepository(message);
+    final cubit = ChatCubit(
+      repository: repository,
+      wsClient: wsClient,
+      conversation: Conversation(
+        id: 'g1',
+        type: 1,
+        unreadCount: 0,
+        createdAt: DateTime(2026, 9, 3),
+      ),
+      currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
+    );
+    addTearDown(cubit.close);
+    addTearDown(wsClient.dispose);
+    await cubit.loadMessages();
+    repository.refreshing = true;
+
+    wsClient.emitConnectionState(WsConnectionState.authenticated);
+    wsClient.emitConnectionState(WsConnectionState.authenticated);
+    repository.firstRefresh.completeError(StateError('stale request failed'));
+    await repository.secondRefreshStarted.future;
+    repository.secondRefresh.complete([message.copyWith(readCount: 4)]);
+    await Future<void>.delayed(Duration.zero);
+
+    expect((cubit.state as ChatLoaded).messages.single.readCount, 4);
+    expect(repository.refreshCalls, 2);
+    expect(repository.maxActiveCalls, 1);
+  });
+
+  test('closing chat stops an in-flight paged refresh', () async {
+    final wsClient = _FakeWsClient();
+    final messages = List.generate(
+      51,
+      (index) => Message(
+        id: 'mine-${index + 1}',
+        conversationId: 'g1',
+        senderId: '1',
+        senderName: '我',
+        seq: index + 1,
+        content: 'message ${index + 1}',
+        status: MessageStatus.sent,
+        createdAt: DateTime(2026, 9, 3).add(Duration(seconds: index)),
+      ),
+    );
+    final repository = _ClosingRefreshRepository(messages);
+    final cubit = ChatCubit(
+      repository: repository,
+      wsClient: wsClient,
+      conversation: Conversation(
+        id: 'g1',
+        type: 1,
+        unreadCount: 0,
+        createdAt: DateTime(2026, 9, 3),
+      ),
+      currentUserId: '1',
+      videoThumbnailService: const _FakeVideoThumbnailService(),
+    );
+    addTearDown(wsClient.dispose);
+    await cubit.loadMessages();
+    await cubit.loadMore();
+    repository.refreshing = true;
+
+    wsClient.emitConnectionState(WsConnectionState.authenticated);
+    await repository.refreshStarted.future;
+    await cubit.close();
+    repository.refreshPage.complete(messages.skip(1).toList(growable: false));
+    await Future<void>.delayed(Duration.zero);
+
+    expect(repository.refreshBeforeSeqs, [null]);
+  });
 
   test('mentioned text sends structured extra over websocket', () async {
     final wsClient = _FakeWsClient();
@@ -430,6 +776,239 @@ class _FakeMessageRepository implements MessageRepository {
   }) => throw UnimplementedError();
 }
 
+class _SequencedMessageRepository implements MessageRepository {
+  _SequencedMessageRepository(this.responses);
+
+  final List<List<Message>> responses;
+  int calls = 0;
+
+  @override
+  Future<List<Message>> getMessages({
+    required String conversationId,
+    int? beforeSeq,
+    int limit = 50,
+  }) async {
+    final index = calls < responses.length ? calls : responses.length - 1;
+    calls += 1;
+    return responses[index];
+  }
+
+  @override
+  Future<String> downloadFile(
+    String url,
+    String savePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<FileUploadResult> uploadFile(
+    String filePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<ImageUploadResult> uploadImage(
+    String filePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<VideoUploadResult> uploadVideo(
+    String videoPath,
+    String thumbPath,
+    int durationMs, {
+    int? width,
+    int? height,
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+}
+
+class _PagedReadCountRepository implements MessageRepository {
+  _PagedReadCountRepository(this.messages);
+
+  final List<Message> messages;
+  final Completer<void> refreshedOlderPage = Completer<void>();
+  final List<int?> refreshBeforeSeqs = [];
+  bool useAuthoritativeCounts = false;
+
+  @override
+  Future<List<Message>> getMessages({
+    required String conversationId,
+    int? beforeSeq,
+    int limit = 50,
+  }) async {
+    if (useAuthoritativeCounts) refreshBeforeSeqs.add(beforeSeq);
+    final eligible =
+        messages
+            .where((message) => beforeSeq == null || message.seq < beforeSeq)
+            .toList(growable: false)
+          ..sort((left, right) => right.seq.compareTo(left.seq));
+    final page = eligible
+        .take(limit)
+        .map((message) {
+          return useAuthoritativeCounts
+              ? message.copyWith(readCount: 3)
+              : message;
+        })
+        .toList(growable: false);
+    if (useAuthoritativeCounts && beforeSeq != null) {
+      if (!refreshedOlderPage.isCompleted) refreshedOlderPage.complete();
+    }
+    return page;
+  }
+
+  @override
+  Future<String> downloadFile(
+    String url,
+    String savePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<FileUploadResult> uploadFile(
+    String filePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<ImageUploadResult> uploadImage(
+    String filePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<VideoUploadResult> uploadVideo(
+    String videoPath,
+    String thumbPath,
+    int durationMs, {
+    int? width,
+    int? height,
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+}
+
+class _ControlledRefreshRepository implements MessageRepository {
+  _ControlledRefreshRepository(this.message);
+
+  final Message message;
+  final Completer<List<Message>> firstRefresh = Completer<List<Message>>();
+  final Completer<List<Message>> secondRefresh = Completer<List<Message>>();
+  final Completer<void> secondRefreshStarted = Completer<void>();
+  bool refreshing = false;
+  int refreshCalls = 0;
+  int activeCalls = 0;
+  int maxActiveCalls = 0;
+
+  @override
+  Future<List<Message>> getMessages({
+    required String conversationId,
+    int? beforeSeq,
+    int limit = 50,
+  }) async {
+    if (!refreshing) return [message];
+    refreshCalls += 1;
+    activeCalls += 1;
+    if (activeCalls > maxActiveCalls) maxActiveCalls = activeCalls;
+    if (refreshCalls == 2 && !secondRefreshStarted.isCompleted) {
+      secondRefreshStarted.complete();
+    }
+    try {
+      return await (refreshCalls == 1
+          ? firstRefresh.future
+          : secondRefresh.future);
+    } finally {
+      activeCalls -= 1;
+    }
+  }
+
+  @override
+  Future<String> downloadFile(
+    String url,
+    String savePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<FileUploadResult> uploadFile(
+    String filePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<ImageUploadResult> uploadImage(
+    String filePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<VideoUploadResult> uploadVideo(
+    String videoPath,
+    String thumbPath,
+    int durationMs, {
+    int? width,
+    int? height,
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+}
+
+class _ClosingRefreshRepository implements MessageRepository {
+  _ClosingRefreshRepository(this.messages);
+
+  final List<Message> messages;
+  final Completer<void> refreshStarted = Completer<void>();
+  final Completer<List<Message>> refreshPage = Completer<List<Message>>();
+  final List<int?> refreshBeforeSeqs = [];
+  bool refreshing = false;
+
+  @override
+  Future<List<Message>> getMessages({
+    required String conversationId,
+    int? beforeSeq,
+    int limit = 50,
+  }) async {
+    if (refreshing) {
+      refreshBeforeSeqs.add(beforeSeq);
+      if (!refreshStarted.isCompleted) refreshStarted.complete();
+      return refreshPage.future;
+    }
+    final eligible =
+        messages
+            .where((message) => beforeSeq == null || message.seq < beforeSeq)
+            .toList(growable: false)
+          ..sort((left, right) => right.seq.compareTo(left.seq));
+    return eligible.take(limit).toList(growable: false);
+  }
+
+  @override
+  Future<String> downloadFile(
+    String url,
+    String savePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<FileUploadResult> uploadFile(
+    String filePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<ImageUploadResult> uploadImage(
+    String filePath, {
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<VideoUploadResult> uploadVideo(
+    String videoPath,
+    String thumbPath,
+    int durationMs, {
+    int? width,
+    int? height,
+    TransferProgress? onProgress,
+  }) => throw UnimplementedError();
+}
+
 class _FakeVideoThumbnailService implements VideoThumbnailService {
   const _FakeVideoThumbnailService({this.thumbnailPath = '/tmp/thumb.jpg'});
 
@@ -526,9 +1105,11 @@ class _MediaMessageRepository implements MessageRepository {
 }
 
 class _FakeWsClient extends WsClient {
-  _FakeWsClient()
+  _FakeWsClient({this.canSendReadReceipts = false})
     : _chatMessages = StreamController<ChatMessage>.broadcast(sync: true),
       _messageAcks = StreamController<MessageAck>.broadcast(sync: true),
+      _readReceipts = StreamController<ReadReceipt>.broadcast(sync: true),
+      _states = StreamController<WsConnectionState>.broadcast(sync: true),
       super(
         config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
         tokenProvider: () => null,
@@ -536,13 +1117,23 @@ class _FakeWsClient extends WsClient {
 
   final StreamController<ChatMessage> _chatMessages;
   final StreamController<MessageAck> _messageAcks;
+  final StreamController<ReadReceipt> _readReceipts;
+  final StreamController<WsConnectionState> _states;
+  final bool canSendReadReceipts;
   final List<SendMessageRequest> sentRequests = [];
+  final List<(String, int)> sentReadReceipts = [];
 
   @override
   Stream<ChatMessage> get chatMessageStream => _chatMessages.stream;
 
   @override
   Stream<MessageAck> get messageAckStream => _messageAcks.stream;
+
+  @override
+  Stream<ReadReceipt> get readReceiptStream => _readReceipts.stream;
+
+  @override
+  Stream<WsConnectionState> get stateStream => _states.stream;
 
   @override
   void sendChatMessage(SendMessageRequest request) {
@@ -557,10 +1148,27 @@ class _FakeWsClient extends WsClient {
     _messageAcks.add(ack);
   }
 
+  void emitReadReceipt(ReadReceipt receipt) {
+    _readReceipts.add(receipt);
+  }
+
+  void emitConnectionState(WsConnectionState state) {
+    _states.add(state);
+  }
+
+  @override
+  bool sendReadReceipt({required String conversationId, required int readSeq}) {
+    if (!canSendReadReceipts) return false;
+    sentReadReceipts.add((conversationId, readSeq));
+    return true;
+  }
+
   @override
   Future<void> dispose() async {
     await _chatMessages.close();
     await _messageAcks.close();
+    await _readReceipts.close();
+    await _states.close();
     await super.dispose();
   }
 }

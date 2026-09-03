@@ -6,6 +6,106 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('mine private message shows read circle before bubble', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'read-private',
+              conversationId: 'c1',
+              senderId: '1',
+              senderName: '我',
+              seq: 3,
+              content: 'hello',
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 9, 3),
+              readCount: 1,
+            ),
+            isMine: true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('已读'), findsNothing);
+    final indicator = find.byKey(const Key('private-message-read-indicator'));
+    expect(indicator, findsOneWidget);
+    expect(
+      find.descendant(of: indicator, matching: find.byIcon(Icons.check)),
+      findsOneWidget,
+    );
+    expect(
+      tester.getCenter(indicator).dx,
+      lessThan(tester.getCenter(find.byKey(const Key('text_bubble'))).dx),
+    );
+  });
+
+  testWidgets('mine unread private message shows hollow circle', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'unread-private',
+              conversationId: 'c1',
+              senderId: '1',
+              senderName: '我',
+              seq: 3,
+              content: 'hello',
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 9, 3),
+            ),
+            isMine: true,
+          ),
+        ),
+      ),
+    );
+
+    final indicator = find.byKey(const Key('private-message-unread-indicator'));
+    expect(indicator, findsOneWidget);
+    expect(
+      find.descendant(of: indicator, matching: find.byIcon(Icons.check)),
+      findsNothing,
+    );
+  });
+
+  testWidgets('mine group message shows clickable reader count', (
+    tester,
+  ) async {
+    var tapped = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'read-group',
+              conversationId: 'g1',
+              senderId: '1',
+              senderName: '我',
+              seq: 3,
+              content: 'hello',
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 9, 3),
+              readCount: 2,
+            ),
+            isMine: true,
+            isGroupChat: true,
+            onReadStatusTap: () => tapped = true,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('2 人已读'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('message-read-status')));
+    expect(tapped, isTrue);
+  });
+
   testWidgets('mine message renders avatar on the right', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

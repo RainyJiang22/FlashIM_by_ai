@@ -165,6 +165,12 @@ void main() {
     await client.connect();
     channel.addFrame(
       WsFrame(
+        type: WsFrameType.ONLINE_LIST,
+        payload: OnlineUserList(userIds: [Int64(2)]).writeToBuffer(),
+      ),
+    );
+    channel.addFrame(
+      WsFrame(
         type: WsFrameType.FRIEND_REQUEST,
         payload: FriendRequestEvent(
           requestId: 'r1',
@@ -178,7 +184,7 @@ void main() {
         type: WsFrameType.FRIEND_ACCEPTED,
         payload: FriendAcceptedEvent(
           requestId: 'r1',
-          friend: FriendUser(nickname: '小雨'),
+          friend: FriendUser(accountId: Int64(2), nickname: '小雨'),
           conversationId: 'c1',
         ).writeToBuffer(),
       ),
@@ -187,7 +193,7 @@ void main() {
       WsFrame(
         type: WsFrameType.FRIEND_REMOVED,
         payload: FriendRemovedEvent(
-          friend: FriendUser(nickname: '小雨'),
+          friend: FriendUser(accountId: Int64(2), nickname: '小雨'),
         ).writeToBuffer(),
       ),
     );
@@ -196,6 +202,7 @@ void main() {
     expect(requests.single.requestId, 'r1');
     expect(accepted.single.conversationId, 'c1');
     expect(removed.single.friend.nickname, '小雨');
+    expect(client.isUserOnline(2), isFalse);
 
     await requestSub.cancel();
     await acceptedSub.cancel();
@@ -302,6 +309,75 @@ void main() {
     expect(request.extra, '{"width":320}');
     expect(request.clientId, 'local:1');
 
+    await client.dispose();
+  });
+
+  test(
+    'presence frames replace and mutate the online set idempotently',
+    () async {
+      final channel = _FakeWebSocketChannel();
+      final client = WsClient(
+        config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+        tokenProvider: () => 'jwt-token',
+        channelFactory: (_) => channel,
+      );
+
+      await client.connect();
+      channel.addFrame(
+        WsFrame(
+          type: WsFrameType.ONLINE_LIST,
+          payload: OnlineUserList(
+            userIds: [Int64(2), Int64(3)],
+          ).writeToBuffer(),
+        ),
+      );
+      channel.addFrame(
+        WsFrame(
+          type: WsFrameType.USER_ONLINE,
+          payload: UserPresenceEvent(userId: Int64(4)).writeToBuffer(),
+        ),
+      );
+      channel.addFrame(
+        WsFrame(
+          type: WsFrameType.USER_OFFLINE,
+          payload: UserPresenceEvent(userId: Int64(2)).writeToBuffer(),
+        ),
+      );
+      await _flushMicrotasks();
+
+      expect(client.onlineUserIds.value, {3, 4});
+      expect(client.isUserOnline(4), isTrue);
+
+      await client.disconnect();
+      expect(client.onlineUserIds.value, isEmpty);
+      await client.dispose();
+    },
+  );
+
+  test('read receipt is sent only after authentication', () async {
+    final channel = _FakeWebSocketChannel();
+    final client = WsClient(
+      config: ImConfig(wsUrl: 'ws://127.0.0.1:9600/ws/im'),
+      tokenProvider: () => 'jwt-token',
+      channelFactory: (_) => channel,
+    );
+
+    expect(client.sendReadReceipt(conversationId: 'c1', readSeq: 9), isFalse);
+    await client.connect();
+    channel.addFrame(
+      WsFrame(
+        type: WsFrameType.AUTH_RESULT,
+        payload: AuthResult(success: true).writeToBuffer(),
+      ),
+    );
+    await _flushMicrotasks();
+
+    expect(client.sendReadReceipt(conversationId: 'c1', readSeq: 9), isTrue);
+    final frame = channel.sentFrames.last;
+    expect(frame.type, WsFrameType.READ_RECEIPT);
+    final receipt = ReadReceipt.fromBuffer(frame.payload);
+    expect(receipt.conversationId, 'c1');
+    expect(receipt.readSeq, 9);
     await client.dispose();
   });
 }

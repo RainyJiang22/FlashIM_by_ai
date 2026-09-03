@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use flash_core::AppResult;
 
-use crate::service::{ConversationUpdate, MessagePayload};
+use crate::service::{ConversationUpdate, MessagePayload, ReadReceiptPayload};
 
 #[async_trait]
 pub trait MessageBroadcaster: Send + Sync {
@@ -17,6 +17,14 @@ pub trait MessageBroadcaster: Send + Sync {
         updates: Vec<ConversationUpdate>,
         member_ids: &[i64],
     ) -> AppResult<()>;
+
+    async fn broadcast_read_receipt(
+        &self,
+        _receipt: ReadReceiptPayload,
+        _member_ids: &[i64],
+    ) -> AppResult<()> {
+        Ok(())
+    }
 }
 
 #[derive(Clone, Default)]

@@ -21,6 +21,8 @@ class MessageBubble extends StatelessWidget {
     this.downloadInfo,
     this.uploadProgress,
     this.onAcceptGroupInvitation,
+    this.isGroupChat = false,
+    this.onReadStatusTap,
   });
 
   final Message message;
@@ -32,6 +34,8 @@ class MessageBubble extends StatelessWidget {
   final FileDownloadInfo? downloadInfo;
   final double? uploadProgress;
   final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
+  final bool isGroupChat;
+  final VoidCallback? onReadStatusTap;
 
   @override
   Widget build(BuildContext context) {
@@ -125,11 +129,37 @@ class MessageBubble extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (isMine) _MessageStatusIcon(status: message.status),
+                    if (isMine)
+                      _MessageStatusIcon(
+                        status: message.status,
+                        showReadStatus: !isGroupChat,
+                        isRead: message.readCount > 0,
+                      ),
                     if (isMine) const SizedBox(width: 6),
                     Flexible(child: content),
                   ],
                 ),
+                if (isMine &&
+                    isGroupChat &&
+                    message.status == MessageStatus.sent) ...[
+                  const SizedBox(height: 4),
+                  GestureDetector(
+                    key: const Key('message-read-status'),
+                    onTap: isGroupChat ? onReadStatusTap : null,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(
+                        '${message.readCount} 人已读',
+                        style: const TextStyle(
+                          color: FlashPalette.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -175,8 +205,15 @@ bool _isLegacyProtocolPayload(String content) {
 }
 
 class _MessageStatusIcon extends StatelessWidget {
-  const _MessageStatusIcon({required this.status});
+  const _MessageStatusIcon({
+    required this.status,
+    required this.showReadStatus,
+    required this.isRead,
+  });
+
   final MessageStatus status;
+  final bool showReadStatus;
+  final bool isRead;
 
   @override
   Widget build(BuildContext context) => switch (status) {
@@ -189,6 +226,33 @@ class _MessageStatusIcon extends StatelessWidget {
       color: FlashPalette.danger,
       size: 14,
     ),
-    MessageStatus.sent => const SizedBox.shrink(),
+    MessageStatus.sent =>
+      showReadStatus
+          ? Semantics(
+              label: isRead ? '已读' : '未读',
+              child: Container(
+                key: Key(
+                  isRead
+                      ? 'private-message-read-indicator'
+                      : 'private-message-unread-indicator',
+                ),
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isRead ? FlashPalette.primary : Colors.transparent,
+                  border: Border.all(
+                    color: isRead
+                        ? FlashPalette.primary
+                        : FlashPalette.mutedInk,
+                    width: 1.4,
+                  ),
+                ),
+                child: isRead
+                    ? const Icon(Icons.check, size: 10, color: Colors.white)
+                    : null,
+              ),
+            )
+          : const SizedBox.shrink(),
   };
 }

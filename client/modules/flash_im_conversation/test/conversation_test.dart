@@ -128,6 +128,31 @@ void main() {
     expect(avatar.seed, '3');
   });
 
+  testWidgets('private online conversation shows presence indicator', (
+    tester,
+  ) async {
+    final conversation = Conversation(
+      id: 'online-private',
+      type: 0,
+      peerUserId: '3',
+      unreadCount: 0,
+      createdAt: DateTime(2026, 9, 3),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ConversationTile(conversation: conversation, isOnline: true),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const Key('conversation-online-indicator')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('group conversation tile uses composite group avatar', (
     tester,
   ) async {

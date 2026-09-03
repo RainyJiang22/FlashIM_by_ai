@@ -13,6 +13,7 @@ export 'src/data/message_repository.dart'
         DioMessageRepository,
         FileUploadResult,
         ImageUploadResult,
+        MessageReadStatusRepository,
         MessageRepository,
         VideoUploadResult;
 export 'src/data/mention.dart'
@@ -22,6 +23,7 @@ export 'src/data/mention.dart'
         ChatMentionPickerData,
         ChatMentionSelection,
         ChatTextMessageDraft;
+export 'src/data/read_receipt.dart' show MessageReadStatus, ReadStatusMember;
 export 'src/data/video_thumbnail_service.dart'
     show NativeVideoThumbnailService, VideoThumbnailInfo, VideoThumbnailService;
 export 'src/logic/chat_cubit.dart' show ChatCubit;

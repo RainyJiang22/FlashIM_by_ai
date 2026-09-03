@@ -26,6 +26,7 @@ class ChatMessage {
     this.createdAt = '',
     this.senderName = '',
     this.senderAvatar = '',
+    this.readCount = 0,
   });
 
   factory ChatMessage.fromBuffer($core.List<$core.int> data) {
@@ -42,6 +43,7 @@ class ChatMessage {
       createdAt: _string(fields[9]),
       senderName: _string(fields[10]),
       senderAvatar: _string(fields[11]),
+      readCount: _int(fields[12]),
     );
   }
 
@@ -56,6 +58,7 @@ class ChatMessage {
   $core.String createdAt;
   $core.String senderName;
   $core.String senderAvatar;
+  $core.int readCount;
 
   $core.List<$core.int> writeToBuffer() {
     return [
@@ -70,6 +73,7 @@ class ChatMessage {
       ..._fieldString(9, createdAt),
       ..._fieldString(10, senderName),
       ..._fieldString(11, senderAvatar),
+      ..._fieldVarint(12, readCount),
     ];
   }
 }
@@ -160,6 +164,39 @@ class ConversationUpdate {
       ..._fieldString(3, lastMessageAt),
       ..._fieldVarint(4, unreadCount),
       ..._fieldVarint(5, totalUnread),
+    ];
+  }
+}
+
+class ReadReceipt {
+  ReadReceipt({
+    this.conversationId = '',
+    this.readerId = 0,
+    this.previousReadSeq = 0,
+    this.readSeq = 0,
+  });
+
+  factory ReadReceipt.fromBuffer($core.List<$core.int> data) {
+    final fields = _decodeFields(data);
+    return ReadReceipt(
+      conversationId: _string(fields[1]),
+      readerId: _int(fields[2]),
+      previousReadSeq: _int(fields[3]),
+      readSeq: _int(fields[4]),
+    );
+  }
+
+  $core.String conversationId;
+  $core.int readerId;
+  $core.int previousReadSeq;
+  $core.int readSeq;
+
+  $core.List<$core.int> writeToBuffer() {
+    return [
+      ..._fieldString(1, conversationId),
+      ..._fieldVarint(2, readerId),
+      ..._fieldVarint(3, previousReadSeq),
+      ..._fieldVarint(4, readSeq),
     ];
   }
 }

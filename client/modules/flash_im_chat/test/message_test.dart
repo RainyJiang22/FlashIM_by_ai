@@ -12,12 +12,14 @@ void main() {
       'sender_avatar': 'identicon:2',
       'seq': 1,
       'content': 'hello',
+      'read_count': 2,
       'created_at': '2026-04-02T09:00:00Z',
     });
 
     expect(message.id, 'm1');
     expect(message.senderName, '朱红');
     expect(message.status, MessageStatus.sent);
+    expect(message.readCount, 2);
   });
 
   test('Message.fromChatMessage maps realtime payload', () {
@@ -29,11 +31,13 @@ void main() {
         seq: 1,
         content: 'hello',
         senderName: '朱红',
+        readCount: 3,
       ),
     );
 
     expect(message.senderId, '2');
     expect(message.content, 'hello');
+    expect(message.readCount, 3);
   });
 
   test('Message.fromJson parses image type and JSON extra', () {

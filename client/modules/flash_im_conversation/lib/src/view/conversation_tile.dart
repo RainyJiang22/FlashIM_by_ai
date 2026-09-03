@@ -4,9 +4,15 @@ import 'package:flutter/material.dart';
 import '../data/conversation.dart';
 
 class ConversationTile extends StatelessWidget {
-  const ConversationTile({super.key, required this.conversation, this.onTap});
+  const ConversationTile({
+    super.key,
+    required this.conversation,
+    this.isOnline = false,
+    this.onTap,
+  });
 
   final Conversation conversation;
+  final bool isOnline;
   final VoidCallback? onTap;
 
   @override
@@ -25,7 +31,10 @@ class ConversationTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
-                  _ConversationAvatar(conversation: conversation),
+                  _ConversationAvatar(
+                    conversation: conversation,
+                    isOnline: isOnline,
+                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -113,9 +122,13 @@ class ConversationTile extends StatelessWidget {
 }
 
 class _ConversationAvatar extends StatelessWidget {
-  const _ConversationAvatar({required this.conversation});
+  const _ConversationAvatar({
+    required this.conversation,
+    required this.isOnline,
+  });
 
   final Conversation conversation;
+  final bool isOnline;
 
   @override
   Widget build(BuildContext context) {
@@ -125,11 +138,31 @@ class _ConversationAvatar extends StatelessWidget {
         seed: conversation.id,
       );
     }
-    return AvatarWidget(
-      avatar: conversation.peerAvatar?.trim(),
-      seed: conversation.avatarSeed,
-      size: 52,
-      borderRadius: BorderRadius.circular(15),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        AvatarWidget(
+          avatar: conversation.peerAvatar?.trim(),
+          seed: conversation.avatarSeed,
+          size: 52,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        if (isOnline)
+          Positioned(
+            key: const Key('conversation-online-indicator'),
+            right: -2,
+            bottom: -2,
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: const Color(0xFF07C160),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -8,7 +8,10 @@ use uuid::Uuid;
 
 use crate::{
     broadcast::MessageBroadcaster,
-    models::{MessageQuery, MessageRow, MessageWithSender, NewMessage},
+    models::{
+        MessageQuery, MessageReadStatus, MessageRow, MessageWithSender, NewMessage,
+        ReadStatusMember,
+    },
     repository,
 };
 
@@ -37,6 +40,7 @@ pub struct MessagePayload {
     pub extra: Option<Value>,
     pub status: i16,
     pub created_at: DateTime<Utc>,
+    pub read_count: i32,
 }
 
 impl From<MessageRow> for MessagePayload {
@@ -51,6 +55,7 @@ impl From<MessageRow> for MessagePayload {
             extra: row.extra,
             status: row.status,
             created_at: row.created_at,
+            read_count: 0,
         }
     }
 }
@@ -68,6 +73,14 @@ pub struct ConversationUpdate {
     pub last_message_preview: String,
     pub last_message_at: DateTime<Utc>,
     pub unread_count: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReadReceiptPayload {
+    pub conversation_id: Uuid,
+    pub reader_id: i64,
+    pub previous_read_seq: i64,
+    pub read_seq: i64,
 }
 
 #[derive(Clone, Debug)]
@@ -306,6 +319,107 @@ where
                 .await?;
 
         Ok(rows.into_iter().map(MessageWithSender::from).collect())
+    }
+
+    pub async fn mark_read(
+        &self,
+        context: &SharedContext,
+        reader_id: i64,
+        conversation_id: Uuid,
+        requested_read_seq: i64,
+    ) -> AppResult<ReadReceiptPayload> {
+        if requested_read_seq < 1 {
+            return Err(AppError::bad_request("invalid read seq"));
+        }
+        let advance = repository::advance_read_seq(
+            context.postgres.pool(),
+            conversation_id,
+            reader_id,
+            requested_read_seq,
+        )
+        .await?;
+        let receipt = ReadReceiptPayload {
+            conversation_id: advance.conversation_id,
+            reader_id: advance.reader_id,
+            previous_read_seq: advance.previous_read_seq,
+            read_seq: advance.read_seq,
+        };
+
+        if receipt.read_seq > receipt.previous_read_seq {
+            let _ = self
+                .broadcaster
+                .broadcast_read_receipt(receipt.clone(), &advance.member_ids)
+                .await;
+        }
+        if let Some(last_message_at) = advance.last_message_at {
+            let _ = self
+                .broadcaster
+                .broadcast_conversation_updates(
+                    vec![ConversationUpdate {
+                        conversation_id,
+                        user_id: reader_id,
+                        last_message_preview: advance.last_message_preview,
+                        last_message_at,
+                        unread_count: advance.unread_count,
+                    }],
+                    &[reader_id],
+                )
+                .await;
+        }
+
+        Ok(receipt)
+    }
+
+    pub async fn get_read_status(
+        &self,
+        context: &SharedContext,
+        requester_id: i64,
+        conversation_id: Uuid,
+        message_id: Uuid,
+    ) -> AppResult<MessageReadStatus> {
+        let message = repository::find_message_for_read_status(
+            context.postgres.pool(),
+            conversation_id,
+            message_id,
+            requester_id,
+        )
+        .await?
+        .ok_or(AppError::not_found("message not found"))?;
+        if message.sender_id != requester_id {
+            return Err(AppError::forbidden("message read status is not allowed"));
+        }
+
+        let members = repository::list_read_status_members(
+            context.postgres.pool(),
+            conversation_id,
+            message.sender_id,
+        )
+        .await?;
+        let mut read_members = Vec::new();
+        let mut unread_members = Vec::new();
+        for member in members {
+            let status_member = ReadStatusMember {
+                user_id: member.user_id.to_string(),
+                nickname: member
+                    .nickname
+                    .filter(|value| !value.trim().is_empty())
+                    .unwrap_or_else(|| format!("用户 {}", member.user_id)),
+                avatar: member.avatar.unwrap_or_default(),
+            };
+            if member.last_read_seq >= message.seq {
+                read_members.push(status_member);
+            } else {
+                unread_members.push(status_member);
+            }
+        }
+
+        Ok(MessageReadStatus {
+            message_id: message.id,
+            conversation_id: message.conversation_id,
+            seq: message.seq,
+            read_members,
+            unread_members,
+        })
     }
 }
 

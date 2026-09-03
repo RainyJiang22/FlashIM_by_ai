@@ -10,7 +10,13 @@ export 'src/data/proto/friend.pb.dart'
 export 'src/data/proto/group.pb.dart'
     show GroupInfoUpdateNotification, GroupJoinRequestNotification;
 export 'src/data/proto/message.pb.dart'
-    show ChatMessage, ConversationUpdate, MessageAck, SendMessageRequest;
+    show
+        ChatMessage,
+        ConversationUpdate,
+        MessageAck,
+        ReadReceipt,
+        SendMessageRequest;
+export 'src/data/proto/presence.pb.dart' show OnlineUserList, UserPresenceEvent;
 export 'src/data/proto/ws.pb.dart' show WsFrame, WsFrameType;
 export 'src/logic/ws_client.dart'
     show TokenProvider, WebSocketChannelFactory, WsClient, WsConnectionState;

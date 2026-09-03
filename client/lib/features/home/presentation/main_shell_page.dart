@@ -292,13 +292,14 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  List<Widget> _buildPages(int groupNotificationCount) {
+  List<Widget> _buildPages(int groupNotificationCount, Set<int> onlineUserIds) {
     return [
       MessagesPlaceholderPage(
         conversationListCubit: _conversationListCubit,
         onConversationTap: _openChat,
         onCreateGroup: _createGroup,
         onAddContact: _addContact,
+        onlineUserIds: onlineUserIds,
       ),
       ContactsPage(
         onMessageFriend: _openFriendChat,
@@ -306,6 +307,7 @@ class _MainShellPageState extends State<MainShellPage> {
         onSearchGroups: _openSearchGroups,
         onOpenGroupNotifications: _openGroupNotifications,
         groupNotificationCount: groupNotificationCount,
+        onlineUserIds: onlineUserIds,
       ),
       const MinePage(),
     ];
@@ -343,50 +345,56 @@ class _MainShellPageState extends State<MainShellPage> {
           bloc: _groupNotificationCubit,
           buildWhen: (previous, current) =>
               previous.pendingCount != current.pendingCount,
-          builder: (context, groupNotificationState) => Scaffold(
-            body: SafeArea(
-              child: Column(
-                children: [
-                  WsStatusIndicator(client: context.read<WsClient>()),
-                  Expanded(
-                    child: _buildPages(
-                      groupNotificationState.pendingCount,
-                    )[_currentIndex],
+          builder: (context, groupNotificationState) =>
+              ValueListenableBuilder<Set<int>>(
+                valueListenable: context.read<WsClient>().onlineUserIds,
+                builder: (context, onlineUserIds, _) => Scaffold(
+                  body: SafeArea(
+                    child: Column(
+                      children: [
+                        WsStatusIndicator(client: context.read<WsClient>()),
+                        Expanded(
+                          child: _buildPages(
+                            groupNotificationState.pendingCount,
+                            onlineUserIds,
+                          )[_currentIndex],
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-            bottomNavigationBar:
-                BlocBuilder<ConversationListCubit, ConversationListState>(
-                  bloc: _conversationListCubit,
-                  builder: (context, conversationState) {
-                    final totalUnread = switch (conversationState) {
-                      ConversationListLoaded(:final totalUnread) => totalUnread,
-                      _ => 0,
-                    };
-                    return BlocBuilder<FriendCubit, FriendState>(
-                      bloc: _friendCubit,
-                      buildWhen: (previous, current) =>
-                          previous.pendingRequestCount !=
-                          current.pendingRequestCount,
-                      builder: (context, friendState) {
-                        return HomeNavigationBar(
-                          currentIndex: _currentIndex,
-                          messageUnreadCount: totalUnread,
-                          contactRequestCount:
-                              friendState.pendingRequestCount +
-                              groupNotificationState.pendingCount,
-                          onDestinationSelected: (index) {
-                            setState(() {
-                              _currentIndex = index;
-                            });
-                          },
-                        );
-                      },
-                    );
-                  },
+                  bottomNavigationBar:
+                      BlocBuilder<ConversationListCubit, ConversationListState>(
+                        bloc: _conversationListCubit,
+                        builder: (context, conversationState) {
+                          final totalUnread = switch (conversationState) {
+                            ConversationListLoaded(:final totalUnread) =>
+                              totalUnread,
+                            _ => 0,
+                          };
+                          return BlocBuilder<FriendCubit, FriendState>(
+                            bloc: _friendCubit,
+                            buildWhen: (previous, current) =>
+                                previous.pendingRequestCount !=
+                                current.pendingRequestCount,
+                            builder: (context, friendState) {
+                              return HomeNavigationBar(
+                                currentIndex: _currentIndex,
+                                messageUnreadCount: totalUnread,
+                                contactRequestCount:
+                                    friendState.pendingRequestCount +
+                                    groupNotificationState.pendingCount,
+                                onDestinationSelected: (index) {
+                                  setState(() {
+                                    _currentIndex = index;
+                                  });
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
                 ),
-          ),
+              ),
         ),
       ),
     );

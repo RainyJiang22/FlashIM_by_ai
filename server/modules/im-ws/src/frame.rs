@@ -5,7 +5,8 @@ use prost::Message as ProstMessage;
 use crate::proto::{
     AuthRequest, AuthResult, ChatMessage, ConversationUpdate, FriendAcceptedEvent,
     FriendRemovedEvent, FriendRequestEvent, GroupInfoUpdateNotification,
-    GroupJoinRequestNotification, MessageAck, WsFrame, WsFrameType,
+    GroupJoinRequestNotification, MessageAck, OnlineUserList, ReadReceipt, UserPresenceEvent,
+    WsFrame, WsFrameType,
 };
 
 #[derive(Debug)]
@@ -109,12 +110,28 @@ pub fn group_info_update_frame(event: GroupInfoUpdateNotification) -> Vec<u8> {
     encode_frame(WsFrameType::GroupInfoUpdate, event.encode_to_vec())
 }
 
+pub fn user_online_frame(event: UserPresenceEvent) -> Vec<u8> {
+    encode_frame(WsFrameType::UserOnline, event.encode_to_vec())
+}
+
+pub fn user_offline_frame(event: UserPresenceEvent) -> Vec<u8> {
+    encode_frame(WsFrameType::UserOffline, event.encode_to_vec())
+}
+
+pub fn online_list_frame(list: OnlineUserList) -> Vec<u8> {
+    encode_frame(WsFrameType::OnlineList, list.encode_to_vec())
+}
+
+pub fn read_receipt_frame(receipt: ReadReceipt) -> Vec<u8> {
+    encode_frame(WsFrameType::ReadReceipt, receipt.encode_to_vec())
+}
+
 #[cfg(test)]
 mod tests {
     use prost::Message as ProstMessage;
 
-    use super::{decode_frame, group_info_update_frame};
-    use crate::proto::{GroupInfoUpdateNotification, WsFrameType};
+    use super::{decode_frame, group_info_update_frame, online_list_frame, read_receipt_frame};
+    use crate::proto::{GroupInfoUpdateNotification, OnlineUserList, ReadReceipt, WsFrameType};
 
     #[test]
     fn group_info_update_uses_type_eleven_and_keeps_recipient_state() {
@@ -138,5 +155,32 @@ mod tests {
         let event = GroupInfoUpdateNotification::decode(payload.as_slice()).unwrap();
         assert!(event.membership_active);
         assert_eq!(event.change_type, "announcement_updated");
+    }
+
+    #[test]
+    fn online_list_uses_presence_frame_type() {
+        let bytes = online_list_frame(OnlineUserList {
+            user_ids: vec![2, 3],
+        });
+        let (frame_type, payload) = decode_frame(&bytes).unwrap();
+        assert_eq!(frame_type, WsFrameType::OnlineList);
+        assert_eq!(
+            OnlineUserList::decode(payload.as_slice()).unwrap().user_ids,
+            vec![2, 3]
+        );
+    }
+
+    #[test]
+    fn read_receipt_keeps_monotonic_interval() {
+        let bytes = read_receipt_frame(ReadReceipt {
+            conversation_id: "conversation-id".to_string(),
+            reader_id: 2,
+            previous_read_seq: 4,
+            read_seq: 8,
+        });
+        let (frame_type, payload) = decode_frame(&bytes).unwrap();
+        assert_eq!(frame_type, WsFrameType::ReadReceipt);
+        let receipt = ReadReceipt::decode(payload.as_slice()).unwrap();
+        assert_eq!((receipt.previous_read_seq, receipt.read_seq), (4, 8));
     }
 }

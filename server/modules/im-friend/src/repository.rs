@@ -69,6 +69,23 @@ pub async fn are_friends(pool: &PgPool, user_id: i64, friend_user_id: i64) -> Ap
     .map_err(|_| AppError::internal_server_error("failed to verify friend relation"))
 }
 
+pub async fn list_friend_ids(pool: &PgPool, user_id: i64) -> AppResult<Vec<i64>> {
+    sqlx::query_scalar::<_, i64>(list_friend_ids_sql())
+        .bind(user_id)
+        .fetch_all(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to list friend ids"))
+}
+
+pub fn list_friend_ids_sql() -> &'static str {
+    r#"
+        SELECT friend_user_id
+        FROM friend_relations
+        WHERE user_id = $1
+        ORDER BY friend_user_id ASC
+        "#
+}
+
 pub async fn search_users(
     pool: &PgPool,
     current_user_id: i64,
@@ -499,7 +516,7 @@ mod tests {
         RELATION_FRIEND, RELATION_NONE, RELATION_PENDING_RECEIVED, RELATION_PENDING_SENT,
     };
 
-    use super::{relation_status_case, relation_status_priority};
+    use super::{list_friend_ids_sql, relation_status_case, relation_status_priority};
 
     #[test]
     fn relation_status_sql_has_expected_priority() {
@@ -520,5 +537,12 @@ mod tests {
             RELATION_PENDING_RECEIVED
         );
         assert_eq!(relation_status_priority(&[]), RELATION_NONE);
+    }
+
+    #[test]
+    fn friend_id_query_is_directional_and_stable() {
+        let sql = list_friend_ids_sql();
+        assert!(sql.contains("WHERE user_id = $1"));
+        assert!(sql.contains("ORDER BY friend_user_id ASC"));
     }
 }

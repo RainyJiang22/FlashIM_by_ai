@@ -11,12 +11,14 @@ class FriendAvatarTile extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.onTap,
+    this.isOnline = false,
   });
 
   final FriendUser user;
   final String? subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
+  final bool isOnline;
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +30,31 @@ class FriendAvatarTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           child: Row(
             children: [
-              AvatarWidget(
-                avatar: user.avatar,
-                seed: '${user.accountId}',
-                size: 52,
-                borderRadius: BorderRadius.circular(15),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  AvatarWidget(
+                    avatar: user.avatar,
+                    seed: '${user.accountId}',
+                    size: 52,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  if (isOnline)
+                    Positioned(
+                      key: const Key('friend-online-indicator'),
+                      right: -2,
+                      bottom: -2,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF07C160),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 14),
               Expanded(

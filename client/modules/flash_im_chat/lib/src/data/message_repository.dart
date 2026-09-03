@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import 'message.dart';
+import 'read_receipt.dart';
 
 typedef TransferProgress = void Function(int current, int total);
 
@@ -115,7 +116,15 @@ class FileUploadResult {
   final String fileType;
 }
 
-class DioMessageRepository implements MessageRepository {
+abstract interface class MessageReadStatusRepository {
+  Future<MessageReadStatus> getReadStatus({
+    required String conversationId,
+    required String messageId,
+  });
+}
+
+class DioMessageRepository
+    implements MessageRepository, MessageReadStatusRepository {
   DioMessageRepository({required Dio dio}) : _dio = dio;
 
   final Dio _dio;
@@ -154,6 +163,24 @@ class DioMessageRepository implements MessageRepository {
     }).toList();
     messages.sort(_compareMessagesAscending);
     return messages;
+  }
+
+  @override
+  Future<MessageReadStatus> getReadStatus({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    final response = await _dio.get<dynamic>(
+      '/conversations/$conversationId/messages/$messageId/read-status',
+    );
+    final status = MessageReadStatus.fromJson(_json(response.data));
+    return MessageReadStatus(
+      messageId: status.messageId,
+      conversationId: status.conversationId,
+      seq: status.seq,
+      readMembers: _resolveReadStatusAvatars(status.readMembers),
+      unreadMembers: _resolveReadStatusAvatars(status.unreadMembers),
+    );
   }
 
   @override
@@ -256,6 +283,20 @@ class DioMessageRepository implements MessageRepository {
       if (extra[key] != null) extra[key] = resolveMediaUrl('${extra[key]}');
     }
     payload['extra'] = extra;
+  }
+
+  List<ReadStatusMember> _resolveReadStatusAvatars(
+    List<ReadStatusMember> members,
+  ) {
+    return List<ReadStatusMember>.unmodifiable(
+      members.map(
+        (member) => ReadStatusMember(
+          userId: member.userId,
+          nickname: member.nickname,
+          avatar: resolveMediaUrl(member.avatar),
+        ),
+      ),
+    );
   }
 }
 

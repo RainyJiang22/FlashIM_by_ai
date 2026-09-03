@@ -115,6 +115,7 @@ class Message extends Equatable {
     required this.content,
     required this.status,
     required this.createdAt,
+    this.readCount = 0,
     this.senderAvatar,
     this.type = MessageType.text,
     this.extra,
@@ -133,6 +134,7 @@ class Message extends Equatable {
       extra: parseExtra(json['extra']),
       status: MessageStatus.sent,
       createdAt: _parseDateTime(json['created_at']),
+      readCount: _readInt(json['read_count']),
     );
   }
 
@@ -150,6 +152,7 @@ class Message extends Equatable {
       status: MessageStatus.sent,
       createdAt:
           DateTime.tryParse(message.createdAt)?.toLocal() ?? DateTime.now(),
+      readCount: message.readCount,
     );
   }
 
@@ -189,6 +192,7 @@ class Message extends Equatable {
   final Map<String, dynamic>? extra;
   final MessageStatus status;
   final DateTime createdAt;
+  final int readCount;
 
   bool get isImage => type == MessageType.image;
   bool get isVideo => type == MessageType.video;
@@ -216,6 +220,7 @@ class Message extends Equatable {
     Object? extra = _unset,
     MessageStatus? status,
     DateTime? createdAt,
+    int? readCount,
   }) {
     return Message(
       id: id ?? this.id,
@@ -231,6 +236,7 @@ class Message extends Equatable {
           : extra as Map<String, dynamic>?,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
+      readCount: readCount ?? this.readCount,
     );
   }
 
@@ -275,6 +281,7 @@ class Message extends Equatable {
     extra,
     status,
     createdAt,
+    readCount,
   ];
 }
 

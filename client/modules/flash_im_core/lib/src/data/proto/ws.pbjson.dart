@@ -31,6 +31,10 @@ const WsFrameType$json = {
     {'1': 'FRIEND_REMOVED', '2': 9},
     {'1': 'GROUP_JOIN_REQUEST', '2': 10},
     {'1': 'GROUP_INFO_UPDATE', '2': 11},
+    {'1': 'USER_ONLINE', '2': 12},
+    {'1': 'USER_OFFLINE', '2': 13},
+    {'1': 'ONLINE_LIST', '2': 14},
+    {'1': 'READ_RECEIPT', '2': 15},
   ],
 };
 
@@ -40,7 +44,8 @@ final $typed_data.Uint8List wsFrameTypeDescriptor = $convert.base64Decode(
     'VMVBADEhAKDENIQVRfTUVTU0FHRRAEEg8KC01FU1NBR0VfQUNLEAUSFwoTQ09OVkVSU0FUSU9O'
     'X1VQREFURRAGEhIKDkZSSUVORF9SRVFVRVNUEAcSEwoPRlJJRU5EX0FDQ0VQVEVEEAgSEgoORl'
     'JJRU5EX1JFTU9WRUQQCRIWChJHUk9VUF9KT0lOX1JFUVVFU1QQChIVChFHUk9VUF9JTkZPX1VQ'
-    'REFURRAL');
+    'REFURRALEg8KC1VTRVJfT05MSU5FEAwSEAoMVVNFUl9PRkZMSU5FEA0SDwoLT05MSU5FX0xJU1'
+    'QQDhIQCgxSRUFEX1JFQ0VJUFQQDw==');
 
 @$core.Deprecated('Use wsFrameDescriptor instead')
 const WsFrame$json = {

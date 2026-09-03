@@ -9,7 +9,7 @@ use im_group::broadcast::{
 };
 use im_message::{
     broadcast::MessageBroadcaster,
-    service::{ConversationUpdate as DomainConversationUpdate, MessagePayload},
+    service::{ConversationUpdate as DomainConversationUpdate, MessagePayload, ReadReceiptPayload},
 };
 use sqlx::PgPool;
 
@@ -17,10 +17,12 @@ use crate::{
     frame::{
         chat_message_frame, conversation_update_frame, friend_accepted_frame, friend_removed_frame,
         friend_request_frame, group_info_update_frame, group_join_request_frame,
+        read_receipt_frame, user_offline_frame, user_online_frame,
     },
     proto::{
         ChatMessage, ConversationUpdate, FriendAcceptedEvent, FriendRemovedEvent,
         FriendRequestEvent, FriendUser, GroupInfoUpdateNotification, GroupJoinRequestNotification,
+        ReadReceipt, UserPresenceEvent,
     },
     state::WsState,
 };
@@ -67,6 +69,23 @@ impl MessageBroadcaster for WsBroadcaster {
             self.state.send_to_user(user_id, frame);
         }
 
+        Ok(())
+    }
+
+    async fn broadcast_read_receipt(
+        &self,
+        receipt: ReadReceiptPayload,
+        member_ids: &[i64],
+    ) -> AppResult<()> {
+        let frame = read_receipt_frame(ReadReceipt {
+            conversation_id: receipt.conversation_id.to_string(),
+            reader_id: receipt.reader_id,
+            previous_read_seq: receipt.previous_read_seq,
+            read_seq: receipt.read_seq,
+        });
+        for member_id in member_ids {
+            self.state.send_to_user(*member_id, frame.clone());
+        }
         Ok(())
     }
 }
@@ -119,6 +138,27 @@ impl FriendBroadcaster for WsBroadcaster {
                 removed_at: event.removed_at.to_rfc3339(),
             }),
         );
+        Ok(())
+    }
+
+    async fn broadcast_friend_presence(
+        &self,
+        to_user_id: i64,
+        friend_user_id: i64,
+        is_friend: bool,
+    ) -> AppResult<()> {
+        let event = UserPresenceEvent {
+            user_id: friend_user_id,
+        };
+        if is_friend {
+            if self.state.is_online(friend_user_id) {
+                self.state
+                    .send_to_user(to_user_id, user_online_frame(event));
+            }
+        } else {
+            self.state
+                .send_to_user(to_user_id, user_offline_frame(event));
+        }
         Ok(())
     }
 }
@@ -254,6 +294,7 @@ async fn to_proto_message(pool: &PgPool, message: MessagePayload) -> AppResult<C
         sender_avatar: sender_profile
             .and_then(|profile| profile.avatar_url)
             .unwrap_or_default(),
+        read_count: message.read_count,
     })
 }
 
@@ -284,8 +325,16 @@ fn to_proto_friend_user(user: FriendUserPayload) -> FriendUser {
 
 #[cfg(test)]
 mod tests {
-    use super::sender_profile_sql;
-    use crate::proto::{ChatMessage, ConversationUpdate};
+    use super::{WsBroadcaster, sender_profile_sql};
+    use crate::{
+        frame::decode_frame,
+        proto::{ChatMessage, ConversationUpdate, UserPresenceEvent, WsFrameType},
+        state::WsState,
+    };
+    use im_friend::broadcast::FriendBroadcaster;
+    use prost::Message;
+    use sqlx::postgres::PgPoolOptions;
+    use uuid::Uuid;
 
     #[test]
     fn sender_profile_prefers_group_nickname() {
@@ -309,6 +358,7 @@ mod tests {
             created_at: "2026-04-03T00:00:00Z".to_string(),
             sender_name: "朱红".to_string(),
             sender_avatar: "identicon:2".to_string(),
+            read_count: 0,
         };
 
         assert_eq!(message.sender_name, "朱红");
@@ -329,6 +379,7 @@ mod tests {
             created_at: "2026-04-03T00:00:00Z".to_string(),
             sender_name: "朱红".to_string(),
             sender_avatar: "identicon:2".to_string(),
+            read_count: 0,
         };
 
         assert!(message.extra.contains("thumbnail_url"));
@@ -345,5 +396,44 @@ mod tests {
         };
 
         assert_eq!(update.total_unread, 9);
+    }
+
+    #[tokio::test]
+    async fn friend_visibility_sends_current_presence_to_recipient() {
+        let state = WsState::default();
+        let mut recipient = state.register(1, Uuid::new_v4()).receiver;
+        let _friend = state.register(2, Uuid::new_v4());
+        let pool = PgPoolOptions::new()
+            .connect_lazy("postgres://localhost/flash_im")
+            .expect("valid lazy pool");
+        let broadcaster = WsBroadcaster::new(state, pool);
+
+        broadcaster
+            .broadcast_friend_presence(1, 2, true)
+            .await
+            .expect("broadcast online friend");
+        let frame = recipient.recv().await.expect("online frame");
+        let (frame_type, payload) = decode_frame(&frame).expect("decode online frame");
+        assert_eq!(frame_type, WsFrameType::UserOnline);
+        assert_eq!(
+            UserPresenceEvent::decode(payload.as_slice())
+                .unwrap()
+                .user_id,
+            2
+        );
+
+        broadcaster
+            .broadcast_friend_presence(1, 2, false)
+            .await
+            .expect("broadcast hidden friend");
+        let frame = recipient.recv().await.expect("offline frame");
+        let (frame_type, payload) = decode_frame(&frame).expect("decode offline frame");
+        assert_eq!(frame_type, WsFrameType::UserOffline);
+        assert_eq!(
+            UserPresenceEvent::decode(payload.as_slice())
+                .unwrap()
+                .user_id,
+            2
+        );
     }
 }

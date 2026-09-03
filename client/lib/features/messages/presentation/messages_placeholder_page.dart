@@ -14,12 +14,14 @@ class MessagesPlaceholderPage extends StatelessWidget {
     required this.onConversationTap,
     required this.onCreateGroup,
     required this.onAddContact,
+    this.onlineUserIds = const <int>{},
   });
 
   final ConversationListCubit conversationListCubit;
   final ValueChanged<Conversation> onConversationTap;
   final VoidCallback onCreateGroup;
   final VoidCallback onAddContact;
+  final Set<int> onlineUserIds;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +56,7 @@ class MessagesPlaceholderPage extends StatelessWidget {
               child: ConversationListPage(
                 cubit: conversationListCubit,
                 onConversationTap: onConversationTap,
+                onlineUserIds: onlineUserIds,
               ),
             ),
           ],
@@ -116,7 +119,7 @@ class _MessagesHeader extends StatelessWidget {
                     },
                   ),
                 ],
-              )
+              ),
             ),
             const SizedBox(width: 12),
             MessageQuickActionsMenu(

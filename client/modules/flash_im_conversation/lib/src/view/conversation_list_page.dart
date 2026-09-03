@@ -9,15 +9,24 @@ import '../logic/conversation_list_state.dart';
 import 'conversation_tile.dart';
 
 class ConversationListPage extends StatelessWidget {
-  const ConversationListPage({super.key, this.cubit, this.onConversationTap});
+  const ConversationListPage({
+    super.key,
+    this.cubit,
+    this.onConversationTap,
+    this.onlineUserIds = const <int>{},
+  });
 
   final ConversationListCubit? cubit;
   final ValueChanged<Conversation>? onConversationTap;
+  final Set<int> onlineUserIds;
 
   @override
   Widget build(BuildContext context) {
     final providedCubit = cubit;
-    final child = ConversationListView(onConversationTap: onConversationTap);
+    final child = ConversationListView(
+      onConversationTap: onConversationTap,
+      onlineUserIds: onlineUserIds,
+    );
     if (providedCubit != null) {
       return BlocProvider<ConversationListCubit>.value(
         value: providedCubit,
@@ -35,9 +44,14 @@ class ConversationListPage extends StatelessWidget {
 }
 
 class ConversationListView extends StatelessWidget {
-  const ConversationListView({super.key, this.onConversationTap});
+  const ConversationListView({
+    super.key,
+    this.onConversationTap,
+    this.onlineUserIds = const <int>{},
+  });
 
   final ValueChanged<Conversation>? onConversationTap;
+  final Set<int> onlineUserIds;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +67,7 @@ class ConversationListView extends StatelessWidget {
           ConversationListLoaded() => _ConversationListBody(
             state: state,
             onConversationTap: onConversationTap,
+            onlineUserIds: onlineUserIds,
           ),
         };
       },
@@ -61,10 +76,15 @@ class ConversationListView extends StatelessWidget {
 }
 
 class _ConversationListBody extends StatelessWidget {
-  const _ConversationListBody({required this.state, this.onConversationTap});
+  const _ConversationListBody({
+    required this.state,
+    required this.onlineUserIds,
+    this.onConversationTap,
+  });
 
   final ConversationListLoaded state;
   final ValueChanged<Conversation>? onConversationTap;
+  final Set<int> onlineUserIds;
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +123,11 @@ class _ConversationListBody extends StatelessWidget {
               final conversation = conversations[index];
               return ConversationTile(
                 conversation: conversation,
+                isOnline:
+                    conversation.isPrivateChat &&
+                    onlineUserIds.contains(
+                      int.tryParse(conversation.peerUserId ?? ''),
+                    ),
                 onTap: () => onConversationTap?.call(conversation),
               );
             },

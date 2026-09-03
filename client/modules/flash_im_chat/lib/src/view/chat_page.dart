@@ -17,6 +17,7 @@ import 'bubble/message_bubble.dart';
 import 'chat_input.dart';
 import 'file_preview_page.dart';
 import 'image_preview_page.dart';
+import 'message_read_status_sheet.dart';
 import 'video_player_page.dart';
 
 class ChatPage extends StatelessWidget {
@@ -123,7 +124,7 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_displayConversation.displayName),
+        title: _ChatTitle(conversation: _displayConversation),
         actions: [
           if (widget.onDetailsTap != null && !_displayConversation.isDissolved)
             IconButton(
@@ -154,6 +155,7 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
                 child: _MessageList(
                   currentUserId: widget.currentUserId,
                   currentUserAvatar: widget.currentUserAvatar,
+                  isGroupChat: _displayConversation.isGroupChat,
                   onAcceptGroupInvitation: widget.onAcceptGroupInvitation,
                 ),
               ),
@@ -233,6 +235,46 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
   }
 }
 
+class _ChatTitle extends StatelessWidget {
+  const _ChatTitle({required this.conversation});
+
+  final Conversation conversation;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!conversation.isPrivateChat) {
+      return Text(conversation.displayName);
+    }
+    final peerId = int.tryParse(conversation.peerUserId ?? '');
+    return ValueListenableBuilder<Set<int>>(
+      valueListenable: context.read<WsClient>().onlineUserIds,
+      builder: (context, onlineUserIds, _) {
+        final isOnline = peerId != null && onlineUserIds.contains(peerId);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(conversation.displayName),
+            Text(
+              textAlign: TextAlign.center,
+              isOnline ? '在线' : '离线',
+              key: const Key('chat-peer-presence'),
+              style: TextStyle(
+                color: isOnline
+                    ? const Color(0xFF07C160)
+                    : FlashPalette.mutedInk,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _AnnouncementBanner extends StatelessWidget {
   const _AnnouncementBanner({required this.announcement, this.onTap});
 
@@ -295,10 +337,12 @@ class _AnnouncementBanner extends StatelessWidget {
 class _MessageList extends StatelessWidget {
   const _MessageList({
     required this.currentUserId,
+    required this.isGroupChat,
     this.currentUserAvatar,
     this.onAcceptGroupInvitation,
   });
   final String currentUserId;
+  final bool isGroupChat;
   final String? currentUserAvatar;
   final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
 
@@ -333,6 +377,7 @@ class _MessageList extends StatelessWidget {
             messages: messages,
             currentUserId: currentUserId,
             currentUserAvatar: currentUserAvatar,
+            isGroupChat: isGroupChat,
             fileDownloads: fileDownloads,
             uploadProgress: uploadProgress,
             onAcceptGroupInvitation: onAcceptGroupInvitation,
@@ -347,6 +392,7 @@ class _LoadedMessageList extends StatelessWidget {
     required this.messages,
     required this.currentUserId,
     required this.fileDownloads,
+    required this.isGroupChat,
     this.currentUserAvatar,
     this.uploadProgress,
     this.onAcceptGroupInvitation,
@@ -356,6 +402,7 @@ class _LoadedMessageList extends StatelessWidget {
   final String currentUserId;
   final String? currentUserAvatar;
   final Map<String, FileDownloadInfo> fileDownloads;
+  final bool isGroupChat;
   final double? uploadProgress;
   final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
 
@@ -388,6 +435,17 @@ class _LoadedMessageList extends StatelessWidget {
             onOpenVideo: () => _openVideo(context, message),
             onOpenFile: () => _openFile(context, message),
             onAcceptGroupInvitation: onAcceptGroupInvitation,
+            isGroupChat: isGroupChat,
+            onReadStatusTap:
+                isGroupChat &&
+                    message.seq > 0 &&
+                    message.senderId == currentUserId
+                ? () => showMessageReadStatusSheet(
+                    context: context,
+                    repository: context.read<MessageRepository>(),
+                    message: message,
+                  )
+                : null,
           );
         },
       ),

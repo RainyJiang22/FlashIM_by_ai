@@ -25,6 +25,7 @@ void main() {
               onSearchGroups: () => searchedGroups = true,
               onOpenGroupNotifications: () => openedGroupNotifications = true,
               groupNotificationCount: 2,
+              onlineUserIds: const {1},
             ),
           ),
         ),
@@ -41,6 +42,7 @@ void main() {
     expect(find.text('群通知'), findsOneWidget);
     expect(find.text('2'), findsOneWidget);
     expect(find.text('公众号'), findsNothing);
+    expect(find.byKey(const Key('friend-online-indicator')), findsOneWidget);
 
     final screenWidth = tester.getSize(find.byType(Scaffold).first).width;
     final titleCenter = tester.getCenter(find.text('通讯录'));

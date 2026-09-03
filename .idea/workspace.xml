@@ -4,35 +4,55 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(group):增加群聊扩展功能，可自定义群昵称">
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(group):增加群聊扩展功能,增加群管理员，可以@提醒别人">
+      <change afterPath="$PROJECT_DIR$/docs/features/im/presence/v0.0.1/analysis.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/deploy/db.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/deploy/env_check.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/deploy/flash.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/app/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/flash_im_chat.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/flash_im_chat.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message_repository.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_input.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_input.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_input_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_input_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/flash_im_group.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/flash_im_group.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_detail.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_detail.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/logic/group_detail_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/logic/group_detail_cubit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/widgets/group_member_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/widgets/group_member_tile.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_detail_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_detail_cubit_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_governance_pages_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_governance_pages_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_repository_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/test_fakes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/test_fakes.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_repository_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pb.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pb.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pbenum.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pbenum.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pbjson.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pbjson.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/widgets/friend_avatar_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/widgets/friend_avatar_tile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/test/contacts_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/test/contacts_page_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/models.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/models.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/repository.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-group/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-group/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/message.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/message.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proto/ws.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/ws.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/broadcast.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/broadcast.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/repository.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/broadcast.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/broadcast.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/models.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/models.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/routes.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/build.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/build.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/handler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/handler.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/state.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,35 +86,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;SHELLCHECK.PATH&quot;: &quot;/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck&quot;,
-    &quot;Shell Script.start_backend.sh.executor&quot;: &quot;Run&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;com.google.services.firebase.aqiPopupShown&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/group/v0.0.3&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "SHELLCHECK.PATH": "/Users/rainyjiang/Library/Application Support/Google/AndroidStudio2025.2.2/plugins/Shell Script/shellcheck",
+    "Shell Script.start_backend.sh.executor": "Run",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/scripts",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "show.migrate.to.gradle.popup": "false"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/scripts" />
+      <recent name="$PROJECT_DIR$/docs/features/im/presence/v0.0.1" />
       <recent name="$PROJECT_DIR$/docs/features/im/group/v0.0.3" />
       <recent name="$PROJECT_DIR$/docs/features/im/group/v0.0.1" />
       <recent name="$PROJECT_DIR$/docs/features/im/friend/v0.0.1" />
-      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/test" />
-      <recent name="$PROJECT_DIR$/docs/features/im/core/v0.0.4_media/client" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/docs/features/archiver" />
@@ -422,7 +442,15 @@
       <option name="project" value="LOCAL" />
       <updated>1788340187269</updated>
     </task>
-    <option name="localTasksCounter" value="37" />
+    <task id="LOCAL-00037" summary="feat(group):增加群聊扩展功能,增加群管理员，可以@提醒别人">
+      <option name="closed" value="true" />
+      <created>1788348909607</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1788348909607</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -439,7 +467,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="feat(playground):整合JWT用户认证与聊天室" />
     <MESSAGE value="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
     <MESSAGE value="feat:后端认证系统升级" />
     <MESSAGE value="feat:client启动页调整" />
@@ -464,7 +491,8 @@
     <MESSAGE value="feat(group):搜索加群与入群审批" />
     <MESSAGE value="fix(group):加入群通知" />
     <MESSAGE value="feat(group):增加群聊扩展功能，可自定义群昵称" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(group):增加群聊扩展功能，可自定义群昵称" />
+    <MESSAGE value="feat(group):增加群聊扩展功能,增加群管理员，可以@提醒别人" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(group):增加群聊扩展功能,增加群管理员，可以@提醒别人" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

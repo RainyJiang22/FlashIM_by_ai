@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../data/im_config.dart';
 import '../data/proto/friend.pb.dart';
 import '../data/proto/group.pb.dart';
 import '../data/proto/message.pb.dart';
+import '../data/proto/presence.pb.dart';
 import '../data/proto/ws.pb.dart';
 
 typedef TokenProvider = FutureOr<String?> Function();
@@ -49,6 +50,11 @@ class WsClient {
       StreamController<GroupJoinRequestNotification>.broadcast();
   final _groupInfoUpdateController =
       StreamController<GroupInfoUpdateNotification>.broadcast();
+  final _userPresenceController =
+      StreamController<UserPresenceEvent>.broadcast();
+  final _onlineListController = StreamController<OnlineUserList>.broadcast();
+  final _readReceiptController = StreamController<ReadReceipt>.broadcast();
+  final ValueNotifier<Set<int>> _onlineUserIds = ValueNotifier(const <int>{});
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _channelSubscription;
@@ -76,7 +82,14 @@ class WsClient {
       _groupJoinRequestController.stream;
   Stream<GroupInfoUpdateNotification> get groupInfoUpdateStream =>
       _groupInfoUpdateController.stream;
+  Stream<UserPresenceEvent> get userPresenceStream =>
+      _userPresenceController.stream;
+  Stream<OnlineUserList> get onlineListStream => _onlineListController.stream;
+  Stream<ReadReceipt> get readReceiptStream => _readReceiptController.stream;
+  ValueListenable<Set<int>> get onlineUserIds => _onlineUserIds;
   WsConnectionState get state => _state;
+
+  bool isUserOnline(int userId) => _onlineUserIds.value.contains(userId);
 
   Future<void> connect() async {
     if (_disposed ||
@@ -148,11 +161,28 @@ class WsClient {
     );
   }
 
+  bool sendReadReceipt({required String conversationId, required int readSeq}) {
+    if (_state != WsConnectionState.authenticated || readSeq < 1) {
+      return false;
+    }
+    sendFrame(
+      WsFrame(
+        type: WsFrameType.READ_RECEIPT,
+        payload: ReadReceipt(
+          conversationId: conversationId,
+          readSeq: readSeq,
+        ).writeToBuffer(),
+      ),
+    );
+    return true;
+  }
+
   Future<void> disconnect() async {
     _manualDisconnect = true;
     _reconnectTimer?.cancel();
     await _closeChannel();
     _stopHeartbeat();
+    _replaceOnlineUsers(const <int>[]);
     _emitState(WsConnectionState.disconnected);
   }
 
@@ -172,6 +202,10 @@ class WsClient {
     await _friendRemovedController.close();
     await _groupJoinRequestController.close();
     await _groupInfoUpdateController.close();
+    await _userPresenceController.close();
+    await _onlineListController.close();
+    await _readReceiptController.close();
+    _onlineUserIds.dispose();
   }
 
   void _handleMessage(dynamic message) {
@@ -209,9 +243,11 @@ class WsClient {
         );
         _frameController.add(frame);
       case WsFrameType.FRIEND_REMOVED:
-        _friendRemovedController.add(
-          FriendRemovedEvent.fromBuffer(frame.payload),
-        );
+        final event = FriendRemovedEvent.fromBuffer(frame.payload);
+        _friendRemovedController.add(event);
+        if (event.hasFriend()) {
+          _setUserOnline(event.friend.accountId.toInt(), false);
+        }
         _frameController.add(frame);
       case WsFrameType.GROUP_JOIN_REQUEST:
         _groupJoinRequestController.add(
@@ -222,6 +258,24 @@ class WsClient {
         _groupInfoUpdateController.add(
           GroupInfoUpdateNotification.fromBuffer(frame.payload),
         );
+        _frameController.add(frame);
+      case WsFrameType.USER_ONLINE:
+        final event = UserPresenceEvent.fromBuffer(frame.payload);
+        _userPresenceController.add(event);
+        _setUserOnline(event.userId.toInt(), true);
+        _frameController.add(frame);
+      case WsFrameType.USER_OFFLINE:
+        final event = UserPresenceEvent.fromBuffer(frame.payload);
+        _userPresenceController.add(event);
+        _setUserOnline(event.userId.toInt(), false);
+        _frameController.add(frame);
+      case WsFrameType.ONLINE_LIST:
+        final list = OnlineUserList.fromBuffer(frame.payload);
+        _onlineListController.add(list);
+        _replaceOnlineUsers(list.userIds.map((userId) => userId.toInt()));
+        _frameController.add(frame);
+      case WsFrameType.READ_RECEIPT:
+        _readReceiptController.add(ReadReceipt.fromBuffer(frame.payload));
         _frameController.add(frame);
       case WsFrameType.PING:
       case WsFrameType.AUTH:
@@ -260,6 +314,7 @@ class WsClient {
 
   void _handleDisconnected({required bool allowReconnect}) {
     _stopHeartbeat();
+    _replaceOnlineUsers(const <int>[]);
     unawaited(_closeChannel());
     _emitState(WsConnectionState.disconnected);
 
@@ -296,5 +351,17 @@ class WsClient {
     }
     _state = state;
     _stateController.add(state);
+  }
+
+  void _replaceOnlineUsers(Iterable<int> userIds) {
+    final next = Set<int>.unmodifiable(userIds);
+    if (setEquals(_onlineUserIds.value, next)) return;
+    _onlineUserIds.value = next;
+  }
+
+  void _setUserOnline(int userId, bool isOnline) {
+    final next = Set<int>.of(_onlineUserIds.value);
+    final changed = isOnline ? next.add(userId) : next.remove(userId);
+    if (changed) _onlineUserIds.value = Set<int>.unmodifiable(next);
   }
 }

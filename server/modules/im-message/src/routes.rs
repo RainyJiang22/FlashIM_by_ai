@@ -31,8 +31,26 @@ pub async fn list_messages(
     Ok(utf8_json(Json(messages)))
 }
 
+pub async fn get_message_read_status(
+    State(context): State<SharedContext>,
+    headers: HeaderMap,
+    Path((conversation_id, message_id)): Path<(Uuid, Uuid)>,
+) -> AppResult<impl IntoResponse> {
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let service = MessageService::new(Arc::new(NoopBroadcaster));
+    let status = service
+        .get_read_status(&context, user_id, conversation_id, message_id)
+        .await?;
+    Ok(utf8_json(Json(status)))
+}
+
 pub fn router() -> Router<SharedContext> {
-    Router::new().route("/conversations/{id}/messages", get(list_messages))
+    Router::new()
+        .route("/conversations/{id}/messages", get(list_messages))
+        .route(
+            "/conversations/{conversation_id}/messages/{message_id}/read-status",
+            get(get_message_read_status),
+        )
 }
 
 #[allow(dead_code)]

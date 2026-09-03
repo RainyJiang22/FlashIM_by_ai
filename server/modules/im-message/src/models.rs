@@ -44,6 +44,7 @@ pub struct MessageWithSenderRow {
     pub extra: Option<serde_json::Value>,
     pub status: i16,
     pub created_at: DateTime<Utc>,
+    pub read_count: i32,
 }
 
 #[derive(Debug, Serialize)]
@@ -59,6 +60,7 @@ pub struct MessageWithSender {
     pub extra: Option<serde_json::Value>,
     pub status: i16,
     pub created_at: DateTime<Utc>,
+    pub read_count: i32,
 }
 
 impl From<MessageWithSenderRow> for MessageWithSender {
@@ -75,6 +77,23 @@ impl From<MessageWithSenderRow> for MessageWithSender {
             extra: row.extra,
             status: row.status,
             created_at: row.created_at,
+            read_count: row.read_count,
         }
     }
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct ReadStatusMember {
+    pub user_id: String,
+    pub nickname: String,
+    pub avatar: String,
+}
+
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+pub struct MessageReadStatus {
+    pub message_id: Uuid,
+    pub conversation_id: Uuid,
+    pub seq: i64,
+    pub read_members: Vec<ReadStatusMember>,
+    pub unread_members: Vec<ReadStatusMember>,
 }

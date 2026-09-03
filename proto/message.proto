@@ -22,6 +22,7 @@ message ChatMessage {
   string created_at = 9;
   string sender_name = 10;
   string sender_avatar = 11;
+  int32 read_count = 12;
 }
 
 message SendMessageRequest {
@@ -43,4 +44,11 @@ message ConversationUpdate {
   string last_message_at = 3;
   int32 unread_count = 4;
   int32 total_unread = 5;
+}
+
+message ReadReceipt {
+  string conversation_id = 1;
+  int64 reader_id = 2;
+  int64 previous_read_seq = 3;
+  int64 read_seq = 4;
 }

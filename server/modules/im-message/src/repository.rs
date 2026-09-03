@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use chrono::{DateTime, Utc};
 use flash_core::{AppError, AppResult};
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
@@ -10,6 +11,33 @@ pub struct PersistedMessage {
     pub row: MessageRow,
     pub member_ids: Vec<i64>,
     pub unread_counts: Vec<(i64, i32)>,
+}
+
+pub struct ReadAdvance {
+    pub conversation_id: Uuid,
+    pub reader_id: i64,
+    pub previous_read_seq: i64,
+    pub read_seq: i64,
+    pub unread_count: i32,
+    pub member_ids: Vec<i64>,
+    pub last_message_preview: String,
+    pub last_message_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Clone, Debug, sqlx::FromRow)]
+pub struct ReadStatusMessageRow {
+    pub id: Uuid,
+    pub conversation_id: Uuid,
+    pub sender_id: i64,
+    pub seq: i64,
+}
+
+#[derive(Clone, Debug, sqlx::FromRow)]
+pub struct ReadStatusMemberRow {
+    pub user_id: i64,
+    pub nickname: Option<String>,
+    pub avatar: Option<String>,
+    pub last_read_seq: i64,
 }
 
 #[derive(Clone, Debug, sqlx::FromRow)]
@@ -248,7 +276,15 @@ pub fn find_before_sql() -> &'static str {
         m.content,
         m.extra,
         m.status,
-        m.created_at
+        m.created_at,
+        (
+            SELECT COUNT(*)::INT
+            FROM conversation_members reader
+            WHERE reader.conversation_id = m.conversation_id
+              AND reader.user_id <> m.sender_id
+              AND reader.is_deleted = FALSE
+              AND reader.last_read_seq >= m.seq
+        ) AS read_count
     FROM messages m
     LEFT JOIN conversation_members member
       ON member.conversation_id = m.conversation_id
@@ -259,6 +295,166 @@ pub fn find_before_sql() -> &'static str {
     ORDER BY m.seq DESC
     LIMIT $3
     "#
+}
+
+pub async fn advance_read_seq(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    reader_id: i64,
+    requested_read_seq: i64,
+) -> AppResult<ReadAdvance> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to start read transaction"))?;
+
+    let state = sqlx::query_as::<_, (i64, i64)>(
+        r#"
+        SELECT member.last_read_seq, COALESCE(seq.current_seq, 0)
+        FROM conversation_members member
+        JOIN conversations conversation
+          ON conversation.id = member.conversation_id
+         AND conversation.is_dissolved = FALSE
+        LEFT JOIN conversation_seq seq ON seq.conversation_id = conversation.id
+        WHERE member.conversation_id = $1
+          AND member.user_id = $2
+          AND member.is_deleted = FALSE
+        FOR UPDATE OF member
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(reader_id)
+    .fetch_optional(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to lock read position"))?
+    .ok_or(AppError::not_found("conversation not found"))?;
+
+    let (previous_read_seq, current_seq) = state;
+    if requested_read_seq > current_seq {
+        return Err(AppError::bad_request("read seq exceeds conversation seq"));
+    }
+    let read_seq = previous_read_seq.max(requested_read_seq);
+    let unread_count = sqlx::query_scalar::<_, i32>(
+        r#"
+        UPDATE conversation_members
+        SET
+            last_read_seq = $3,
+            unread_count = (
+                SELECT COUNT(*)::INT
+                FROM messages message
+                WHERE message.conversation_id = $1
+                  AND message.seq > $3
+                  AND message.sender_id <> $2
+            )
+        WHERE conversation_id = $1
+          AND user_id = $2
+          AND is_deleted = FALSE
+        RETURNING unread_count
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(reader_id)
+    .bind(read_seq)
+    .fetch_one(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to advance read position"))?;
+
+    let member_ids = sqlx::query_scalar::<_, i64>(
+        r#"
+        SELECT user_id
+        FROM conversation_members
+        WHERE conversation_id = $1
+          AND is_deleted = FALSE
+        ORDER BY joined_at ASC, user_id ASC
+        "#,
+    )
+    .bind(conversation_id)
+    .fetch_all(&mut *transaction)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to load receipt recipients"))?;
+    let (last_message_preview, last_message_at) =
+        sqlx::query_as::<_, (Option<String>, Option<DateTime<Utc>>)>(
+            r#"
+            SELECT last_message_preview, last_message_at
+            FROM conversations
+            WHERE id = $1
+            "#,
+        )
+        .bind(conversation_id)
+        .fetch_one(&mut *transaction)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to load conversation preview"))?;
+
+    transaction
+        .commit()
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to commit read transaction"))?;
+
+    Ok(ReadAdvance {
+        conversation_id,
+        reader_id,
+        previous_read_seq,
+        read_seq,
+        unread_count,
+        member_ids,
+        last_message_preview: last_message_preview.unwrap_or_default(),
+        last_message_at,
+    })
+}
+
+pub async fn find_message_for_read_status(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    message_id: Uuid,
+    requester_id: i64,
+) -> AppResult<Option<ReadStatusMessageRow>> {
+    sqlx::query_as::<_, ReadStatusMessageRow>(
+        r#"
+        SELECT message.id, message.conversation_id, message.sender_id, message.seq
+        FROM messages message
+        JOIN conversations conversation
+          ON conversation.id = message.conversation_id
+        JOIN conversation_members requester
+          ON requester.conversation_id = conversation.id
+         AND requester.user_id = $3
+         AND requester.is_deleted = FALSE
+        WHERE message.conversation_id = $1
+          AND message.id = $2
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(message_id)
+    .bind(requester_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to load message read status"))
+}
+
+pub async fn list_read_status_members(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    sender_id: i64,
+) -> AppResult<Vec<ReadStatusMemberRow>> {
+    sqlx::query_as::<_, ReadStatusMemberRow>(
+        r#"
+        SELECT
+            member.user_id,
+            COALESCE(NULLIF(BTRIM(member.group_nickname), ''), profile.nickname) AS nickname,
+            profile.avatar_url AS avatar,
+            member.last_read_seq
+        FROM conversation_members member
+        LEFT JOIN user_profiles profile ON profile.account_id = member.user_id
+        WHERE member.conversation_id = $1
+          AND member.user_id <> $2
+          AND member.is_deleted = FALSE
+        ORDER BY member.joined_at ASC, member.user_id ASC
+        "#,
+    )
+    .bind(conversation_id)
+    .bind(sender_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|_| AppError::internal_server_error("failed to load read status members"))
 }
 
 pub fn insert_message_sql() -> &'static str {
@@ -310,6 +506,8 @@ mod tests {
         assert!(sql.contains("LIMIT $3"));
         assert!(sql.contains("member.group_nickname"));
         assert!(sql.contains("COALESCE"));
+        assert!(sql.contains("reader.last_read_seq >= m.seq"));
+        assert!(sql.contains("reader.user_id <> m.sender_id"));
     }
 
     #[test]

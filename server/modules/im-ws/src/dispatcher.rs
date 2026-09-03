@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::{
     broadcaster::WsBroadcaster,
     frame::{message_ack_frame, pong_frame},
-    proto::{MessageAck, SendMessageRequest, WsFrameType},
+    proto::{MessageAck, ReadReceipt, SendMessageRequest, WsFrameType},
 };
 
 pub enum DispatchOutcome {
@@ -26,6 +26,10 @@ pub async fn dispatch_frame(
         WsFrameType::ChatMessage => handle_chat_message(context, account_id, service, payload)
             .await
             .map(DispatchOutcome::Reply),
+        WsFrameType::ReadReceipt => {
+            handle_read_receipt(context, account_id, service, payload).await?;
+            Ok(DispatchOutcome::Ignore)
+        }
         WsFrameType::Pong
         | WsFrameType::Auth
         | WsFrameType::AuthResult
@@ -35,8 +39,27 @@ pub async fn dispatch_frame(
         | WsFrameType::FriendAccepted
         | WsFrameType::FriendRemoved
         | WsFrameType::GroupJoinRequest
-        | WsFrameType::GroupInfoUpdate => Ok(DispatchOutcome::Ignore),
+        | WsFrameType::GroupInfoUpdate
+        | WsFrameType::UserOnline
+        | WsFrameType::UserOffline
+        | WsFrameType::OnlineList => Ok(DispatchOutcome::Ignore),
     }
+}
+
+async fn handle_read_receipt(
+    context: &SharedContext,
+    account_id: i64,
+    service: &MessageService<WsBroadcaster>,
+    payload: Vec<u8>,
+) -> AppResult<()> {
+    let request = ReadReceipt::decode(payload.as_slice())
+        .map_err(|_| AppError::bad_request("invalid read receipt payload"))?;
+    let conversation_id = Uuid::parse_str(request.conversation_id.trim())
+        .map_err(|_| AppError::bad_request("invalid conversation id"))?;
+    service
+        .mark_read(context, account_id, conversation_id, request.read_seq)
+        .await?;
+    Ok(())
 }
 
 async fn handle_chat_message(

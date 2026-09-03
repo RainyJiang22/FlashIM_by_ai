@@ -61,6 +61,7 @@ void main() {
       'avatar': 'grid:identicon:1,identicon:2',
       'owner_id': 1,
       'member_avatars': ['identicon:1', '', 'identicon:2'],
+      'member_count': 12,
       'announcement': '周五发布新版本',
       'unread_count': 0,
       'created_at': '2026-08-16T08:00:00Z',
@@ -71,6 +72,7 @@ void main() {
     expect(conversation.avatar, 'grid:identicon:1,identicon:2');
     expect(conversation.groupAvatar, 'grid:identicon:1,identicon:2');
     expect(conversation.memberAvatars, ['identicon:1', 'identicon:2']);
+    expect(conversation.memberCount, 12);
     expect(conversation.announcement, '周五发布新版本');
     expect(
       () => conversation.memberAvatars.add('identicon:3'),

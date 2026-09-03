@@ -10,6 +10,7 @@ pub struct ConversationListRow {
     pub avatar: Option<String>,
     pub owner_id: Option<i64>,
     pub member_avatars: Vec<String>,
+    pub member_count: i32,
     pub peer_user_id: Option<i64>,
     pub peer_nickname: Option<String>,
     pub peer_avatar: Option<String>,
@@ -29,6 +30,7 @@ pub struct ConversationListItem {
     pub avatar: Option<String>,
     pub owner_id: Option<String>,
     pub member_avatars: Vec<String>,
+    pub member_count: i32,
     pub peer_user_id: Option<String>,
     pub peer_nickname: Option<String>,
     pub peer_avatar: Option<String>,
@@ -49,6 +51,7 @@ impl From<ConversationListRow> for ConversationListItem {
             avatar: row.avatar,
             owner_id: row.owner_id.map(|id| id.to_string()),
             member_avatars: row.member_avatars,
+            member_count: row.member_count,
             peer_user_id: row.peer_user_id.map(|id| id.to_string()),
             peer_nickname: row.peer_nickname,
             peer_avatar: row.peer_avatar,
@@ -92,6 +95,7 @@ mod tests {
             avatar: Some("grid:identicon:10001".to_string()),
             owner_id: Some(10001),
             member_avatars: vec!["identicon:10001".to_string()],
+            member_count: 1,
             peer_user_id: None,
             peer_nickname: None,
             peer_avatar: None,
@@ -107,6 +111,7 @@ mod tests {
         assert_eq!(item.owner_id.as_deref(), Some("10001"));
         assert_eq!(item.avatar.as_deref(), Some("grid:identicon:10001"));
         assert_eq!(item.member_avatars, ["identicon:10001"]);
+        assert_eq!(item.member_count, 1);
         assert_eq!(item.announcement, "欢迎加入");
         assert!(item.peer_user_id.is_none());
     }

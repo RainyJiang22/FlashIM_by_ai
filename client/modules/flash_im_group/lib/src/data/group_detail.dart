@@ -149,6 +149,7 @@ class GroupDetail extends Equatable {
         name: name,
         avatar: avatar,
         announcement: announcement,
+        memberCount: memberCount,
         memberAvatars: members.map((member) => member.avatar).take(9).toList(),
       );
 

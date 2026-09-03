@@ -4,55 +4,16 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(group):增加群聊扩展功能,增加群管理员，可以@提醒别人">
-      <change afterPath="$PROJECT_DIR$/docs/features/im/presence/v0.0.1/analysis.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/deploy/db.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/deploy/env_check.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/deploy/flash.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/flash_im_chat.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/flash_im_chat.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/data/message_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/logic/chat_cubit.dart" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(presence):添加聊天在线与已读未读状态回执">
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/chat_cubit_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_repository_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_repository_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/flash_im_core.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pb.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pb.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pbenum.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pbenum.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pbjson.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/message.pbjson.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbenum.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/data/proto/ws.pbjson.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/lib/src/logic/ws_client.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_core/test/ws_client_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/widgets/friend_avatar_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/widgets/friend_avatar_tile.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/test/contacts_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/test/contacts_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proto/message.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/message.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/proto/ws.proto" beforeDir="false" afterPath="$PROJECT_DIR$/proto/ws.proto" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/broadcast.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/broadcast.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/repository.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/broadcast.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/broadcast.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/models.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/models.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/build.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/build.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/dispatcher.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/frame.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/handler.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/handler.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/state.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/state.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_detail.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_detail.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_detail_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_detail_cubit_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/models.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/models.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/repository.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -450,7 +411,15 @@
       <option name="project" value="LOCAL" />
       <updated>1788348909607</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="feat(presence):添加聊天在线与已读未读状态回执">
+      <option name="closed" value="true" />
+      <created>1788427003650</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1788427003650</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -467,7 +436,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="feat: 拆分服务端认证登录类型并为前端补齐密码登录与平滑切换动画" />
     <MESSAGE value="feat:后端认证系统升级" />
     <MESSAGE value="feat:client启动页调整" />
     <MESSAGE value="feat:模块化隔离，提取flash_auth,app_starter" />
@@ -492,7 +460,8 @@
     <MESSAGE value="fix(group):加入群通知" />
     <MESSAGE value="feat(group):增加群聊扩展功能，可自定义群昵称" />
     <MESSAGE value="feat(group):增加群聊扩展功能,增加群管理员，可以@提醒别人" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(group):增加群聊扩展功能,增加群管理员，可以@提醒别人" />
+    <MESSAGE value="feat(presence):添加聊天在线与已读未读状态回执" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(presence):添加聊天在线与已读未读状态回执" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

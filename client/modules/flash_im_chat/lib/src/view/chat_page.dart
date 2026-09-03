@@ -156,6 +156,7 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
                   currentUserId: widget.currentUserId,
                   currentUserAvatar: widget.currentUserAvatar,
                   isGroupChat: _displayConversation.isGroupChat,
+                  groupMemberCount: _displayConversation.memberCount,
                   onAcceptGroupInvitation: widget.onAcceptGroupInvitation,
                 ),
               ),
@@ -228,6 +229,7 @@ class _ChatScaffoldState extends State<_ChatScaffold> {
         name: update.name,
         avatar: update.avatar,
         ownerId: update.ownerId.toString(),
+        memberCount: update.memberCount,
         announcement: update.announcement,
         isDissolved: update.isDissolved,
       );
@@ -338,11 +340,13 @@ class _MessageList extends StatelessWidget {
   const _MessageList({
     required this.currentUserId,
     required this.isGroupChat,
+    required this.groupMemberCount,
     this.currentUserAvatar,
     this.onAcceptGroupInvitation,
   });
   final String currentUserId;
   final bool isGroupChat;
+  final int groupMemberCount;
   final String? currentUserAvatar;
   final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
 
@@ -378,6 +382,7 @@ class _MessageList extends StatelessWidget {
             currentUserId: currentUserId,
             currentUserAvatar: currentUserAvatar,
             isGroupChat: isGroupChat,
+            groupMemberCount: groupMemberCount,
             fileDownloads: fileDownloads,
             uploadProgress: uploadProgress,
             onAcceptGroupInvitation: onAcceptGroupInvitation,
@@ -393,6 +398,7 @@ class _LoadedMessageList extends StatelessWidget {
     required this.currentUserId,
     required this.fileDownloads,
     required this.isGroupChat,
+    required this.groupMemberCount,
     this.currentUserAvatar,
     this.uploadProgress,
     this.onAcceptGroupInvitation,
@@ -403,6 +409,7 @@ class _LoadedMessageList extends StatelessWidget {
   final String? currentUserAvatar;
   final Map<String, FileDownloadInfo> fileDownloads;
   final bool isGroupChat;
+  final int groupMemberCount;
   final double? uploadProgress;
   final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
 
@@ -436,6 +443,7 @@ class _LoadedMessageList extends StatelessWidget {
             onOpenFile: () => _openFile(context, message),
             onAcceptGroupInvitation: onAcceptGroupInvitation,
             isGroupChat: isGroupChat,
+            groupMemberCount: groupMemberCount,
             onReadStatusTap:
                 isGroupChat &&
                     message.seq > 0 &&

@@ -14,6 +14,13 @@ pub fn list_conversations_sql() -> &'static str {
         c.avatar,
         c.owner_id,
         group_members.member_avatars,
+        (
+            SELECT COUNT(*)::INT
+            FROM conversation_members count_member
+            WHERE count_member.conversation_id = c.id
+              AND count_member.is_deleted = FALSE
+              AND c.type = 1
+        ) AS member_count,
         peer.account_id AS peer_user_id,
         peer.nickname AS peer_nickname,
         peer.avatar_url AS peer_avatar,
@@ -71,6 +78,13 @@ pub fn get_conversation_by_id_sql() -> &'static str {
         c.avatar,
         c.owner_id,
         group_members.member_avatars,
+        (
+            SELECT COUNT(*)::INT
+            FROM conversation_members count_member
+            WHERE count_member.conversation_id = c.id
+              AND count_member.is_deleted = FALSE
+              AND c.type = 1
+        ) AS member_count,
         peer.account_id AS peer_user_id,
         peer.nickname AS peer_nickname,
         peer.avatar_url AS peer_avatar,
@@ -571,6 +585,8 @@ mod tests {
         assert!(sql.contains("$4::SMALLINT IS NULL OR c.type = $4"));
         assert!(sql.contains("c.owner_id"));
         assert!(sql.contains("ARRAY_AGG(group_member.avatar_url"));
+        assert!(sql.contains("COUNT(*)::INT"));
+        assert!(sql.contains("AS member_count"));
         assert!(sql.contains("LIMIT 9"));
         assert!(sql.contains("LIMIT $2 OFFSET $3"));
     }
@@ -599,6 +615,7 @@ mod tests {
         assert!(sql.contains("peer.avatar_url AS peer_avatar"));
         assert!(sql.contains("c.owner_id"));
         assert!(sql.contains("member_avatars"));
+        assert!(sql.contains("AS member_count"));
         assert!(sql.contains("AND c.id = $2"));
         assert!(sql.contains("AND me.is_deleted = FALSE"));
         assert!(sql.contains("c.is_dissolved"));

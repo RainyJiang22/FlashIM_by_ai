@@ -11,6 +11,7 @@ class Conversation extends Equatable {
     this.avatar,
     this.ownerId,
     List<String> memberAvatars = const <String>[],
+    this.memberCount = 0,
     this.peerUserId,
     this.peerNickname,
     this.peerAvatar,
@@ -34,6 +35,7 @@ class Conversation extends Equatable {
           : encodeGroupAvatar(memberAvatars),
       ownerId: json['owner_id']?.toString(),
       memberAvatars: memberAvatars,
+      memberCount: (json['member_count'] as num?)?.toInt() ?? 0,
       peerUserId: json['peer_user_id']?.toString(),
       peerNickname: json['peer_nickname'] as String?,
       peerAvatar: json['peer_avatar'] as String?,
@@ -68,6 +70,7 @@ class Conversation extends Equatable {
   final String? avatar;
   final String? ownerId;
   final List<String> memberAvatars;
+  final int memberCount;
   final String? peerUserId;
   final String? peerNickname;
   final String? peerAvatar;
@@ -84,6 +87,7 @@ class Conversation extends Equatable {
     String? avatar,
     String? ownerId,
     List<String>? memberAvatars,
+    int? memberCount,
     int? unreadCount,
     DateTime? lastMessageAt,
     String? lastMessagePreview,
@@ -101,6 +105,7 @@ class Conversation extends Equatable {
       avatar: avatar ?? this.avatar,
       ownerId: ownerId ?? this.ownerId,
       memberAvatars: memberAvatars ?? this.memberAvatars,
+      memberCount: memberCount ?? this.memberCount,
       peerUserId: peerUserId,
       peerNickname: peerNickname ?? this.peerNickname,
       peerAvatar: peerAvatar ?? this.peerAvatar,
@@ -119,6 +124,7 @@ class Conversation extends Equatable {
     avatar,
     ownerId,
     memberAvatars,
+    memberCount,
     peerUserId,
     peerNickname,
     peerAvatar,

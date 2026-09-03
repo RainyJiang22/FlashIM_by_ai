@@ -74,7 +74,7 @@ void main() {
     );
   });
 
-  testWidgets('mine group message shows clickable reader count', (
+  testWidgets('mine group message shows clickable unread progress circle', (
     tester,
   ) async {
     var tapped = false;
@@ -95,15 +95,58 @@ void main() {
             ),
             isMine: true,
             isGroupChat: true,
+            groupMemberCount: 5,
             onReadStatusTap: () => tapped = true,
           ),
         ),
       ),
     );
 
-    expect(find.text('2 人已读'), findsOneWidget);
+    expect(find.text('2 人已读'), findsNothing);
+    expect(find.text('2'), findsNothing);
+    final progress = tester.widget<CircularProgressIndicator>(
+      find.byKey(const Key('group-message-read-progress')),
+    );
+    expect(progress.value, 0.5);
+    expect(
+      tester.getSize(find.byKey(const Key('group-message-read-progress'))),
+      const Size.square(14),
+    );
     await tester.tap(find.byKey(const Key('message-read-status')));
     expect(tapped, isTrue);
+  });
+
+  testWidgets('mine group message completes progress when everyone has read', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: MessageBubble(
+            message: Message(
+              id: 'all-read-group',
+              conversationId: 'g1',
+              senderId: '1',
+              senderName: '我',
+              seq: 3,
+              content: 'hello',
+              status: MessageStatus.sent,
+              createdAt: DateTime(2026, 9, 3),
+              readCount: 2,
+            ),
+            isMine: true,
+            isGroupChat: true,
+            groupMemberCount: 3,
+          ),
+        ),
+      ),
+    );
+
+    final progress = tester.widget<CircularProgressIndicator>(
+      find.byKey(const Key('group-message-read-progress')),
+    );
+    expect(progress.value, 1);
+    expect(find.byIcon(Icons.check), findsNothing);
   });
 
   testWidgets('mine message renders avatar on the right', (tester) async {

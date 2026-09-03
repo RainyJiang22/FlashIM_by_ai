@@ -22,6 +22,7 @@ class MessageBubble extends StatelessWidget {
     this.uploadProgress,
     this.onAcceptGroupInvitation,
     this.isGroupChat = false,
+    this.groupMemberCount = 0,
     this.onReadStatusTap,
   });
 
@@ -35,6 +36,7 @@ class MessageBubble extends StatelessWidget {
   final double? uploadProgress;
   final Future<void> Function(String invitationId)? onAcceptGroupInvitation;
   final bool isGroupChat;
+  final int groupMemberCount;
   final VoidCallback? onReadStatusTap;
 
   @override
@@ -134,32 +136,14 @@ class MessageBubble extends StatelessWidget {
                         status: message.status,
                         showReadStatus: !isGroupChat,
                         isRead: message.readCount > 0,
+                        groupReadCount: isGroupChat ? message.readCount : null,
+                        groupMemberCount: groupMemberCount,
+                        onGroupReadStatusTap: onReadStatusTap,
                       ),
                     if (isMine) const SizedBox(width: 6),
                     Flexible(child: content),
                   ],
                 ),
-                if (isMine &&
-                    isGroupChat &&
-                    message.status == MessageStatus.sent) ...[
-                  const SizedBox(height: 4),
-                  GestureDetector(
-                    key: const Key('message-read-status'),
-                    onTap: isGroupChat ? onReadStatusTap : null,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Text(
-                        '${message.readCount} 人已读',
-                        style: const TextStyle(
-                          color: FlashPalette.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -209,11 +193,17 @@ class _MessageStatusIcon extends StatelessWidget {
     required this.status,
     required this.showReadStatus,
     required this.isRead,
+    required this.groupReadCount,
+    required this.groupMemberCount,
+    required this.onGroupReadStatusTap,
   });
 
   final MessageStatus status;
   final bool showReadStatus;
   final bool isRead;
+  final int? groupReadCount;
+  final int groupMemberCount;
+  final VoidCallback? onGroupReadStatusTap;
 
   @override
   Widget build(BuildContext context) => switch (status) {
@@ -227,7 +217,13 @@ class _MessageStatusIcon extends StatelessWidget {
       size: 14,
     ),
     MessageStatus.sent =>
-      showReadStatus
+      groupReadCount != null
+          ? _GroupReadProgressIndicator(
+              readCount: groupReadCount!,
+              memberCount: groupMemberCount,
+              onTap: onGroupReadStatusTap,
+            )
+          : showReadStatus
           ? Semantics(
               label: isRead ? '已读' : '未读',
               child: Container(
@@ -255,4 +251,53 @@ class _MessageStatusIcon extends StatelessWidget {
             )
           : const SizedBox.shrink(),
   };
+}
+
+class _GroupReadProgressIndicator extends StatelessWidget {
+  const _GroupReadProgressIndicator({
+    required this.readCount,
+    required this.memberCount,
+    this.onTap,
+  });
+
+  final int readCount;
+  final int memberCount;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final recipientCount = memberCount > 0 ? memberCount - 1 : 0;
+    final unreadCount = recipientCount > readCount
+        ? recipientCount - readCount
+        : 0;
+    final hasMemberCount = memberCount > 0;
+    final isAllRead = hasMemberCount && unreadCount == 0;
+    final progress = recipientCount == 0
+        ? (hasMemberCount ? 1.0 : 0.0)
+        : (readCount / recipientCount).clamp(0.0, 1.0);
+
+    return Semantics(
+      label: !hasMemberCount
+          ? '群聊已读进度未知'
+          : isAllRead
+          ? '全部已读'
+          : '$unreadCount 人未读',
+      button: onTap != null,
+      child: GestureDetector(
+        key: const Key('message-read-status'),
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox.square(
+          dimension: 14,
+          child: CircularProgressIndicator(
+            key: const Key('group-message-read-progress'),
+            value: progress,
+            strokeWidth: 1.6,
+            backgroundColor: const Color(0xFFD8DDE7),
+            color: FlashPalette.primary,
+          ),
+        ),
+      ),
+    );
+  }
 }

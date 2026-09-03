@@ -8,6 +8,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'test_fakes.dart';
 
 void main() {
+  test('group detail keeps member count when updating conversation', () {
+    final conversation = groupDetail().applyToConversation(
+      groupConversation('group-1', '旧群名'),
+    );
+
+    expect(conversation.memberCount, 2);
+  });
+
   test('loads and updates group snapshot', () async {
     final repository = FakeGroupRepository();
     final cubit = GroupDetailCubit(repository: repository, groupId: 'group-1');

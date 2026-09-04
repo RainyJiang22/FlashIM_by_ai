@@ -4,26 +4,10 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(search):添加完善全局搜索功能">
-      <change afterPath="$PROJECT_DIR$/server/migrations/20260904000200_conversation_list_hidden.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation_repository.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_cubit.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/logic/conversation_list_cubit.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_list_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/view/conversation_tile.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_list_cubit_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_list_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_list_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/test_fakes.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/test_fakes.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/startup/presentation/startup_page_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/server/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/repository.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/routes.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/service.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-message/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-ws/src/broadcaster.rs" afterDir="false" />
+    <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(search):补充长按删除首页消息">
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_repository_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -437,7 +421,15 @@
       <option name="project" value="LOCAL" />
       <updated>1788510311451</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="feat(search):补充长按删除首页消息">
+      <option name="closed" value="true" />
+      <created>1788513110374</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1788513110374</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -454,7 +446,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="feat:模块化隔离，提取flash_auth,app_starter" />
     <MESSAGE value="feat:后端rust模块化隔离" />
     <MESSAGE value="fix:工作空间workspace" />
     <MESSAGE value="feat: 重构认证与会话模块并拆分服务端核心/用户模块，补齐客户端会话页与文档更新，同时修复 start_backend 脚本的环境兜底启动逻辑" />
@@ -479,7 +470,8 @@
     <MESSAGE value="feat(presence):添加聊天在线与已读未读状态回执" />
     <MESSAGE value="feat(search):添加完成全局搜索功能" />
     <MESSAGE value="feat(search):添加完善全局搜索功能" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat(search):添加完善全局搜索功能" />
+    <MESSAGE value="feat(search):补充长按删除首页消息" />
+    <option name="LAST_COMMIT_MESSAGE" value="feat(search):补充长按删除首页消息" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

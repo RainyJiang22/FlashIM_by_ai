@@ -24,7 +24,7 @@
 
 Flash IM 是一个客户端与服务端同仓维护的即时通讯项目。客户端采用 Flutter 与 Cubit/Bloc，服务端采用 Rust、Axum、Tokio 和 SQLx；业务数据写入 PostgreSQL，实时消息通过经过 JWT 认证的 Protobuf WebSocket 传输。
 
-项目不只包含聊天页面，还覆盖账号与会话恢复、好友关系、单聊、群聊治理、在线状态、已读回执、媒体消息、本地文件存储，以及正在完善中的综合搜索链路。
+项目不只包含聊天页面，还覆盖账号与会话恢复、好友关系、单聊、群聊治理、在线状态、已读回执、媒体消息、本地文件存储与综合搜索链路。
 
 ## 当前完成度
 
@@ -34,12 +34,12 @@ Flash IM 是一个客户端与服务端同仓维护的即时通讯项目。客�
 | --- | :---: | --- |
 | 用户与认证 | ✅ | 短信验证码登录、密码登录、JWT 鉴权、登录态恢复、资料编辑、设置与修改密码 |
 | 好友系统 | ✅ | 用户搜索、好友申请、收到/发出记录、接受/拒绝/撤回、删除好友、字母索引通讯录 |
-| 会话系统 | ✅ | 单聊/群聊会话创建、列表与详情、分页、未读数、标记已读、实时会话更新 |
+| 会话系统 | ✅ | 单聊/群聊会话创建、列表与详情、分页、未读数、标记已读、实时会话更新；首页长按可隐藏会话并保留聊天记录，新消息到达后自动恢复显示 |
 | 消息系统 | ✅ | 文本、图片、视频和文件消息，历史记录、发送确认、失败重试、媒体预览与下载 |
 | 实时与状态 | ✅ | JWT WebSocket 认证、断线重连、心跳、好友在线状态、多端在线语义、消息已读回执 |
 | 群聊系统 | ✅ | 建群、群搜索与加入、邀请/审批、群成员与管理员、群昵称、公告、转让、退出、移除与解散 |
 | 群聊增强 | ✅ | 群系统消息、邀请卡片、九宫格群头像、`@成员`、`@所有人`、群消息已读成员明细 |
-| 综合搜索 | 🚧 | 联系人、已加入群和聊天记录搜索的前后端主链路已接入；测试、API 实测与质量门禁待完成 |
+| 综合搜索 | ✅ | 联系人、已加入群、跨会话聊天记录与会话内消息搜索；支持搜索历史、关键词高亮、分区重试和结果导航 |
 | Playground | 🧪 | 认证、会话、WebSocket 心跳与广播聊天室的独立调试页面和接口样例 |
 
 当前没有实现或没有完成生产化验收的能力包括：音视频通话、语音消息、消息撤回/转发、推送通知、端到端加密、对象存储、集群部署、后台管理，以及所有 Flutter 目标平台的完整兼容性验证。
@@ -205,11 +205,11 @@ flutter run
 | 健康检查 | `GET /v` |
 | 认证 | `POST /auth/sms`、`POST /auth/login` |
 | 用户 | `GET/PUT /user/profile`、`POST/PUT /user/password` |
-| 会话 | `GET/POST /conversations`、`GET /conversations/{id}`、`POST /conversations/{id}/read` |
+| 会话 | `GET/POST /conversations`、`GET /conversations/{id}`、`GET /conversations/private/{peer_user_id}`、`POST /conversations/{id}/read`、`DELETE /conversations/{id}`（仅从首页隐藏） |
 | 消息 | `GET /conversations/{id}/messages`、`GET /conversations/{id}/messages/{message_id}/read-status` |
 | 好友 | `/api/users/*`、`/api/friends/*` |
 | 群聊 | `/groups/*`、`/group-invitations/*` |
-| 搜索 | `/api/friends/search`、`/api/conversations/search-joined-groups`、`/api/messages/search` |
+| 搜索 | `GET /api/friends/search`、`GET /api/conversations/search-joined-groups`、`GET /api/messages/search`、`GET /conversations/{id}/messages/search` |
 | 文件 | `POST /api/upload/image`、`POST /api/upload/video`、`POST /api/upload/file` |
 | 实时 IM | `GET /ws/im` |
 
@@ -244,11 +244,6 @@ cd client/modules/flash_im_chat
 flutter test
 ```
 
-当前综合搜索仍缺少计划中的模块/宿主测试、真实 API 测试链和最终质量门禁，详见：
-
-- [综合搜索客户端任务](./docs/features/im/search/v0.0.1/client/tasks.md)
-- [综合搜索服务端任务](./docs/features/im/search/v0.0.1/server/tasks.md)
-
 ## 开发约定
 
 - 协议变更以根目录 `proto/*.proto` 为源，不直接手改生成的 Dart/Rust 协议代码。
@@ -265,12 +260,3 @@ flutter test
 - 示例配置中的 JWT Secret 不能用于公网部署。
 - 仓库目前没有提供 TLS、反向代理、容器编排、限流、监控告警和生产密钥管理方案。
 - 在上述能力补齐并完成安全审计、压力测试和目标平台验收前，不应直接用于生产环境。
-
-## 路线图
-
-- [ ] 完成综合搜索的服务端/客户端测试、API 实测与质量门禁
-- [ ] 增加稳定的多环境配置方式，避免客户端硬编码 API 地址
-- [ ] 补齐 Docker Compose、反向代理和生产部署文档
-- [ ] 将本地媒体存储抽象为可替换的对象存储实现
-- [ ] 增加推送通知、消息操作能力和可观测性
-- [ ] 完成 Android、iOS、桌面端与 Web 的逐平台兼容性验收

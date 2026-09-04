@@ -118,6 +118,30 @@ class ConversationListCubit extends Cubit<ConversationListState> {
     }
   }
 
+  Future<bool> hideConversationFromList(String conversationId) async {
+    final current = state;
+    if (current is! ConversationListLoaded) {
+      return false;
+    }
+    try {
+      await _repository.hideFromList(conversationId);
+      final latest = state;
+      if (latest is! ConversationListLoaded) {
+        return true;
+      }
+      emit(
+        latest.copyWith(
+          conversations: latest.conversations
+              .where((conversation) => conversation.id != conversationId)
+              .toList(growable: false),
+        ),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void markConversationReadLocally(String conversationId) {
     final current = state;
     if (current is! ConversationListLoaded) {
@@ -204,20 +228,10 @@ class ConversationListCubit extends Cubit<ConversationListState> {
         isDissolved: update.isDissolved,
       );
     } else {
-      conversations.insert(
-        0,
-        Conversation(
-          id: update.conversationId,
-          type: 1,
-          name: update.name,
-          avatar: update.avatar,
-          ownerId: update.ownerId.toString(),
-          unreadCount: 0,
-          isDissolved: update.isDissolved,
-          createdAt: DateTime.now(),
-        ),
-      );
-      unawaited(_hydrateConversation(update.conversationId));
+      // Group detail changes must not restore a conversation hidden from home.
+      // A persisted message emits ConversationUpdate and is the source of truth
+      // for adding an absent conversation back to this list.
+      return;
     }
     emit(current.copyWith(conversations: conversations));
   }

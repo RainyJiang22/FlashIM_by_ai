@@ -162,6 +162,25 @@ pub async fn get_conversation_by_id(
     Ok(ConversationListItem::from(row))
 }
 
+pub async fn get_private_conversation(
+    context: &SharedContext,
+    user_id: i64,
+    peer_user_id: i64,
+) -> AppResult<ConversationListItem> {
+    if user_id == peer_user_id {
+        return Err(AppError::bad_request("invalid private conversation peer"));
+    }
+    let conversation_id = crate::repository::find_private_conversation(
+        context.postgres.pool(),
+        user_id,
+        peer_user_id,
+    )
+    .await?
+    .ok_or(AppError::not_found("conversation not found"))?;
+
+    get_conversation_by_id(context, user_id, conversation_id).await
+}
+
 pub async fn delete_created_group(
     context: &SharedContext,
     owner_id: i64,
@@ -178,6 +197,21 @@ pub async fn mark_read(
 ) -> AppResult<()> {
     let updated =
         crate::repository::mark_read(context.postgres.pool(), user_id, conversation_id).await?;
+    if !updated {
+        return Err(AppError::not_found("conversation not found"));
+    }
+
+    Ok(())
+}
+
+pub async fn hide_from_list(
+    context: &SharedContext,
+    user_id: i64,
+    conversation_id: Uuid,
+) -> AppResult<()> {
+    let updated =
+        crate::repository::hide_from_list(context.postgres.pool(), user_id, conversation_id)
+            .await?;
     if !updated {
         return Err(AppError::not_found("conversation not found"));
     }
@@ -505,6 +539,38 @@ mod tests {
         .await
         .expect("group list should load");
         assert!(groups.iter().any(|item| item.id == created.id));
+
+        super::hide_from_list(&context, owner_id, created.id)
+            .await
+            .expect("conversation should be hidden from home");
+        let home_conversations = super::list_conversations(
+            &context,
+            owner_id,
+            ConversationListQuery {
+                limit: Some(100),
+                offset: Some(0),
+                r#type: None,
+            },
+        )
+        .await
+        .expect("home conversation list should load");
+        assert!(!home_conversations.iter().any(|item| item.id == created.id));
+        let hidden_group = super::get_conversation_by_id(&context, owner_id, created.id)
+            .await
+            .expect("hidden conversation history should remain accessible");
+        assert_eq!(hidden_group.id, created.id);
+        let all_groups = super::list_conversations(
+            &context,
+            owner_id,
+            ConversationListQuery {
+                limit: Some(100),
+                offset: Some(0),
+                r#type: Some(1),
+            },
+        )
+        .await
+        .expect("group directory should include hidden home conversations");
+        assert!(all_groups.iter().any(|item| item.id == created.id));
 
         let invalid = super::create_conversation(
             &context,

@@ -9,11 +9,13 @@ class ConversationTile extends StatelessWidget {
     required this.conversation,
     this.isOnline = false,
     this.onTap,
+    this.onLongPress,
   });
 
   final Conversation conversation;
   final bool isOnline;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +29,7 @@ class ConversationTile extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
+            onLongPress: onLongPress,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(

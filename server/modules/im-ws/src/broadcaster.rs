@@ -262,6 +262,7 @@ async fn load_total_unread(pool: &PgPool, user_id: i64) -> AppResult<i32> {
         FROM conversation_members
         WHERE user_id = $1
           AND is_deleted = FALSE
+          AND is_hidden = FALSE
         "#,
     )
     .bind(user_id)

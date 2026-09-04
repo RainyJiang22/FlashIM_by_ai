@@ -59,6 +59,7 @@ pub fn list_conversations_sql() -> &'static str {
     ) group_members ON TRUE
     WHERE me.user_id = $1
       AND me.is_deleted = FALSE
+      AND (me.is_hidden = FALSE OR $4::SMALLINT IS NOT NULL)
       AND (
           c.is_dissolved = FALSE
           OR (c.type = 1 AND $4::SMALLINT IS NULL)
@@ -409,6 +410,27 @@ pub async fn mark_read(pool: &PgPool, user_id: i64, conversation_id: Uuid) -> Ap
     Ok(result.rows_affected() > 0)
 }
 
+pub fn hide_from_list_sql() -> &'static str {
+    r#"
+        UPDATE conversation_members member
+        SET is_hidden = TRUE
+        WHERE member.conversation_id = $1
+          AND member.user_id = $2
+          AND member.is_deleted = FALSE
+        "#
+}
+
+pub async fn hide_from_list(pool: &PgPool, user_id: i64, conversation_id: Uuid) -> AppResult<bool> {
+    let result = sqlx::query(hide_from_list_sql())
+        .bind(conversation_id)
+        .bind(user_id)
+        .execute(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to hide conversation"))?;
+
+    Ok(result.rows_affected() > 0)
+}
+
 pub async fn get_total_unread_by_user(pool: &PgPool, user_id: i64) -> AppResult<i32> {
     sqlx::query_scalar::<_, i32>(
         r#"
@@ -416,6 +438,7 @@ pub async fn get_total_unread_by_user(pool: &PgPool, user_id: i64) -> AppResult<
         FROM conversation_members
         WHERE user_id = $1
           AND is_deleted = FALSE
+          AND is_hidden = FALSE
         "#,
     )
     .bind(user_id)
@@ -523,9 +546,12 @@ pub async fn increment_unread(
     sqlx::query(
         r#"
         UPDATE conversation_members
-        SET unread_count = unread_count + 1
+        SET is_hidden = FALSE,
+            unread_count = CASE
+                WHEN user_id <> $2 THEN unread_count + 1
+                ELSE unread_count
+            END
         WHERE conversation_id = $1
-          AND user_id <> $2
           AND is_deleted = FALSE
         "#,
     )
@@ -533,7 +559,7 @@ pub async fn increment_unread(
     .bind(sender_id)
     .execute(pool)
     .await
-    .map_err(|_| AppError::internal_server_error("failed to increment unread count"))?;
+    .map_err(|_| AppError::internal_server_error("failed to restore conversation visibility"))?;
 
     Ok(())
 }
@@ -639,8 +665,8 @@ pub async fn ensure_private_members(
 mod tests {
     use super::{
         can_read_history_sql, create_group_conversation_sql, get_conversation_by_id_sql,
-        group_friend_validation_sql, insert_group_members_sql, list_conversations_sql,
-        refresh_group_avatar_sql, search_joined_groups_sql,
+        group_friend_validation_sql, hide_from_list_sql, insert_group_members_sql,
+        list_conversations_sql, refresh_group_avatar_sql, search_joined_groups_sql,
     };
 
     #[test]
@@ -649,6 +675,7 @@ mod tests {
 
         assert!(sql.contains("ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC"));
         assert!(sql.contains("AND me.is_deleted = FALSE"));
+        assert!(sql.contains("me.is_hidden = FALSE OR $4::SMALLINT IS NOT NULL"));
         assert!(sql.contains("c.is_dissolved = FALSE"));
         assert!(sql.contains("OR (c.type = 1 AND $4::SMALLINT IS NULL)"));
         assert!(sql.contains("$4::SMALLINT IS NULL OR c.type = $4"));
@@ -658,6 +685,18 @@ mod tests {
         assert!(sql.contains("AS member_count"));
         assert!(sql.contains("LIMIT 9"));
         assert!(sql.contains("LIMIT $2 OFFSET $3"));
+    }
+
+    #[test]
+    fn hide_sql_preserves_messages_membership_and_read_position() {
+        let sql = hide_from_list_sql();
+
+        assert!(sql.contains("SET is_hidden = TRUE"));
+        assert!(sql.contains("member.is_deleted = FALSE"));
+        assert!(!sql.contains("DELETE FROM messages"));
+        assert!(!sql.contains("SET is_deleted = TRUE"));
+        assert!(!sql.contains("unread_count"));
+        assert!(!sql.contains("last_read_seq"));
     }
 
     #[test]

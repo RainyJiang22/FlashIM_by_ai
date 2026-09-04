@@ -203,20 +203,14 @@ async fn persist_message_in_transaction(
     .await
     .map_err(|_| AppError::internal_server_error("failed to update conversation preview"))?;
 
-    sqlx::query(
-        r#"
-        UPDATE conversation_members
-        SET unread_count = unread_count + 1
-        WHERE conversation_id = $1
-          AND user_id <> $2
-          AND is_deleted = FALSE
-        "#,
-    )
-    .bind(row.conversation_id)
-    .bind(row.sender_id)
-    .execute(&mut **transaction)
-    .await
-    .map_err(|_| AppError::internal_server_error("failed to increment unread count"))?;
+    sqlx::query(restore_conversation_visibility_sql())
+        .bind(row.conversation_id)
+        .bind(row.sender_id)
+        .execute(&mut **transaction)
+        .await
+        .map_err(|_| {
+            AppError::internal_server_error("failed to restore conversation visibility")
+        })?;
 
     let member_ids = sqlx::query_scalar::<_, i64>(
         r#"
@@ -250,6 +244,19 @@ async fn persist_message_in_transaction(
         member_ids,
         unread_counts,
     })
+}
+
+pub fn restore_conversation_visibility_sql() -> &'static str {
+    r#"
+        UPDATE conversation_members
+        SET is_hidden = FALSE,
+            unread_count = CASE
+                WHEN user_id <> $2 THEN unread_count + 1
+                ELSE unread_count
+            END
+        WHERE conversation_id = $1
+          AND is_deleted = FALSE
+        "#
 }
 
 pub async fn persist_system_message_in_transaction(
@@ -625,9 +632,13 @@ pub async fn search_conversation_messages(
 
 #[cfg(test)]
 mod tests {
+    use flash_core::{AppConfig, AppContext};
+
+    use crate::models::NewMessage;
+
     use super::{
         active_conversation_lock_sql, find_before_sql, insert_message_sql,
-        search_conversation_messages_sql, search_messages_sql,
+        restore_conversation_visibility_sql, search_conversation_messages_sql, search_messages_sql,
     };
 
     #[test]
@@ -658,6 +669,112 @@ mod tests {
         assert!(sql.contains("sender.is_deleted = FALSE"));
         assert!(sql.contains("c.is_dissolved = FALSE"));
         assert!(sql.contains("FOR UPDATE OF c"));
+    }
+
+    #[test]
+    fn persisted_message_restores_hidden_members() {
+        let sql = restore_conversation_visibility_sql();
+
+        assert!(sql.contains("SET is_hidden = FALSE"));
+        assert!(sql.contains("WHEN user_id <> $2 THEN unread_count + 1"));
+    }
+
+    #[tokio::test]
+    async fn message_round_trip_restores_hidden_members_in_configured_database() {
+        let Ok(config) = AppConfig::from_env() else {
+            return;
+        };
+        let context = AppContext::from_config(config)
+            .await
+            .expect("configured test database should connect");
+        let pool = context.postgres.pool();
+        let marker = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let sender_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO accounts (primary_identifier) VALUES ($1) RETURNING id",
+        )
+        .bind(format!("message-restore-sender-{marker}"))
+        .fetch_one(pool)
+        .await
+        .expect("sender should be inserted");
+        let receiver_id = sqlx::query_scalar::<_, i64>(
+            "INSERT INTO accounts (primary_identifier) VALUES ($1) RETURNING id",
+        )
+        .bind(format!("message-restore-receiver-{marker}"))
+        .fetch_one(pool)
+        .await
+        .expect("receiver should be inserted");
+        let conversation_id = sqlx::query_scalar::<_, uuid::Uuid>(
+            "INSERT INTO conversations (type) VALUES (0) RETURNING id",
+        )
+        .fetch_one(pool)
+        .await
+        .expect("conversation should be inserted");
+        sqlx::query(
+            r#"
+            INSERT INTO conversation_members (
+                conversation_id, user_id, unread_count, is_hidden
+            )
+            VALUES ($1, $2, 0, TRUE), ($1, $3, 4, TRUE)
+            "#,
+        )
+        .bind(conversation_id)
+        .bind(sender_id)
+        .bind(receiver_id)
+        .execute(pool)
+        .await
+        .expect("hidden members should be inserted");
+
+        super::persist_message(
+            pool,
+            NewMessage {
+                conversation_id,
+                sender_id,
+                seq: 0,
+                r#type: 0,
+                content: "重新出现".to_string(),
+                extra: None,
+            },
+            "重新出现",
+        )
+        .await
+        .expect("message should be persisted");
+
+        let members = sqlx::query_as::<_, (i64, i32, bool)>(
+            r#"
+            SELECT user_id, unread_count, is_hidden
+            FROM conversation_members
+            WHERE conversation_id = $1
+            ORDER BY user_id
+            "#,
+        )
+        .bind(conversation_id)
+        .fetch_all(pool)
+        .await
+        .expect("members should load");
+        let sender = members
+            .iter()
+            .find(|member| member.0 == sender_id)
+            .expect("sender membership should remain");
+        let receiver = members
+            .iter()
+            .find(|member| member.0 == receiver_id)
+            .expect("receiver membership should remain");
+        assert_eq!((sender.1, sender.2), (0, false));
+        assert_eq!((receiver.1, receiver.2), (5, false));
+
+        sqlx::query("DELETE FROM conversations WHERE id = $1")
+            .bind(conversation_id)
+            .execute(pool)
+            .await
+            .expect("conversation should be cleaned up");
+        sqlx::query("DELETE FROM accounts WHERE id = ANY($1)")
+            .bind(vec![sender_id, receiver_id])
+            .execute(pool)
+            .await
+            .expect("accounts should be cleaned up");
     }
 
     #[test]

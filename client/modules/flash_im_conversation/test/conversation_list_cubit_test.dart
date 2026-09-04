@@ -151,6 +151,37 @@ void main() {
     ],
   );
 
+  blocTest<ConversationListCubit, ConversationListState>(
+    'hideConversationFromList removes only the selected item after API success',
+    build: () {
+      repository = _FakeConversationRepository(
+        pages: {
+          0: [firstConversation, secondConversation],
+        },
+      );
+      return ConversationListCubit(repository: repository);
+    },
+    act: (cubit) async {
+      await cubit.loadConversations();
+      expect(
+        await cubit.hideConversationFromList(firstConversation.id),
+        isTrue,
+      );
+    },
+    expect: () => [
+      const ConversationListLoading(),
+      ConversationListLoaded(
+        conversations: [firstConversation, secondConversation],
+        hasMore: false,
+      ),
+      ConversationListLoaded(
+        conversations: [secondConversation],
+        hasMore: false,
+      ),
+    ],
+    verify: (_) => expect(repository.hiddenIds, [firstConversation.id]),
+  );
+
   test(
     'group info stream updates and removes the matching conversation',
     () async {
@@ -186,6 +217,54 @@ void main() {
       await cubit.close();
       expect(wsClient.hasGroupInfoListener, isFalse);
       await wsClient.closeEvents();
+    },
+  );
+
+  test(
+    'group info does not restore an absent conversation before a new message',
+    () async {
+      final wsClient = _FakeWsClient();
+      final cubit = ConversationListCubit(
+        repository: _FakeConversationRepository(pages: const {0: []}),
+        wsClient: wsClient,
+      );
+      await cubit.loadConversations();
+
+      wsClient.addGroupInfo(_groupInfo(name: '隐藏后的新群名'));
+      await Future<void>.delayed(Duration.zero);
+
+      final loaded = cubit.state as ConversationListLoaded;
+      expect(loaded.conversations, isEmpty);
+
+      await cubit.close();
+      await wsClient.closeEvents();
+    },
+  );
+
+  test(
+    'a new message update restores an absent conversation to home',
+    () async {
+      final cubit = ConversationListCubit(
+        repository: _FakeConversationRepository(pages: const {0: []}),
+      );
+      await cubit.loadConversations();
+
+      cubit.applyConversationUpdate(
+        ConversationUpdate(
+          conversationId: 'group-1',
+          lastMessagePreview: '重新出现',
+          lastMessageAt: '2026-09-04T08:30:00Z',
+          unreadCount: 1,
+          totalUnread: 1,
+        ),
+      );
+
+      final loaded = cubit.state as ConversationListLoaded;
+      expect(loaded.conversations.single.id, 'group-1');
+      expect(loaded.conversations.single.lastMessagePreview, '重新出现');
+      expect(loaded.totalUnread, 1);
+
+      await cubit.close();
     },
   );
 }
@@ -235,6 +314,7 @@ class _FakeConversationRepository implements ConversationRepository {
   final Map<int, List<Conversation>> pages;
   final Set<int> failingOffsets;
   final List<int> offsets = <int>[];
+  final List<String> hiddenIds = <String>[];
 
   @override
   Future<Conversation> createGroup({
@@ -262,6 +342,18 @@ class _FakeConversationRepository implements ConversationRepository {
     return pages.values
         .expand((items) => items)
         .firstWhere((conversation) => conversation.id == id);
+  }
+
+  @override
+  Future<Conversation> getPrivateByPeerId(int peerUserId) async {
+    return pages.values
+        .expand((items) => items)
+        .firstWhere((conversation) => conversation.peerUserId == '$peerUserId');
+  }
+
+  @override
+  Future<void> hideFromList(String id) async {
+    hiddenIds.add(id);
   }
 
   @override

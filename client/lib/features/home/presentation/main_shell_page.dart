@@ -219,11 +219,9 @@ class _MainShellPageState extends State<MainShellPage> {
 
     if (conversation == null) {
       try {
-        final conversations = await context
+        conversation = await context
             .read<ConversationRepository>()
-            .getList(limit: 100);
-        conversation = _conversationForFriend(conversations, friend.accountId);
-        await _conversationListCubit.refresh();
+            .getPrivateByPeerId(friend.accountId);
       } catch (_) {
         // The visible fallback below is more useful than a transport detail.
       }

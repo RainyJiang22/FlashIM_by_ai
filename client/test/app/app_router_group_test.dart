@@ -338,6 +338,13 @@ class _ConversationRepository implements ConversationRepository {
   Future<Conversation> getById(String id) => throw UnimplementedError();
 
   @override
+  Future<Conversation> getPrivateByPeerId(int peerUserId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> hideFromList(String id) async {}
+
+  @override
   Future<List<Conversation>> getList({
     int limit = 20,
     int offset = 0,

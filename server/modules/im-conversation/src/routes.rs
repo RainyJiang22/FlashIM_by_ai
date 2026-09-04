@@ -56,6 +56,17 @@ pub async fn get_conversation(
     Ok(utf8_json(Json(conversation)))
 }
 
+pub async fn get_private_conversation(
+    State(context): State<SharedContext>,
+    headers: HeaderMap,
+    Path(peer_user_id): Path<i64>,
+) -> AppResult<impl IntoResponse> {
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let conversation =
+        crate::service::get_private_conversation(&context, user_id, peer_user_id).await?;
+    Ok(utf8_json(Json(conversation)))
+}
+
 pub async fn search_joined_groups(
     State(context): State<SharedContext>,
     headers: HeaderMap,
@@ -83,6 +94,23 @@ struct MarkReadResponse {
     message: &'static str,
 }
 
+pub async fn hide_conversation_from_list(
+    State(context): State<SharedContext>,
+    headers: HeaderMap,
+    Path(conversation_id): Path<Uuid>,
+) -> AppResult<impl IntoResponse> {
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    crate::service::hide_from_list(&context, user_id, conversation_id).await?;
+    Ok(utf8_json(Json(HideConversationResponse {
+        message: "conversation hidden from list",
+    })))
+}
+
+#[derive(Serialize)]
+struct HideConversationResponse {
+    message: &'static str,
+}
+
 pub fn router_with_notifier<N>(notifier: Arc<N>) -> Router<SharedContext>
 where
     N: GroupCreationNotifier + 'static,
@@ -96,7 +124,14 @@ where
             "/api/conversations/search-joined-groups",
             get(search_joined_groups),
         )
-        .route("/conversations/{id}", get(get_conversation))
+        .route(
+            "/conversations/private/{peer_user_id}",
+            get(get_private_conversation),
+        )
+        .route(
+            "/conversations/{id}",
+            get(get_conversation).delete(hide_conversation_from_list),
+        )
         .route("/conversations/{id}/read", post(mark_conversation_read))
         .layer(Extension(notifier))
 }

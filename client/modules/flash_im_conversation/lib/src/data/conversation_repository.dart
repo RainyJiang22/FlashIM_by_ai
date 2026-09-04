@@ -11,12 +11,16 @@ abstract interface class ConversationRepository {
 
   Future<Conversation> getById(String id);
 
+  Future<Conversation> getPrivateByPeerId(int peerUserId);
+
   Future<Conversation> createGroup({
     required String name,
     required List<int> memberIds,
   });
 
   Future<void> markRead(String id);
+
+  Future<void> hideFromList(String id);
 }
 
 class ConversationRequestException implements Exception {
@@ -60,6 +64,18 @@ class DioConversationRepository implements ConversationRepository {
   }
 
   @override
+  Future<Conversation> getPrivateByPeerId(int peerUserId) async {
+    final response = await _dio.get<dynamic>(
+      '/conversations/private/$peerUserId',
+    );
+    final data = response.data;
+    if (data is! Map) {
+      throw const FormatException('Conversation detail is not a JSON object.');
+    }
+    return Conversation.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  @override
   Future<Conversation> createGroup({
     required String name,
     required List<int> memberIds,
@@ -93,6 +109,11 @@ class DioConversationRepository implements ConversationRepository {
   @override
   Future<void> markRead(String id) async {
     await _dio.post<dynamic>('/conversations/$id/read');
+  }
+
+  @override
+  Future<void> hideFromList(String id) async {
+    await _dio.delete<dynamic>('/conversations/$id');
   }
 }
 

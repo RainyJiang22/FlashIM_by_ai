@@ -129,12 +129,51 @@ class _ConversationListBody extends StatelessWidget {
                       int.tryParse(conversation.peerUserId ?? ''),
                     ),
                 onTap: () => onConversationTap?.call(conversation),
+                onLongPress: () =>
+                    _confirmHideConversation(context, conversation),
               );
             },
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _confirmHideConversation(
+    BuildContext context,
+    Conversation conversation,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('删除该聊天？'),
+        content: const Text('聊天记录会保留。该会话有新消息时，会重新出现在首页消息列表。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            key: const Key('conversation-hide-confirm'),
+            style: FilledButton.styleFrom(backgroundColor: FlashPalette.danger),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) {
+      return;
+    }
+
+    final hidden = await context
+        .read<ConversationListCubit>()
+        .hideConversationFromList(conversation.id);
+    if (!hidden && context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('删除失败，请稍后重试')));
+    }
   }
 }
 

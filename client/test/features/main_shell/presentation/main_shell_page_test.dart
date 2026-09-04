@@ -376,6 +376,13 @@ class _FakeConversationRepository implements ConversationRepository {
   }
 
   @override
+  Future<Conversation> getPrivateByPeerId(int peerUserId) =>
+      getById('conversation-1');
+
+  @override
+  Future<void> hideFromList(String id) async {}
+
+  @override
   Future<void> markRead(String id) async {
     markReadIds.add(id);
   }

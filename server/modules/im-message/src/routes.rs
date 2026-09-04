@@ -12,9 +12,34 @@ use uuid::Uuid;
 
 use crate::{
     broadcast::NoopBroadcaster,
-    models::MessageQuery,
+    models::{ConversationMessageSearchQuery, GlobalMessageSearchQuery, MessageQuery},
     service::{MessageService, SendMessageInput},
 };
+
+pub async fn search_messages(
+    State(context): State<SharedContext>,
+    headers: HeaderMap,
+    Query(query): Query<GlobalMessageSearchQuery>,
+) -> AppResult<impl IntoResponse> {
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let service = MessageService::new(Arc::new(NoopBroadcaster));
+    let messages = service.search_messages(&context, user_id, query).await?;
+    Ok(utf8_json(Json(messages)))
+}
+
+pub async fn search_conversation_messages(
+    State(context): State<SharedContext>,
+    headers: HeaderMap,
+    Path(conversation_id): Path<Uuid>,
+    Query(query): Query<ConversationMessageSearchQuery>,
+) -> AppResult<impl IntoResponse> {
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let service = MessageService::new(Arc::new(NoopBroadcaster));
+    let messages = service
+        .search_conversation_messages(&context, user_id, conversation_id, query)
+        .await?;
+    Ok(utf8_json(Json(messages)))
+}
 
 pub async fn list_messages(
     State(context): State<SharedContext>,
@@ -46,7 +71,12 @@ pub async fn get_message_read_status(
 
 pub fn router() -> Router<SharedContext> {
     Router::new()
+        .route("/api/messages/search", get(search_messages))
         .route("/conversations/{id}/messages", get(list_messages))
+        .route(
+            "/conversations/{id}/messages/search",
+            get(search_conversation_messages),
+        )
         .route(
             "/conversations/{conversation_id}/messages/{message_id}/read-status",
             get(get_message_read_status),

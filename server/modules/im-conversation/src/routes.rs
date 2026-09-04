@@ -11,7 +11,7 @@ use flash_core::{AppResult, SharedContext, jwt::extract_user_id, response::utf8_
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::models::{ConversationListQuery, CreateConversationBody};
+use crate::models::{ConversationListQuery, CreateConversationBody, JoinedGroupSearchQuery};
 use crate::notification::GroupCreationNotifier;
 
 async fn create_conversation<N>(
@@ -56,6 +56,16 @@ pub async fn get_conversation(
     Ok(utf8_json(Json(conversation)))
 }
 
+pub async fn search_joined_groups(
+    State(context): State<SharedContext>,
+    headers: HeaderMap,
+    Query(query): Query<JoinedGroupSearchQuery>,
+) -> AppResult<impl IntoResponse> {
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let conversations = crate::service::search_joined_groups(&context, user_id, query).await?;
+    Ok(utf8_json(Json(conversations)))
+}
+
 pub async fn mark_conversation_read(
     State(context): State<SharedContext>,
     headers: HeaderMap,
@@ -81,6 +91,10 @@ where
         .route(
             "/conversations",
             get(list_conversations).post(create_conversation::<N>),
+        )
+        .route(
+            "/api/conversations/search-joined-groups",
+            get(search_joined_groups),
         )
         .route("/conversations/{id}", get(get_conversation))
         .route("/conversations/{id}/read", post(mark_conversation_read))

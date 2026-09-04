@@ -7,6 +7,7 @@ import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart' show WsClient;
 import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_im_group/flash_im_group.dart';
+import 'package:flash_im_search/flash_im_search.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,12 +37,14 @@ class CreateGroupRouteArguments {
 class PrivateChatDetailsRouteArguments {
   const PrivateChatDetailsRouteArguments({
     required this.friend,
+    required this.conversation,
     required this.currentUserId,
     this.currentUserName,
     this.currentUserAvatar,
   });
 
   final FriendUser friend;
+  final Conversation conversation;
   final String currentUserId;
   final String? currentUserName;
   final String? currentUserAvatar;
@@ -175,6 +178,7 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
                             signature: '',
                             relationStatus: 'friend',
                           ),
+                          conversation: args.conversation,
                           currentUserId: args.currentUserId,
                           currentUserName: args.currentUserName,
                           currentUserAvatar: args.currentUserAvatar,
@@ -254,6 +258,12 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
       return MaterialPageRoute<Conversation>(
         builder: (context) => PrivateChatDetailsPage(
           friend: args.friend,
+          onSearchMessages: () => Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ConversationSearchPage(conversation: args.conversation),
+            ),
+          ),
           onInviteMore: (friend) async {
             final group = await Navigator.of(context).pushNamed<Conversation>(
               AppRoutes.createGroup,
@@ -278,6 +288,12 @@ Route<dynamic>? onGenerateAppRoute(RouteSettings settings) {
         builder: (context) => GroupDetailsPage(
           conversation: args.conversation,
           wsClient: context.read<WsClient>(),
+          onSearchMessages: () => Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  ConversationSearchPage(conversation: args.conversation),
+            ),
+          ),
         ),
         settings: settings,
       );

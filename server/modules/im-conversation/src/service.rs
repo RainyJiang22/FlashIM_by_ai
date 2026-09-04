@@ -4,10 +4,15 @@ use sqlx::{Postgres, Transaction};
 use std::collections::HashSet;
 use uuid::Uuid;
 
-use crate::models::{ConversationListItem, ConversationListQuery, CreateConversationBody};
+use crate::models::{
+    ConversationListItem, ConversationListQuery, CreateConversationBody, JoinedGroupSearchQuery,
+};
 
 const DEFAULT_LIMIT: i64 = 20;
 const MAX_LIMIT: i64 = 100;
+const DEFAULT_SEARCH_LIMIT: i64 = 20;
+const MAX_SEARCH_LIMIT: i64 = 50;
+const MAX_SEARCH_QUERY_CHARS: usize = 100;
 
 pub async fn refresh_group_avatar_in_transaction(
     transaction: &mut Transaction<'_, Postgres>,
@@ -90,6 +95,38 @@ pub async fn list_conversations(
     .await?;
 
     Ok(rows.into_iter().map(ConversationListItem::from).collect())
+}
+
+pub async fn search_joined_groups(
+    context: &SharedContext,
+    user_id: i64,
+    query: JoinedGroupSearchQuery,
+) -> AppResult<Vec<ConversationListItem>> {
+    let (like_pattern, limit) = normalize_joined_group_search(query)?;
+    let rows = crate::repository::search_joined_groups(
+        context.postgres.pool(),
+        user_id,
+        &like_pattern,
+        limit,
+    )
+    .await?;
+    Ok(rows.into_iter().map(ConversationListItem::from).collect())
+}
+
+fn normalize_joined_group_search(query: JoinedGroupSearchQuery) -> AppResult<(String, i64)> {
+    let value = query.q.trim();
+    if value.is_empty() || value.chars().count() > MAX_SEARCH_QUERY_CHARS {
+        return Err(AppError::bad_request("invalid group search query"));
+    }
+    let limit = query.limit.unwrap_or(DEFAULT_SEARCH_LIMIT);
+    if limit < 1 {
+        return Err(AppError::bad_request("invalid limit"));
+    }
+    let escaped = value
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_");
+    Ok((format!("%{escaped}%"), limit.min(MAX_SEARCH_LIMIT)))
 }
 
 pub async fn create_conversation(
@@ -238,8 +275,11 @@ mod tests {
     use flash_core::{AppConfig, AppContext};
 
     use crate::{
-        models::{ConversationListQuery, CreateConversationBody},
-        service::{normalize_group_input, normalize_list_query, normalize_pagination},
+        models::{ConversationListQuery, CreateConversationBody, JoinedGroupSearchQuery},
+        service::{
+            normalize_group_input, normalize_joined_group_search, normalize_list_query,
+            normalize_pagination,
+        },
     };
 
     fn list_query(limit: Option<i64>, offset: Option<i64>) -> ConversationListQuery {
@@ -357,6 +397,25 @@ mod tests {
         .expect("199 invited members should be valid");
 
         assert_eq!(input.member_ids.len(), 199);
+    }
+
+    #[test]
+    fn joined_group_search_normalizes_keyword_and_limit() {
+        let (pattern, limit) = normalize_joined_group_search(JoinedGroupSearchQuery {
+            q: " 研发%_\\群 ".to_string(),
+            limit: Some(999),
+        })
+        .unwrap();
+
+        assert_eq!(pattern, "%研发\\%\\_\\\\群%");
+        assert_eq!(limit, 50);
+        assert!(
+            normalize_joined_group_search(JoinedGroupSearchQuery {
+                q: " ".to_string(),
+                limit: None,
+            })
+            .is_err()
+        );
     }
 
     #[tokio::test]

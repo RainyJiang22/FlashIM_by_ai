@@ -7,6 +7,7 @@ import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart' hide FriendUser;
 import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_im_group/flash_im_group.dart';
+import 'package:flash_im_search/flash_im_search.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -292,6 +293,26 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
+  Future<void> _openSearch() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => SearchPage(
+          onFriendTap: _openFriendProfile,
+          onConversationTap: _openChat,
+        ),
+      ),
+    );
+  }
+
+  void _openFriendProfile(FriendUser friend) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            FriendProfilePage(user: friend, onMessageFriend: _openFriendChat),
+      ),
+    );
+  }
+
   List<Widget> _buildPages(int groupNotificationCount, Set<int> onlineUserIds) {
     return [
       MessagesPlaceholderPage(
@@ -299,12 +320,14 @@ class _MainShellPageState extends State<MainShellPage> {
         onConversationTap: _openChat,
         onCreateGroup: _createGroup,
         onAddContact: _addContact,
+        onSearch: _openSearch,
         onlineUserIds: onlineUserIds,
       ),
       ContactsPage(
         onMessageFriend: _openFriendChat,
         onOpenGroups: _openMyGroups,
         onSearchGroups: _openSearchGroups,
+        onSearch: _openSearch,
         onOpenGroupNotifications: _openGroupNotifications,
         groupNotificationCount: groupNotificationCount,
         onlineUserIds: onlineUserIds,

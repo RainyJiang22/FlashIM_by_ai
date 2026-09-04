@@ -6,7 +6,6 @@ import '../logic/friend_cubit.dart';
 import '../logic/friend_state.dart';
 import 'add_friend_page.dart';
 import 'friend_profile_page.dart';
-import 'friend_search_page.dart';
 import 'new_friends_page.dart';
 import 'widgets/friend_alphabet_index.dart';
 import 'widgets/friend_avatar_tile.dart';
@@ -19,6 +18,7 @@ class ContactsPage extends StatelessWidget {
     required this.onMessageFriend,
     required this.onOpenGroups,
     required this.onSearchGroups,
+    required this.onSearch,
     required this.onOpenGroupNotifications,
     required this.groupNotificationCount,
     this.onlineUserIds = const <int>{},
@@ -27,6 +27,7 @@ class ContactsPage extends StatelessWidget {
   final ValueChanged<FriendUser> onMessageFriend;
   final VoidCallback onOpenGroups;
   final VoidCallback onSearchGroups;
+  final VoidCallback onSearch;
   final VoidCallback onOpenGroupNotifications;
   final int groupNotificationCount;
   final Set<int> onlineUserIds;
@@ -57,10 +58,7 @@ class ContactsPage extends StatelessWidget {
         child: Column(
           children: [
             _ContactsHeader(
-              onSearch: () => _pushWithCubit(
-                context,
-                FriendSearchPage(onMessageFriend: onMessageFriend),
-              ),
+              onSearch: onSearch,
               onAdd: () => _pushWithCubit(
                 context,
                 AddFriendPage(

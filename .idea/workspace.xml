@@ -5,15 +5,79 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="09e41685-b243-4c69-8004-293f18d865d4" name="Changes" comment="feat(presence):添加聊天在线与已读未读状态回执">
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/bubble/message_bubble.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/lib/src/view/chat_page.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_chat/test/message_bubble_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/lib/src/data/conversation.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_conversation/test/conversation_test.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_detail.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/data/group_detail.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_detail_cubit_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_detail_cubit_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/native_assets/macos/native_assets.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/native_assets/macos/objective_c.dylib" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/test_cache/build/c1a2004662044feb47c136be2870373c.cache.dill.track.dill" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/unit_test_assets/AssetManifest.bin" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/unit_test_assets/FontManifest.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/unit_test_assets/NOTICES.Z" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/unit_test_assets/NativeAssetsManifest.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/unit_test_assets/fonts/MaterialIcons-Regular.otf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/unit_test_assets/shaders/ink_sparkle.frag" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/build/unit_test_assets/shaders/stretch_effect.frag" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/coverage/lcov.info" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/flash_im_search.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/data/search_history_store.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/data/search_models.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/data/search_repository.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/logic/conversation_search_cubit.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/logic/conversation_search_state.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/logic/search_cubit.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/logic/search_state.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/view/conversation_search_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/view/message_detail_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/view/search_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/view/single_message_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/lib/src/view/widgets/highlight_text.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/pubspec.lock" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/pubspec.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/test/search_cubit_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/test/search_history_store_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/test/search_models_repository_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/modules/flash_im_search/test/search_pages_test.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/analysis.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/api/search/doc/00_link.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/api/search/doc/01_search_friends.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/api/search/doc/02_search_joined_groups.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/api/search/doc/03_search_messages.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/api/search/doc/04_search_conversation_messages.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/api/search/doc/05_empty_keyword.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/api/search/doc/06_unauthorized.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/api/search/request/search.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/client/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/client/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/server/design.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/features/im/search/v0.0.1/server/tasks.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/migrations/20260904000100_search_indexes.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/app/app_router.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/app_router.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/app/flash_im_app.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/lib/features/messages/presentation/messages_placeholder_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/flash_im_friend.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/flash_im_friend.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/lib/src/view/contacts_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_friend/test/contacts_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_friend/test/contacts_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/group_details_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/private_chat_details_page.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/lib/src/view/private_chat_details_page.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/create_group_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/create_group_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/modules/flash_im_group/test/group_details_page_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/app/app_router_group_test.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" beforeDir="false" afterPath="$PROJECT_DIR$/client/test/features/main_shell/presentation/main_shell_page_test.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/models.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/models.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/repository.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-conversation/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-conversation/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/models.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/models.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/repository.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-friend/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-friend/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/models.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/models.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/repository.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/routes.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/routes.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/modules/im-message/src/service.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,18 +128,18 @@
     "dart.analysis.tool.window.visible": "false",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/scripts",
+    "last_opened_file_path": "/Users/rainyjiang/AndroidStudioProjects/flash_im/docs/features/im/search",
     "settings.editor.selected.configurable": "preferences.pluginManager",
     "show.migrate.to.gradle.popup": "false"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docs/features/im/search" />
       <recent name="$PROJECT_DIR$/scripts" />
       <recent name="$PROJECT_DIR$/docs/features/im/presence/v0.0.1" />
       <recent name="$PROJECT_DIR$/docs/features/im/group/v0.0.3" />
       <recent name="$PROJECT_DIR$/docs/features/im/group/v0.0.1" />
-      <recent name="$PROJECT_DIR$/docs/features/im/friend/v0.0.1" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/docs/features/archiver" />
@@ -468,7 +532,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="Dart">
           <url>file://$PROJECT_DIR$/client/lib/features/home/presentation/main_shell_page.dart</url>
-          <line>37</line>
+          <line>38</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

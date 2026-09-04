@@ -11,3 +11,4 @@ export 'src/logic/friend_cubit.dart' show FriendCubit;
 export 'src/logic/friend_state.dart' show FriendState;
 export 'src/view/contacts_page.dart' show ContactsPage;
 export 'src/view/add_friend_page.dart' show AddFriendPage;
+export 'src/view/friend_profile_page.dart' show FriendProfilePage;

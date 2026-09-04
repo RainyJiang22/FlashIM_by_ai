@@ -24,6 +24,12 @@ pub struct UserSearchQuery {
     pub limit: Option<i64>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct FriendSearchQuery {
+    pub q: String,
+    pub limit: Option<i64>,
+}
+
 #[derive(Clone, Debug, sqlx::FromRow)]
 pub struct FriendUserRow {
     pub account_id: i64,

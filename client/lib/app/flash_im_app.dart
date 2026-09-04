@@ -5,6 +5,7 @@ import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart';
 import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_im_group/flash_im_group.dart';
+import 'package:flash_im_search/flash_im_search.dart';
 import 'package:flash_shared/flash_shared.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flash_starter/flash_starter.dart';
@@ -27,6 +28,7 @@ class FlashImApp extends StatefulWidget {
     this.messageRepository,
     this.friendRepository,
     this.groupRepository,
+    this.searchRepository,
     this.sessionCubit,
     this.appStarterController,
     this.wsClient,
@@ -39,6 +41,7 @@ class FlashImApp extends StatefulWidget {
   final MessageRepository? messageRepository;
   final FriendRepository? friendRepository;
   final GroupRepository? groupRepository;
+  final SearchRepository? searchRepository;
   final SessionCubit? sessionCubit;
   final AppStarterController? appStarterController;
   final WsClient? wsClient;
@@ -55,6 +58,7 @@ class _FlashImAppState extends State<FlashImApp> {
   MessageRepository? _defaultMessageRepository;
   FriendRepository? _defaultFriendRepository;
   GroupRepository? _defaultGroupRepository;
+  SearchRepository? _defaultSearchRepository;
   SessionCubit? _defaultSessionCubit;
   AppStarterController? _defaultAppStarterController;
   WsClient? _defaultWsClient;
@@ -291,6 +295,14 @@ class _FlashImAppState extends State<FlashImApp> {
                 sessionCubit: sessionCubit,
               ),
             ));
+        final searchRepository =
+            widget.searchRepository ??
+            (_defaultSearchRepository ??= DioSearchRepository(
+              dio: _createAuthenticatedDio(
+                baseUrl: config.apiBaseUrl,
+                sessionCubit: sessionCubit,
+              ),
+            ));
         final wsClient =
             widget.wsClient ??
             (_defaultWsClient ??= WsClient(
@@ -313,6 +325,7 @@ class _FlashImAppState extends State<FlashImApp> {
             ),
             RepositoryProvider<FriendRepository>.value(value: friendRepository),
             RepositoryProvider<GroupRepository>.value(value: groupRepository),
+            RepositoryProvider<SearchRepository>.value(value: searchRepository),
             RepositoryProvider<AppStarterController>.value(
               value: appStarterController,
             ),

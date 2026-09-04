@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use chrono::{DateTime, Utc};
 use flash_core::{AppError, AppResult, SharedContext};
@@ -9,8 +9,8 @@ use uuid::Uuid;
 use crate::{
     broadcast::MessageBroadcaster,
     models::{
-        MessageQuery, MessageReadStatus, MessageRow, MessageWithSender, NewMessage,
-        ReadStatusMember,
+        ConversationMessageSearchQuery, GlobalMessageSearchQuery, MessageQuery, MessageReadStatus,
+        MessageRow, MessageSearchGroup, MessageWithSender, NewMessage, ReadStatusMember,
     },
     repository,
 };
@@ -18,6 +18,11 @@ use crate::{
 const DEFAULT_LIMIT: i64 = 50;
 const MAX_LIMIT: i64 = 100;
 const DEFAULT_BEFORE_SEQ: i64 = i64::MAX;
+const DEFAULT_SEARCH_GROUP_LIMIT: i64 = 20;
+const MAX_SEARCH_GROUP_LIMIT: i64 = 50;
+const DEFAULT_SEARCH_MESSAGE_LIMIT: i64 = 50;
+const MAX_SEARCH_MESSAGE_LIMIT: i64 = 100;
+const MAX_SEARCH_QUERY_CHARS: usize = 100;
 pub const GROUP_CREATED_MESSAGE_TYPE: i16 = 5;
 
 #[derive(Clone, Debug)]
@@ -321,6 +326,80 @@ where
         Ok(rows.into_iter().map(MessageWithSender::from).collect())
     }
 
+    pub async fn search_messages(
+        &self,
+        context: &SharedContext,
+        user_id: i64,
+        query: GlobalMessageSearchQuery,
+    ) -> AppResult<Vec<MessageSearchGroup>> {
+        let (like_pattern, group_limit, message_limit) = normalize_global_search_query(query)?;
+        let rows = repository::search_messages(
+            context.postgres.pool(),
+            user_id,
+            &like_pattern,
+            group_limit,
+            message_limit,
+        )
+        .await?;
+
+        let mut order = Vec::new();
+        let mut grouped = HashMap::<Uuid, (i64, Vec<MessageWithSender>)>::new();
+        for row in rows {
+            let conversation_id = row.conversation_id;
+            let match_count = row.match_count;
+            if !grouped.contains_key(&conversation_id) {
+                order.push(conversation_id);
+            }
+            grouped
+                .entry(conversation_id)
+                .or_insert_with(|| (match_count, Vec::new()))
+                .1
+                .push(MessageWithSender::from(row));
+        }
+
+        let mut result = Vec::with_capacity(order.len());
+        for conversation_id in order {
+            let Some((match_count, messages)) = grouped.remove(&conversation_id) else {
+                continue;
+            };
+            let conversation =
+                im_conversation::service::get_conversation_by_id(context, user_id, conversation_id)
+                    .await?;
+            result.push(MessageSearchGroup {
+                conversation,
+                match_count,
+                messages,
+            });
+        }
+        Ok(result)
+    }
+
+    pub async fn search_conversation_messages(
+        &self,
+        context: &SharedContext,
+        user_id: i64,
+        conversation_id: Uuid,
+        query: ConversationMessageSearchQuery,
+    ) -> AppResult<Vec<MessageWithSender>> {
+        let (like_pattern, limit) = normalize_conversation_search_query(query)?;
+        let conversation_service = ConversationMessageService::new(context);
+        if !conversation_service
+            .can_read_history(conversation_id, user_id)
+            .await?
+        {
+            return Err(AppError::not_found("conversation not found"));
+        }
+        let rows = repository::search_conversation_messages(
+            context.postgres.pool(),
+            conversation_id,
+            user_id,
+            &like_pattern,
+            limit,
+        )
+        .await?;
+        Ok(rows.into_iter().map(MessageWithSender::from).collect())
+    }
+
     pub async fn mark_read(
         &self,
         context: &SharedContext,
@@ -603,6 +682,43 @@ fn require_key(
     }
 }
 
+fn normalize_global_search_query(query: GlobalMessageSearchQuery) -> AppResult<(String, i64, i64)> {
+    let like_pattern = normalize_search_pattern(&query.q)?;
+    let group_limit = query.group_limit.unwrap_or(DEFAULT_SEARCH_GROUP_LIMIT);
+    let message_limit = query.message_limit.unwrap_or(DEFAULT_SEARCH_MESSAGE_LIMIT);
+    if group_limit < 1 || message_limit < 1 {
+        return Err(AppError::bad_request("invalid search limit"));
+    }
+    Ok((
+        like_pattern,
+        group_limit.min(MAX_SEARCH_GROUP_LIMIT),
+        message_limit.min(MAX_SEARCH_MESSAGE_LIMIT),
+    ))
+}
+
+fn normalize_conversation_search_query(
+    query: ConversationMessageSearchQuery,
+) -> AppResult<(String, i64)> {
+    let like_pattern = normalize_search_pattern(&query.q)?;
+    let limit = query.limit.unwrap_or(DEFAULT_SEARCH_MESSAGE_LIMIT);
+    if limit < 1 {
+        return Err(AppError::bad_request("invalid search limit"));
+    }
+    Ok((like_pattern, limit.min(MAX_SEARCH_MESSAGE_LIMIT)))
+}
+
+fn normalize_search_pattern(value: &str) -> AppResult<String> {
+    let value = value.trim();
+    if value.is_empty() || value.chars().count() > MAX_SEARCH_QUERY_CHARS {
+        return Err(AppError::bad_request("invalid message search query"));
+    }
+    let escaped = value
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_");
+    Ok(format!("%{escaped}%"))
+}
+
 #[cfg(test)]
 mod tests {
     use serde_json::{Map, json};
@@ -610,9 +726,10 @@ mod tests {
     use crate::repository::MentionMemberRow;
 
     use crate::{
-        models::MessageQuery,
+        models::{ConversationMessageSearchQuery, GlobalMessageSearchQuery, MessageQuery},
         service::{
             GROUP_CREATED_MESSAGE_TYPE, build_group_invitation_content, build_preview,
+            normalize_conversation_search_query, normalize_global_search_query,
             normalize_history_query, normalize_mentions_for_members, validate_file_extra,
             validate_group_invitation_extra, validate_image_extra, validate_video_extra,
         },
@@ -654,6 +771,46 @@ mod tests {
         assert!(
             normalize_history_query(MessageQuery {
                 before_seq: Some(10),
+                limit: Some(0),
+            })
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn search_queries_escape_wildcards_and_clamp_limits() {
+        let (pattern, groups, messages) = normalize_global_search_query(GlobalMessageSearchQuery {
+            q: " 50%_\\off ".to_string(),
+            group_limit: Some(500),
+            message_limit: Some(500),
+        })
+        .unwrap();
+        assert_eq!(pattern, "%50\\%\\_\\\\off%");
+        assert_eq!((groups, messages), (50, 100));
+
+        let (pattern, limit) =
+            normalize_conversation_search_query(ConversationMessageSearchQuery {
+                q: " 发布 ".to_string(),
+                limit: None,
+            })
+            .unwrap();
+        assert_eq!(pattern, "%发布%");
+        assert_eq!(limit, 50);
+    }
+
+    #[test]
+    fn search_queries_reject_blank_or_non_positive_limits() {
+        assert!(
+            normalize_global_search_query(GlobalMessageSearchQuery {
+                q: " ".to_string(),
+                group_limit: None,
+                message_limit: None,
+            })
+            .is_err()
+        );
+        assert!(
+            normalize_conversation_search_query(ConversationMessageSearchQuery {
+                q: "message".to_string(),
                 limit: Some(0),
             })
             .is_err()

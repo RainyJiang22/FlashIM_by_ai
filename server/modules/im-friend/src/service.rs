@@ -16,9 +16,10 @@ use crate::{
     },
     models::{
         AcceptFriendRequestResponse, FRIEND_REQUEST_ACCEPTED, FRIEND_REQUEST_PENDING,
-        FRIEND_REQUEST_REJECTED, FriendRequestListQuery, FriendRequestResponse, FriendUserResponse,
-        MessageResponse, ReceivedFriendRequestResponse, RejectFriendRequestResponse,
-        SendFriendRequestBody, SentFriendRequestResponse, UserSearchQuery,
+        FRIEND_REQUEST_REJECTED, FriendRequestListQuery, FriendRequestResponse, FriendSearchQuery,
+        FriendUserResponse, MessageResponse, ReceivedFriendRequestResponse,
+        RejectFriendRequestResponse, SendFriendRequestBody, SentFriendRequestResponse,
+        UserSearchQuery,
     },
     repository,
 };
@@ -27,6 +28,7 @@ const DEFAULT_LIMIT: i64 = 50;
 const MAX_LIMIT: i64 = 100;
 const DEFAULT_SEARCH_LIMIT: i64 = 20;
 const MAX_SEARCH_LIMIT: i64 = 50;
+const MAX_SEARCH_QUERY_CHARS: usize = 100;
 const MAX_REQUEST_MESSAGE_CHARS: usize = 200;
 
 #[derive(Clone)]
@@ -330,6 +332,19 @@ where
         Ok(rows.into_iter().map(FriendUserResponse::from).collect())
     }
 
+    pub async fn search_friends(
+        &self,
+        context: &SharedContext,
+        user_id: i64,
+        query: FriendSearchQuery,
+    ) -> AppResult<Vec<FriendUserResponse>> {
+        let (q, like_pattern, limit) = normalize_friend_search_query(query)?;
+        let rows =
+            repository::search_friends(context.postgres.pool(), user_id, &q, &like_pattern, limit)
+                .await?;
+        Ok(rows.into_iter().map(FriendUserResponse::from).collect())
+    }
+
     pub async fn get_public_user(
         &self,
         context: &SharedContext,
@@ -386,6 +401,22 @@ fn normalize_search_query(query: UserSearchQuery) -> AppResult<(String, i64)> {
     Ok((q, limit.min(MAX_SEARCH_LIMIT)))
 }
 
+fn normalize_friend_search_query(query: FriendSearchQuery) -> AppResult<(String, String, i64)> {
+    let q = query.q.trim().to_string();
+    if q.is_empty() || q.chars().count() > MAX_SEARCH_QUERY_CHARS {
+        return Err(AppError::bad_request("invalid friend search query"));
+    }
+    let limit = query.limit.unwrap_or(DEFAULT_SEARCH_LIMIT);
+    if limit < 1 {
+        return Err(AppError::bad_request("invalid limit"));
+    }
+    let escaped = q
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_");
+    Ok((q, format!("%{escaped}%"), limit.min(MAX_SEARCH_LIMIT)))
+}
+
 fn from_payload_from_request(row: &crate::models::FriendRequestRow) -> FriendUserPayload {
     FriendUserPayload {
         account_id: row.from_user_id,
@@ -426,9 +457,9 @@ fn payload_from_user_row(row: crate::models::FriendUserRow) -> FriendUserPayload
 
 #[cfg(test)]
 mod tests {
-    use crate::models::FriendRequestListQuery;
+    use crate::models::{FriendRequestListQuery, FriendSearchQuery};
 
-    use super::{normalize_message, normalize_request_list_query};
+    use super::{normalize_friend_search_query, normalize_message, normalize_request_list_query};
 
     #[test]
     fn normalize_message_rejects_too_long_text() {
@@ -453,5 +484,25 @@ mod tests {
         assert_eq!(status, Some(crate::models::FRIEND_REQUEST_PENDING));
         assert_eq!(limit, 100);
         assert_eq!(offset, 3);
+    }
+
+    #[test]
+    fn friend_search_normalizes_limits_and_like_wildcards() {
+        let (query, pattern, limit) = normalize_friend_search_query(FriendSearchQuery {
+            q: " 50%_\\off ".to_string(),
+            limit: Some(500),
+        })
+        .unwrap();
+
+        assert_eq!(query, "50%_\\off");
+        assert_eq!(pattern, "%50\\%\\_\\\\off%");
+        assert_eq!(limit, 50);
+        assert!(
+            normalize_friend_search_query(FriendSearchQuery {
+                q: " ".to_string(),
+                limit: None,
+            })
+            .is_err()
+        );
     }
 }

@@ -73,6 +73,12 @@ pub struct ConversationListQuery {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct JoinedGroupSearchQuery {
+    pub q: String,
+    pub limit: Option<i64>,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct CreateConversationBody {
     pub r#type: String,
     pub name: String,

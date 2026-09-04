@@ -13,7 +13,7 @@ use uuid::Uuid;
 
 use crate::{
     broadcast::{FriendBroadcaster, NoopFriendBroadcaster},
-    models::{FriendRequestListQuery, SendFriendRequestBody, UserSearchQuery},
+    models::{FriendRequestListQuery, FriendSearchQuery, SendFriendRequestBody, UserSearchQuery},
     service::FriendService,
 };
 
@@ -42,6 +42,7 @@ where
         )
         .route("/api/friends/requests/{id}", delete(delete_request::<B>))
         .route("/api/friends", get(list_friends::<B>))
+        .route("/api/friends/search", get(search_friends::<B>))
         .route("/api/friends/{friend_user_id}", delete(remove_friend::<B>))
         .route("/api/users/search", get(search_users::<B>))
         .route("/api/users/{account_id}", get(get_public_user::<B>))
@@ -174,6 +175,21 @@ where
     let response = service
         .remove_friend(&context, user_id, friend_user_id)
         .await?;
+    Ok(utf8_json(Json(response)))
+}
+
+async fn search_friends<B>(
+    State(context): State<SharedContext>,
+    Extension(broadcaster): Extension<Arc<B>>,
+    headers: HeaderMap,
+    Query(query): Query<FriendSearchQuery>,
+) -> AppResult<impl IntoResponse>
+where
+    B: FriendBroadcaster + MessageBroadcaster,
+{
+    let user_id = extract_user_id(context.as_ref(), &headers)?;
+    let service = FriendService::new(broadcaster);
+    let response = service.search_friends(&context, user_id, query).await?;
     Ok(utf8_json(Json(response)))
 }
 

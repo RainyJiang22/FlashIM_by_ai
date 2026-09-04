@@ -1454,6 +1454,198 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn search_routes_round_trip_against_configured_database() {
+        let Ok(config) = flash_core::AppConfig::from_env() else {
+            return;
+        };
+        let context = Arc::new(
+            AppContext::from_config(config)
+                .await
+                .expect("configured search database should connect"),
+        );
+        let pool = context.postgres.pool();
+        let marker = format!("{:016x}", rand::random::<u64>());
+        let keyword = format!("search{marker}");
+        let mut user_ids = Vec::new();
+        for index in 0..3 {
+            let account_id = sqlx::query_scalar::<_, i64>(
+                "INSERT INTO accounts (primary_identifier) VALUES ($1) RETURNING id",
+            )
+            .bind(format!("search-route-test-{marker}-{index}"))
+            .fetch_one(pool)
+            .await
+            .expect("search test account should be inserted");
+            sqlx::query(
+                "INSERT INTO user_profiles (account_id, nickname, avatar_url, flash_id) VALUES ($1, $2, $3, $4)",
+            )
+            .bind(account_id)
+            .bind(if index == 1 {
+                format!("friend-{keyword}")
+            } else {
+                format!("search-user-{index}")
+            })
+            .bind(format!("identicon:{account_id}"))
+            .bind(format!("search_{marker}_{index}"))
+            .execute(pool)
+            .await
+            .expect("search test profile should be inserted");
+            user_ids.push(account_id);
+        }
+        let viewer_id = user_ids[0];
+        let friend_id = user_ids[1];
+        let outsider_id = user_ids[2];
+        sqlx::query("INSERT INTO friend_relations (user_id, friend_user_id) VALUES ($1, $2)")
+            .bind(viewer_id)
+            .bind(friend_id)
+            .execute(pool)
+            .await
+            .expect("search friendship should be inserted");
+
+        let joined_group_id = sqlx::query_scalar::<_, sqlx::types::Uuid>(
+            "INSERT INTO conversations (type, name, owner_id) VALUES (1, $1, $2) RETURNING id",
+        )
+        .bind(format!("joined-{keyword}"))
+        .bind(viewer_id)
+        .fetch_one(pool)
+        .await
+        .expect("joined search group should be inserted");
+        let hidden_group_id = sqlx::query_scalar::<_, sqlx::types::Uuid>(
+            "INSERT INTO conversations (type, name, owner_id) VALUES (1, $1, $2) RETURNING id",
+        )
+        .bind(format!("hidden-{keyword}"))
+        .bind(outsider_id)
+        .fetch_one(pool)
+        .await
+        .expect("hidden search group should be inserted");
+        sqlx::query(
+            r#"
+            INSERT INTO conversation_members (conversation_id, user_id, is_deleted)
+            VALUES ($1, $2, FALSE), ($1, $3, FALSE), ($4, $5, FALSE)
+            "#,
+        )
+        .bind(joined_group_id)
+        .bind(viewer_id)
+        .bind(friend_id)
+        .bind(hidden_group_id)
+        .bind(outsider_id)
+        .execute(pool)
+        .await
+        .expect("search memberships should be inserted");
+        sqlx::query(
+            r#"
+            INSERT INTO messages (conversation_id, sender_id, seq, type, content)
+            VALUES
+                ($1, $2, 1, 0, $3),
+                ($1, $2, 2, 5, $3),
+                ($4, $5, 1, 0, $3)
+            "#,
+        )
+        .bind(joined_group_id)
+        .bind(friend_id)
+        .bind(format!("message-{keyword}"))
+        .bind(hidden_group_id)
+        .bind(outsider_id)
+        .execute(pool)
+        .await
+        .expect("search messages should be inserted");
+
+        let token = sign_token(context.as_ref(), viewer_id).expect("search token should sign");
+        let app = build_app(context.clone(), Arc::new(InMemoryStore::new()));
+        let get = |uri: String| {
+            Request::builder()
+                .method("GET")
+                .uri(uri)
+                .header(header::AUTHORIZATION, format!("Bearer {token}"))
+                .body(Body::empty())
+                .unwrap()
+        };
+
+        let friend_response = app
+            .clone()
+            .oneshot(get(format!("/api/friends/search?q={keyword}")))
+            .await
+            .unwrap();
+        assert_eq!(friend_response.status(), StatusCode::OK);
+        let friend_body = to_bytes(friend_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let friends: serde_json::Value = serde_json::from_slice(&friend_body).unwrap();
+        assert_eq!(friends.as_array().unwrap().len(), 1);
+        assert_eq!(friends[0]["account_id"], friend_id);
+
+        let group_response = app
+            .clone()
+            .oneshot(get(format!(
+                "/api/conversations/search-joined-groups?q={keyword}"
+            )))
+            .await
+            .unwrap();
+        assert_eq!(group_response.status(), StatusCode::OK);
+        let group_body = to_bytes(group_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let groups: serde_json::Value = serde_json::from_slice(&group_body).unwrap();
+        assert_eq!(groups.as_array().unwrap().len(), 1);
+        assert_eq!(groups[0]["id"], joined_group_id.to_string());
+
+        let global_response = app
+            .clone()
+            .oneshot(get(format!("/api/messages/search?q={keyword}")))
+            .await
+            .unwrap();
+        assert_eq!(global_response.status(), StatusCode::OK);
+        let global_body = to_bytes(global_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let global: serde_json::Value = serde_json::from_slice(&global_body).unwrap();
+        assert_eq!(global.as_array().unwrap().len(), 1);
+        assert_eq!(global[0]["conversation"]["id"], joined_group_id.to_string());
+        assert_eq!(global[0]["match_count"], 1);
+        assert_eq!(global[0]["messages"].as_array().unwrap().len(), 1);
+
+        let conversation_response = app
+            .clone()
+            .oneshot(get(format!(
+                "/conversations/{joined_group_id}/messages/search?q={keyword}"
+            )))
+            .await
+            .unwrap();
+        assert_eq!(conversation_response.status(), StatusCode::OK);
+        let conversation_body = to_bytes(conversation_response.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let messages: serde_json::Value = serde_json::from_slice(&conversation_body).unwrap();
+        assert_eq!(messages.as_array().unwrap().len(), 1);
+        assert_eq!(messages[0]["msg_type"], 0);
+
+        let hidden_response = app
+            .clone()
+            .oneshot(get(format!(
+                "/conversations/{hidden_group_id}/messages/search?q={keyword}"
+            )))
+            .await
+            .unwrap();
+        assert_eq!(hidden_response.status(), StatusCode::NOT_FOUND);
+        let invalid_response = app
+            .clone()
+            .oneshot(get("/api/messages/search?q=%20".to_string()))
+            .await
+            .unwrap();
+        assert_eq!(invalid_response.status(), StatusCode::BAD_REQUEST);
+
+        sqlx::query("DELETE FROM conversations WHERE id = ANY($1)")
+            .bind(&[joined_group_id, hidden_group_id])
+            .execute(pool)
+            .await
+            .expect("search conversations should be cleaned up");
+        sqlx::query("DELETE FROM accounts WHERE id = ANY($1)")
+            .bind(&user_ids)
+            .execute(pool)
+            .await
+            .expect("search accounts should be cleaned up");
+    }
+
+    #[tokio::test]
     async fn conversation_messages_route_requires_authentication() {
         let (_, _, app) = build_test_app();
 
@@ -1514,6 +1706,26 @@ mod tests {
             Request::builder()
                 .method("GET")
                 .uri("/api/users/search?q=13800138000")
+                .body(Body::empty())
+                .unwrap(),
+            Request::builder()
+                .method("GET")
+                .uri("/api/friends/search?q=test")
+                .body(Body::empty())
+                .unwrap(),
+            Request::builder()
+                .method("GET")
+                .uri("/api/conversations/search-joined-groups?q=test")
+                .body(Body::empty())
+                .unwrap(),
+            Request::builder()
+                .method("GET")
+                .uri("/api/messages/search?q=test")
+                .body(Body::empty())
+                .unwrap(),
+            Request::builder()
+                .method("GET")
+                .uri("/conversations/00000000-0000-0000-0000-000000000001/messages/search?q=test")
                 .body(Body::empty())
                 .unwrap(),
         ];

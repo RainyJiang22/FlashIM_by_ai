@@ -5,7 +5,7 @@ use flash_core::{AppError, AppResult};
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
-use crate::models::{MessageRow, MessageWithSenderRow, NewMessage};
+use crate::models::{MessageRow, MessageSearchRow, MessageWithSenderRow, NewMessage};
 
 pub struct PersistedMessage {
     pub row: MessageRow,
@@ -493,9 +493,142 @@ pub async fn find_before(
         .map_err(|_| AppError::internal_server_error("failed to list messages"))
 }
 
+pub fn search_messages_sql() -> &'static str {
+    r#"
+    WITH matching AS (
+        SELECT
+            m.id,
+            m.conversation_id,
+            m.sender_id,
+            COALESCE(NULLIF(BTRIM(sender_member.group_nickname), ''), profile.nickname)
+                AS sender_name,
+            profile.avatar_url AS sender_avatar,
+            m.seq,
+            m.type,
+            m.content,
+            m.extra,
+            m.status,
+            m.created_at,
+            0::INT AS read_count,
+            COUNT(*) OVER (PARTITION BY m.conversation_id)::BIGINT AS match_count,
+            ROW_NUMBER() OVER (
+                PARTITION BY m.conversation_id
+                ORDER BY m.seq DESC, m.id DESC
+            ) AS message_rank,
+            MAX(m.created_at) OVER (PARTITION BY m.conversation_id) AS latest_match_at
+        FROM messages m
+        JOIN conversation_members viewer
+          ON viewer.conversation_id = m.conversation_id
+         AND viewer.user_id = $1
+         AND viewer.is_deleted = FALSE
+        LEFT JOIN conversation_members sender_member
+          ON sender_member.conversation_id = m.conversation_id
+         AND sender_member.user_id = m.sender_id
+        LEFT JOIN user_profiles profile ON profile.account_id = m.sender_id
+        WHERE m.type <> 5
+          AND m.content ILIKE $2 ESCAPE '\'
+    ), selected_conversations AS (
+        SELECT conversation_id, MAX(latest_match_at) AS latest_match_at
+        FROM matching
+        GROUP BY conversation_id
+        ORDER BY latest_match_at DESC, conversation_id ASC
+        LIMIT $3
+    )
+    SELECT
+        matching.id,
+        matching.conversation_id,
+        matching.sender_id,
+        matching.sender_name,
+        matching.sender_avatar,
+        matching.seq,
+        matching.type,
+        matching.content,
+        matching.extra,
+        matching.status,
+        matching.created_at,
+        matching.read_count,
+        matching.match_count
+    FROM matching
+    JOIN selected_conversations selected
+      ON selected.conversation_id = matching.conversation_id
+    WHERE matching.message_rank <= $4
+    ORDER BY selected.latest_match_at DESC, matching.conversation_id ASC, matching.seq DESC
+    "#
+}
+
+pub async fn search_messages(
+    pool: &PgPool,
+    user_id: i64,
+    like_pattern: &str,
+    group_limit: i64,
+    message_limit: i64,
+) -> AppResult<Vec<MessageSearchRow>> {
+    sqlx::query_as::<_, MessageSearchRow>(search_messages_sql())
+        .bind(user_id)
+        .bind(like_pattern)
+        .bind(group_limit)
+        .bind(message_limit)
+        .fetch_all(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to search messages"))
+}
+
+pub fn search_conversation_messages_sql() -> &'static str {
+    r#"
+    SELECT
+        m.id,
+        m.conversation_id,
+        m.sender_id,
+        COALESCE(NULLIF(BTRIM(sender_member.group_nickname), ''), profile.nickname)
+            AS sender_name,
+        profile.avatar_url AS sender_avatar,
+        m.seq,
+        m.type,
+        m.content,
+        m.extra,
+        m.status,
+        m.created_at,
+        0::INT AS read_count
+    FROM messages m
+    JOIN conversation_members viewer
+      ON viewer.conversation_id = m.conversation_id
+     AND viewer.user_id = $2
+     AND viewer.is_deleted = FALSE
+    LEFT JOIN conversation_members sender_member
+      ON sender_member.conversation_id = m.conversation_id
+     AND sender_member.user_id = m.sender_id
+    LEFT JOIN user_profiles profile ON profile.account_id = m.sender_id
+    WHERE m.conversation_id = $1
+      AND m.type <> 5
+      AND m.content ILIKE $3 ESCAPE '\'
+    ORDER BY m.seq DESC
+    LIMIT $4
+    "#
+}
+
+pub async fn search_conversation_messages(
+    pool: &PgPool,
+    conversation_id: Uuid,
+    user_id: i64,
+    like_pattern: &str,
+    limit: i64,
+) -> AppResult<Vec<MessageWithSenderRow>> {
+    sqlx::query_as::<_, MessageWithSenderRow>(search_conversation_messages_sql())
+        .bind(conversation_id)
+        .bind(user_id)
+        .bind(like_pattern)
+        .bind(limit)
+        .fetch_all(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to search conversation messages"))
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{active_conversation_lock_sql, find_before_sql, insert_message_sql};
+    use super::{
+        active_conversation_lock_sql, find_before_sql, insert_message_sql,
+        search_conversation_messages_sql, search_messages_sql,
+    };
 
     #[test]
     fn history_sql_uses_seq_pagination() {
@@ -525,5 +658,28 @@ mod tests {
         assert!(sql.contains("sender.is_deleted = FALSE"));
         assert!(sql.contains("c.is_dissolved = FALSE"));
         assert!(sql.contains("FOR UPDATE OF c"));
+    }
+
+    #[test]
+    fn global_search_is_member_scoped_grouped_and_excludes_system_events() {
+        let sql = search_messages_sql();
+
+        assert!(sql.contains("viewer.user_id = $1"));
+        assert!(sql.contains("viewer.is_deleted = FALSE"));
+        assert!(sql.contains("m.type <> 5"));
+        assert!(sql.contains("ILIKE $2 ESCAPE '\\'"));
+        assert!(sql.contains("COUNT(*) OVER (PARTITION BY m.conversation_id)"));
+        assert!(sql.contains("matching.message_rank <= $4"));
+    }
+
+    #[test]
+    fn conversation_search_is_member_scoped_and_bounded() {
+        let sql = search_conversation_messages_sql();
+
+        assert!(sql.contains("m.conversation_id = $1"));
+        assert!(sql.contains("viewer.user_id = $2"));
+        assert!(sql.contains("viewer.is_deleted = FALSE"));
+        assert!(sql.contains("m.type <> 5"));
+        assert!(sql.contains("LIMIT $4"));
     }
 }

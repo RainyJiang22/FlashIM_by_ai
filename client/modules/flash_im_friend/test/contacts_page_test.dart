@@ -11,6 +11,7 @@ void main() {
     FriendUser? messagedUser;
     var openedGroups = false;
     var searchedGroups = false;
+    var openedSearch = false;
     var openedGroupNotifications = false;
     await cubit.load();
 
@@ -23,6 +24,7 @@ void main() {
               onMessageFriend: (user) => messagedUser = user,
               onOpenGroups: () => openedGroups = true,
               onSearchGroups: () => searchedGroups = true,
+              onSearch: () => openedSearch = true,
               onOpenGroupNotifications: () => openedGroupNotifications = true,
               groupNotificationCount: 2,
               onlineUserIds: const {1},
@@ -51,6 +53,9 @@ void main() {
     expect(titleCenter.dx, closeTo(screenWidth / 2, 0.5));
     expect(searchCenter.dx, greaterThan(screenWidth - 100));
     expect(addCenter.dx, greaterThan(searchCenter.dx));
+
+    await tester.tap(find.byTooltip('搜索好友'));
+    expect(openedSearch, isTrue);
 
     await tester.tap(find.text('群聊'));
     expect(openedGroups, isTrue);

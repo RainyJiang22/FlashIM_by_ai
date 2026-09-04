@@ -7,10 +7,12 @@ class PrivateChatDetailsPage extends StatelessWidget {
     super.key,
     required this.friend,
     required this.onInviteMore,
+    required this.onSearchMessages,
   });
 
   final FriendUser friend;
   final Future<void> Function(FriendUser friend) onInviteMore;
+  final VoidCallback onSearchMessages;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +53,13 @@ class PrivateChatDetailsPage extends StatelessWidget {
               onPressed: () => onInviteMore(friend),
               icon: const Icon(Icons.group_add_rounded),
               label: const Text('邀请更多人发起群聊'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              key: const Key('private-chat-search-messages'),
+              onPressed: onSearchMessages,
+              icon: const Icon(Icons.search_rounded),
+              label: const Text('查找聊天内容'),
             ),
           ],
         ),

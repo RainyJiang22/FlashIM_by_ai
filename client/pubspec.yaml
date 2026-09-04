@@ -44,6 +44,8 @@ dependencies:
     path: modules/flash_im_friend
   flash_im_group:
     path: modules/flash_im_group
+  flash_im_search:
+    path: modules/flash_im_search
   flash_shared:
     path: modules/flash_shared
   flash_starter:

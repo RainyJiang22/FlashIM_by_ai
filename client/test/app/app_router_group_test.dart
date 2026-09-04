@@ -58,12 +58,21 @@ void main() {
 
     Navigator.of(context).pushNamed(
       AppRoutes.privateChatDetails,
-      arguments: const PrivateChatDetailsRouteArguments(
-        friend: FriendUser(
+      arguments: PrivateChatDetailsRouteArguments(
+        friend: const FriendUser(
           accountId: 2,
           nickname: '阿青',
           avatar: 'identicon:2',
           signature: '',
+        ),
+        conversation: Conversation(
+          id: 'private-1',
+          type: 0,
+          unreadCount: 0,
+          createdAt: DateTime(2026),
+          peerUserId: '2',
+          peerNickname: '阿青',
+          peerAvatar: 'identicon:2',
         ),
         currentUserId: '1',
       ),

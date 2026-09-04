@@ -243,6 +243,13 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  flash_im_search:
+    dependency: "direct main"
+    description:
+      path: "modules/flash_im_search"
+      relative: true
+    source: path
+    version: "0.0.1"
   flash_session:
     dependency: "direct main"
     description:

@@ -144,6 +144,75 @@ pub async fn list_conversations_by_user(
         .map_err(|_| AppError::internal_server_error("failed to list conversations"))
 }
 
+pub fn search_joined_groups_sql() -> &'static str {
+    r#"
+    SELECT
+        c.id,
+        c.type,
+        c.name,
+        c.avatar,
+        c.owner_id,
+        group_members.member_avatars,
+        (
+            SELECT COUNT(*)::INT
+            FROM conversation_members count_member
+            WHERE count_member.conversation_id = c.id
+              AND count_member.is_deleted = FALSE
+        ) AS member_count,
+        NULL::BIGINT AS peer_user_id,
+        NULL::VARCHAR AS peer_nickname,
+        NULL::TEXT AS peer_avatar,
+        c.last_message_at,
+        c.last_message_preview,
+        me.unread_count,
+        c.announcement,
+        c.is_dissolved,
+        c.created_at
+    FROM conversation_members me
+    JOIN conversations c ON c.id = me.conversation_id
+    LEFT JOIN LATERAL (
+        SELECT COALESCE(
+            ARRAY_AGG(group_member.avatar_url ORDER BY group_member.joined_at),
+            ARRAY[]::TEXT[]
+        ) AS member_avatars
+        FROM (
+            SELECT profile.avatar_url, member.joined_at
+            FROM conversation_members member
+            JOIN user_profiles profile ON profile.account_id = member.user_id
+            WHERE member.conversation_id = c.id
+              AND member.is_deleted = FALSE
+            ORDER BY
+                (member.user_id = c.owner_id) DESC,
+                member.joined_at ASC,
+                member.user_id ASC
+            LIMIT 9
+        ) group_member
+    ) group_members ON TRUE
+    WHERE me.user_id = $1
+      AND me.is_deleted = FALSE
+      AND c.type = 1
+      AND c.is_dissolved = FALSE
+      AND COALESCE(c.name, '') ILIKE $2 ESCAPE '\'
+    ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC, c.id ASC
+    LIMIT $3
+    "#
+}
+
+pub async fn search_joined_groups(
+    pool: &PgPool,
+    user_id: i64,
+    like_pattern: &str,
+    limit: i64,
+) -> AppResult<Vec<ConversationListRow>> {
+    sqlx::query_as::<_, ConversationListRow>(search_joined_groups_sql())
+        .bind(user_id)
+        .bind(like_pattern)
+        .bind(limit)
+        .fetch_all(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to search joined groups"))
+}
+
 pub fn group_friend_validation_sql() -> &'static str {
     r#"
     SELECT COUNT(*)::BIGINT
@@ -571,7 +640,7 @@ mod tests {
     use super::{
         can_read_history_sql, create_group_conversation_sql, get_conversation_by_id_sql,
         group_friend_validation_sql, insert_group_members_sql, list_conversations_sql,
-        refresh_group_avatar_sql,
+        refresh_group_avatar_sql, search_joined_groups_sql,
     };
 
     #[test]
@@ -676,5 +745,17 @@ mod tests {
         assert!(sql.contains("member.is_deleted = FALSE"));
         assert!(sql.contains("LIMIT 9"));
         assert!(sql.contains("SET avatar = avatar_grid.avatar"));
+    }
+
+    #[test]
+    fn joined_group_search_is_member_scoped_and_active() {
+        let sql = search_joined_groups_sql();
+
+        assert!(sql.contains("me.user_id = $1"));
+        assert!(sql.contains("me.is_deleted = FALSE"));
+        assert!(sql.contains("c.type = 1"));
+        assert!(sql.contains("c.is_dissolved = FALSE"));
+        assert!(sql.contains("ILIKE $2 ESCAPE '\\'"));
+        assert!(sql.contains("LIMIT $3"));
     }
 }

@@ -77,6 +77,48 @@ pub async fn list_friend_ids(pool: &PgPool, user_id: i64) -> AppResult<Vec<i64>>
         .map_err(|_| AppError::internal_server_error("failed to list friend ids"))
 }
 
+pub fn search_friends_sql() -> &'static str {
+    r#"
+        SELECT
+            p.account_id,
+            p.nickname,
+            p.avatar_url AS avatar,
+            p.signature,
+            p.flash_id,
+            'friend'::TEXT AS relation_status,
+            relation.created_at
+        FROM friend_relations relation
+        JOIN user_profiles p ON p.account_id = relation.friend_user_id
+        WHERE relation.user_id = $1
+          AND (
+              p.nickname ILIKE $2 ESCAPE '\'
+              OR p.flash_id = $3
+          )
+        ORDER BY
+            CASE WHEN p.flash_id = $3 THEN 0 ELSE 1 END,
+            p.nickname ASC,
+            p.account_id ASC
+        LIMIT $4
+    "#
+}
+
+pub async fn search_friends(
+    pool: &PgPool,
+    user_id: i64,
+    query: &str,
+    like_pattern: &str,
+    limit: i64,
+) -> AppResult<Vec<FriendUserRow>> {
+    sqlx::query_as::<_, FriendUserRow>(search_friends_sql())
+        .bind(user_id)
+        .bind(like_pattern)
+        .bind(query)
+        .bind(limit)
+        .fetch_all(pool)
+        .await
+        .map_err(|_| AppError::internal_server_error("failed to search friends"))
+}
+
 pub fn list_friend_ids_sql() -> &'static str {
     r#"
         SELECT friend_user_id
@@ -516,7 +558,9 @@ mod tests {
         RELATION_FRIEND, RELATION_NONE, RELATION_PENDING_RECEIVED, RELATION_PENDING_SENT,
     };
 
-    use super::{list_friend_ids_sql, relation_status_case, relation_status_priority};
+    use super::{
+        list_friend_ids_sql, relation_status_case, relation_status_priority, search_friends_sql,
+    };
 
     #[test]
     fn relation_status_sql_has_expected_priority() {
@@ -544,5 +588,16 @@ mod tests {
         let sql = list_friend_ids_sql();
         assert!(sql.contains("WHERE user_id = $1"));
         assert!(sql.contains("ORDER BY friend_user_id ASC"));
+    }
+
+    #[test]
+    fn friend_search_is_scoped_and_escaped() {
+        let sql = search_friends_sql();
+
+        assert!(sql.contains("relation.user_id = $1"));
+        assert!(sql.contains("relation.friend_user_id"));
+        assert!(sql.contains("ILIKE $2 ESCAPE '\\'"));
+        assert!(sql.contains("p.flash_id = $3"));
+        assert!(sql.contains("LIMIT $4"));
     }
 }

@@ -12,6 +12,7 @@ void main() {
     tester,
   ) async {
     final groupRepository = FakeGroupRepository();
+    var searchedMessages = false;
     await tester.pumpWidget(
       MultiRepositoryProvider(
         providers: [
@@ -28,6 +29,7 @@ void main() {
                   MaterialPageRoute<GroupDetailsResult>(
                     builder: (_) => GroupDetailsPage(
                       conversation: groupConversation('group-1', '测试群聊'),
+                      onSearchMessages: () => searchedMessages = true,
                     ),
                   ),
                 ),
@@ -49,6 +51,8 @@ void main() {
     expect(find.text('group-1'), findsOneWidget);
     expect(find.text('入群验证'), findsOneWidget);
     expect(find.byKey(const Key('group-nickname-row')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('group-chat-search-messages')));
+    expect(searchedMessages, isTrue);
     expect(find.text('群主'), findsWidgets);
     await tester.tap(find.byKey(const Key('group-nickname-row')));
     await tester.pumpAndSettle();
@@ -104,6 +108,8 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -120));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('group-dissolve-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('group-dissolve-confirm')));
@@ -130,6 +136,7 @@ void main() {
         child: MaterialApp(
           home: GroupDetailsPage(
             conversation: groupConversation('group-1', '测试群聊'),
+            onSearchMessages: () {},
           ),
         ),
       ),

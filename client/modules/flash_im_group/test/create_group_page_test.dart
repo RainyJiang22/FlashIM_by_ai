@@ -109,10 +109,12 @@ void main() {
 
   testWidgets('private chat details invokes invite callback', (tester) async {
     FriendUser? invited;
+    var searchedMessages = false;
     await tester.pumpWidget(
       MaterialApp(
         home: PrivateChatDetailsPage(
           friend: friends.first,
+          onSearchMessages: () => searchedMessages = true,
           onInviteMore: (friend) async => invited = friend,
         ),
       ),
@@ -122,5 +124,7 @@ void main() {
     await tester.tap(find.byKey(const Key('invite-more-to-group')));
     await tester.pump();
     expect(invited, friends.first);
+    await tester.tap(find.byKey(const Key('private-chat-search-messages')));
+    expect(searchedMessages, isTrue);
   });
 }

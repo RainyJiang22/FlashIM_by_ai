@@ -23,10 +23,12 @@ class GroupDetailsPage extends StatelessWidget {
     super.key,
     required this.conversation,
     this.wsClient,
+    required this.onSearchMessages,
   });
 
   final Conversation conversation;
   final WsClient? wsClient;
+  final VoidCallback onSearchMessages;
 
   @override
   Widget build(BuildContext context) {
@@ -36,15 +38,22 @@ class GroupDetailsPage extends StatelessWidget {
         groupId: conversation.id,
         wsClient: wsClient,
       )..load(),
-      child: _GroupDetailsView(conversation: conversation),
+      child: _GroupDetailsView(
+        conversation: conversation,
+        onSearchMessages: onSearchMessages,
+      ),
     );
   }
 }
 
 class _GroupDetailsView extends StatelessWidget {
-  const _GroupDetailsView({required this.conversation});
+  const _GroupDetailsView({
+    required this.conversation,
+    required this.onSearchMessages,
+  });
 
   final Conversation conversation;
+  final VoidCallback onSearchMessages;
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +205,16 @@ class _GroupDetailsView extends StatelessWidget {
                     onTap: state.isSaving
                         ? null
                         : () => _openAnnouncement(context, detail),
+                  ),
+                  const Divider(height: 1, indent: 16),
+                  ListTile(
+                    key: const Key('group-chat-search-messages'),
+                    title: const Text('查找聊天内容'),
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: FlashPalette.mutedInk,
+                    ),
+                    onTap: onSearchMessages,
                   ),
                   const Divider(height: 1, indent: 16),
                   ListTile(

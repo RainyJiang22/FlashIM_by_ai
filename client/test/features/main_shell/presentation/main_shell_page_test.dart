@@ -3,10 +3,12 @@ import 'dart:convert';
 
 import 'package:flash_auth/flash_auth.dart';
 import 'package:flash_im/app/app_router.dart';
+import 'package:flash_im_chat/flash_im_chat.dart';
 import 'package:flash_im_conversation/flash_im_conversation.dart';
 import 'package:flash_im_core/flash_im_core.dart' hide FriendUser;
 import 'package:flash_im_friend/flash_im_friend.dart';
 import 'package:flash_im_group/flash_im_group.dart';
+import 'package:flash_im_search/flash_im_search.dart';
 import 'package:flash_session/flash_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,6 +36,9 @@ void main() {
           ),
           RepositoryProvider<GroupRepository>.value(
             value: _FakeGroupRepository(),
+          ),
+          RepositoryProvider<SearchRepository>.value(
+            value: _FakeSearchRepository(),
           ),
         ],
         child: BlocProvider<SessionCubit>.value(
@@ -135,6 +140,9 @@ void main() {
           RepositoryProvider<GroupRepository>.value(
             value: _FakeGroupRepository(),
           ),
+          RepositoryProvider<SearchRepository>.value(
+            value: _FakeSearchRepository(),
+          ),
         ],
         child: BlocProvider<SessionCubit>.value(
           value: cubit,
@@ -197,6 +205,14 @@ void main() {
     expect(find.text('今天的接口联调先看会话列表。'), findsOneWidget);
     expect(find.text('消息页暂未开放'), findsNothing);
     expect(find.text('3'), findsWidgets);
+
+    await tester.tap(find.byKey(const Key('messages-comprehensive-search')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('comprehensive-search-field')), findsOneWidget);
+    Navigator.of(
+      tester.element(find.byKey(const Key('comprehensive-search-field'))),
+    ).pop();
+    await tester.pumpAndSettle();
 
     final triggerBottom = tester.getBottomLeft(
       find.byKey(const Key('messages-create-group')),
@@ -434,6 +450,24 @@ class _FakeGroupRepository implements GroupRepository {
     String groupId, {
     required bool joinApprovalRequired,
   }) => throw UnimplementedError();
+}
+
+class _FakeSearchRepository implements SearchRepository {
+  @override
+  Future<List<FriendUser>> searchFriends(String query) async => const [];
+
+  @override
+  Future<List<Conversation>> searchJoinedGroups(String query) async => const [];
+
+  @override
+  Future<List<MessageSearchGroup>> searchMessages(String query) async =>
+      const [];
+
+  @override
+  Future<List<Message>> searchConversationMessages({
+    required String conversationId,
+    required String query,
+  }) async => const [];
 }
 
 class _FakeWsClient extends WsClient {

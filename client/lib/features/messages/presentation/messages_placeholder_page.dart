@@ -14,6 +14,7 @@ class MessagesPlaceholderPage extends StatelessWidget {
     required this.onConversationTap,
     required this.onCreateGroup,
     required this.onAddContact,
+    required this.onSearch,
     this.onlineUserIds = const <int>{},
   });
 
@@ -21,6 +22,7 @@ class MessagesPlaceholderPage extends StatelessWidget {
   final ValueChanged<Conversation> onConversationTap;
   final VoidCallback onCreateGroup;
   final VoidCallback onAddContact;
+  final VoidCallback onSearch;
   final Set<int> onlineUserIds;
 
   @override
@@ -51,6 +53,40 @@ class MessagesPlaceholderPage extends StatelessWidget {
                   : UserAvatar(user: user, size: 48),
               onCreateGroup: onCreateGroup,
               onAddContact: onAddContact,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Material(
+                color: FlashPalette.surface,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  key: const Key('messages-comprehensive-search'),
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: onSearch,
+                  child: Container(
+                    height: 46,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: FlashPalette.border),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.search_rounded,
+                          color: FlashPalette.mutedInk,
+                          size: 21,
+                        ),
+                        SizedBox(width: 9),
+                        Text(
+                          '搜索联系人、群聊和聊天记录',
+                          style: TextStyle(color: FlashPalette.mutedInk),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
             Expanded(
               child: ConversationListPage(

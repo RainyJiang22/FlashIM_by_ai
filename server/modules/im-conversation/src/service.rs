@@ -540,6 +540,14 @@ mod tests {
         .expect("group list should load");
         assert!(groups.iter().any(|item| item.id == created.id));
 
+        sqlx::query(
+            "UPDATE conversation_members SET unread_count = 3 WHERE conversation_id = $1 AND user_id = $2",
+        )
+        .bind(created.id)
+        .bind(owner_id)
+        .execute(pool)
+        .await
+        .expect("test unread count should be set");
         super::hide_from_list(&context, owner_id, created.id)
             .await
             .expect("conversation should be hidden from home");
@@ -571,6 +579,55 @@ mod tests {
         .await
         .expect("group directory should include hidden home conversations");
         assert!(all_groups.iter().any(|item| item.id == created.id));
+        let conversation_message_service = super::ConversationMessageService::new(&context);
+        assert_eq!(
+            conversation_message_service
+                .get_total_unread_by_user(owner_id)
+                .await
+                .expect("hidden unread total should load"),
+            0
+        );
+
+        sqlx::query(
+            r#"
+            INSERT INTO conversation_seq (conversation_id, current_seq)
+            VALUES ($1, 1)
+            ON CONFLICT (conversation_id)
+            DO UPDATE SET current_seq = conversation_seq.current_seq + 1
+            "#,
+        )
+        .bind(created.id)
+        .execute(pool)
+        .await
+        .expect("new message sequence should advance");
+        let still_hidden = sqlx::query_scalar::<_, bool>(
+            "SELECT is_hidden FROM conversation_members WHERE conversation_id = $1 AND user_id = $2",
+        )
+        .bind(created.id)
+        .bind(owner_id)
+        .fetch_one(pool)
+        .await
+        .expect("hidden flag should load");
+        assert!(still_hidden);
+        let restored_home = super::list_conversations(
+            &context,
+            owner_id,
+            ConversationListQuery {
+                limit: Some(100),
+                offset: Some(0),
+                r#type: None,
+            },
+        )
+        .await
+        .expect("advanced sequence should restore the home conversation");
+        assert!(restored_home.iter().any(|item| item.id == created.id));
+        assert_eq!(
+            conversation_message_service
+                .get_total_unread_by_user(owner_id)
+                .await
+                .expect("restored unread total should load"),
+            3
+        );
 
         let invalid = super::create_conversation(
             &context,
@@ -584,6 +641,11 @@ mod tests {
         .await;
         assert!(invalid.is_err());
 
+        sqlx::query("DELETE FROM conversations WHERE id = $1")
+            .bind(created.id)
+            .execute(pool)
+            .await
+            .expect("test conversation should be cleaned up");
         sqlx::query("DELETE FROM accounts WHERE id = ANY($1)")
             .bind(&user_ids)
             .execute(pool)

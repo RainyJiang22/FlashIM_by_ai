@@ -32,6 +32,7 @@ pub fn list_conversations_sql() -> &'static str {
         c.created_at
     FROM conversation_members me
     JOIN conversations c ON c.id = me.conversation_id
+    LEFT JOIN conversation_seq list_sequence ON list_sequence.conversation_id = c.id
     LEFT JOIN conversation_members peer_member
         ON peer_member.conversation_id = c.id
        AND peer_member.user_id <> me.user_id
@@ -59,7 +60,11 @@ pub fn list_conversations_sql() -> &'static str {
     ) group_members ON TRUE
     WHERE me.user_id = $1
       AND me.is_deleted = FALSE
-      AND (me.is_hidden = FALSE OR $4::SMALLINT IS NOT NULL)
+      AND (
+          me.is_hidden = FALSE
+          OR COALESCE(list_sequence.current_seq, 0) > me.hidden_through_seq
+          OR $4::SMALLINT IS NOT NULL
+      )
       AND (
           c.is_dissolved = FALSE
           OR (c.type = 1 AND $4::SMALLINT IS NULL)
@@ -413,7 +418,15 @@ pub async fn mark_read(pool: &PgPool, user_id: i64, conversation_id: Uuid) -> Ap
 pub fn hide_from_list_sql() -> &'static str {
     r#"
         UPDATE conversation_members member
-        SET is_hidden = TRUE
+        SET is_hidden = TRUE,
+            hidden_through_seq = COALESCE(
+                (
+                    SELECT current_seq
+                    FROM conversation_seq
+                    WHERE conversation_id = $1
+                ),
+                0
+            )
         WHERE member.conversation_id = $1
           AND member.user_id = $2
           AND member.is_deleted = FALSE
@@ -435,10 +448,20 @@ pub async fn get_total_unread_by_user(pool: &PgPool, user_id: i64) -> AppResult<
     sqlx::query_scalar::<_, i32>(
         r#"
         SELECT COALESCE(SUM(unread_count), 0)::INT
-        FROM conversation_members
-        WHERE user_id = $1
-          AND is_deleted = FALSE
-          AND is_hidden = FALSE
+        FROM conversation_members member
+        WHERE member.user_id = $1
+          AND member.is_deleted = FALSE
+          AND (
+              member.is_hidden = FALSE
+              OR COALESCE(
+                  (
+                      SELECT current_seq
+                      FROM conversation_seq
+                      WHERE conversation_id = member.conversation_id
+                  ),
+                  0
+              ) > member.hidden_through_seq
+          )
         "#,
     )
     .bind(user_id)
@@ -675,7 +698,9 @@ mod tests {
 
         assert!(sql.contains("ORDER BY c.last_message_at DESC NULLS LAST, c.created_at DESC"));
         assert!(sql.contains("AND me.is_deleted = FALSE"));
-        assert!(sql.contains("me.is_hidden = FALSE OR $4::SMALLINT IS NOT NULL"));
+        assert!(sql.contains("COALESCE(list_sequence.current_seq, 0)"));
+        assert!(sql.contains("> me.hidden_through_seq"));
+        assert!(sql.contains("OR $4::SMALLINT IS NOT NULL"));
         assert!(sql.contains("c.is_dissolved = FALSE"));
         assert!(sql.contains("OR (c.type = 1 AND $4::SMALLINT IS NULL)"));
         assert!(sql.contains("$4::SMALLINT IS NULL OR c.type = $4"));
@@ -692,6 +717,8 @@ mod tests {
         let sql = hide_from_list_sql();
 
         assert!(sql.contains("SET is_hidden = TRUE"));
+        assert!(sql.contains("hidden_through_seq = COALESCE"));
+        assert!(sql.contains("FROM conversation_seq"));
         assert!(sql.contains("member.is_deleted = FALSE"));
         assert!(!sql.contains("DELETE FROM messages"));
         assert!(!sql.contains("SET is_deleted = TRUE"));

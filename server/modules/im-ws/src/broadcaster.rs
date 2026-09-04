@@ -259,10 +259,20 @@ async fn load_total_unread(pool: &PgPool, user_id: i64) -> AppResult<i32> {
     sqlx::query_scalar::<_, i32>(
         r#"
         SELECT COALESCE(SUM(unread_count), 0)::INT
-        FROM conversation_members
-        WHERE user_id = $1
-          AND is_deleted = FALSE
-          AND is_hidden = FALSE
+        FROM conversation_members member
+        WHERE member.user_id = $1
+          AND member.is_deleted = FALSE
+          AND (
+              member.is_hidden = FALSE
+              OR COALESCE(
+                  (
+                      SELECT current_seq
+                      FROM conversation_seq
+                      WHERE conversation_id = member.conversation_id
+                  ),
+                  0
+              ) > member.hidden_through_seq
+          )
         "#,
     )
     .bind(user_id)
